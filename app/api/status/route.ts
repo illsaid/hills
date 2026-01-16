@@ -26,13 +26,15 @@ export async function GET() {
     const lastEventResult = await supabaseServer
       .from('events')
       .select('observed_at')
+      .eq('is_seed', false)
       .order('observed_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
     const eventCountResult = await supabaseServer
       .from('events')
-      .select('id', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true })
+      .eq('is_seed', false);
 
     const recentIngestsResult = await supabaseServer
       .from('ingest_runs')

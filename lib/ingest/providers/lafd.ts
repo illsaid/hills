@@ -1,5 +1,5 @@
 import { Provider, IngestionContext, IngestionResult, IngestionEvent } from '../types';
-import { matchesKeywords, findMatchedKeyword, safeText, safeDate } from '../utils';
+import { safeText, safeDate } from '../utils';
 import { supabaseServer } from '@/lib/supabase/server';
 
 const USER_AGENT = 'hills-ledger/0.1 (contact@example.com)';
@@ -8,7 +8,7 @@ export const lafdProvider: Provider = {
   name: 'lafd',
 
   async ingest(context: IngestionContext): Promise<IngestionResult> {
-    const { areaId, sourceId, sourceUrl, keywords } = context;
+    const { areaId, sourceId, sourceUrl } = context;
     let fetched = 0;
     let inserted = 0;
 
@@ -16,6 +16,7 @@ export const lafdProvider: Provider = {
       const response = await fetch(sourceUrl, {
         headers: {
           'User-Agent': USER_AGENT,
+          'Accept': 'text/html',
         },
       });
 
@@ -24,43 +25,56 @@ export const lafdProvider: Provider = {
         throw new Error(`HTTP ${response.status}: ${response.statusText} - ${text.slice(0, 200)}`);
       }
 
-      const xmlText = await response.text();
-      const items = parseRSSItems(xmlText);
-      fetched = items.length;
+      const html = await response.text();
+      const alerts = parseHTMLAlerts(html, sourceUrl);
+      fetched = alerts.length;
 
       const events: IngestionEvent[] = [];
 
-      for (const item of items) {
-        const title = safeText(item.title);
-        const description = safeText(item.description);
-        const fullText = `${title} ${description}`;
+      for (const alert of alerts) {
+        const title = alert.title;
+        const summary = alert.summary;
+        const fullText = `${title} ${summary}`;
 
-        if (!matchesKeywords(fullText, keywords)) {
-          continue;
+        const isCritical = /evacuation|evacuate|fatality|immediate threat/i.test(fullText);
+        const isFire = /fire|brush|structure/i.test(title);
+        const isTraffic = /traffic|collision|vehicle/i.test(title);
+
+        let eventType: 'FIRE' | 'CLOSURE' | 'OTHER' = 'OTHER';
+        if (isFire) {
+          eventType = 'FIRE';
+        } else if (isTraffic) {
+          eventType = 'CLOSURE';
         }
 
-        const matchedKeyword = findMatchedKeyword(fullText, keywords);
-        const isCritical = /evacuation|evacuate|immediate threat/i.test(fullText);
-        const level = isCritical ? 'CRITICAL' : 'ADVISORY';
+        let level: 'INFO' | 'ADVISORY' | 'CRITICAL' = 'INFO';
+        if (isCritical) {
+          level = 'CRITICAL';
+        } else if (isFire) {
+          level = 'ADVISORY';
+        }
 
-        let impact = 2;
+        let impact = 1;
         if (isCritical) impact = 4;
-        else if (/major|significant|large/i.test(fullText)) impact = 3;
+        else if (isFire && /major|large|significant/i.test(fullText)) impact = 3;
+        else if (isFire) impact = 2;
+
+        const locationLabel = extractLocationLabel(alert.neighborhood);
 
         events.push({
-          event_type: 'FIRE',
+          event_type: eventType,
           level,
           verification: 'SINGLE_SOURCE',
           impact,
-          confidence_basis: `Keyword match: ${matchedKeyword}`,
+          confidence_basis: `LAFD filtered by ${alert.neighborhood}`,
           title,
-          summary: description.slice(0, 1000),
-          location_label: `${matchedKeyword} vicinity`,
+          summary: summary.slice(0, 1000),
+          location_label: locationLabel,
           lat: null,
           lng: null,
-          occurred_at: safeDate(item.pubDate),
+          occurred_at: alert.datetime,
           observed_at: new Date(),
-          source_url: safeText(item.link) || null,
+          source_url: alert.url,
         });
       }
 
@@ -77,6 +91,7 @@ export const lafdProvider: Provider = {
           const insertResult = await supabaseServer.from('events').insert({
             area_id: areaId,
             source_id: sourceId,
+            is_seed: false,
             ...event,
           });
           if (!insertResult.error) {
@@ -92,38 +107,101 @@ export const lafdProvider: Provider = {
   },
 };
 
-interface RSSItem {
+interface LAFDAlert {
   title: string;
-  description: string;
-  link: string;
-  pubDate: string;
+  summary: string;
+  datetime: Date | null;
+  url: string | null;
+  neighborhood: string;
 }
 
-function parseRSSItems(xmlText: string): RSSItem[] {
-  const items: RSSItem[] = [];
-  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
-  let itemMatch;
+function parseHTMLAlerts(html: string, baseUrl: string): LAFDAlert[] {
+  const alerts: LAFDAlert[] = [];
 
-  while ((itemMatch = itemRegex.exec(xmlText)) !== null) {
-    const itemContent = itemMatch[1];
-    const title = extractTag(itemContent, 'title');
-    const description = extractTag(itemContent, 'description');
-    const link = extractTag(itemContent, 'link');
-    const pubDate = extractTag(itemContent, 'pubDate');
+  const alertBlockRegex = /<article[^>]*class="[^"]*alert-item[^"]*"[^>]*>([\s\S]*?)<\/article>/gi;
+  let match;
+
+  while ((match = alertBlockRegex.exec(html)) !== null) {
+    const blockHtml = match[1];
+
+    const titleMatch = blockHtml.match(/<h[234][^>]*class="[^"]*alert-title[^"]*"[^>]*>([\s\S]*?)<\/h[234]>/i) ||
+                       blockHtml.match(/<h[234][^>]*>([\s\S]*?)<\/h[234]>/i);
+    const title = titleMatch ? stripHTML(titleMatch[1]).trim() : '';
+
+    const summaryMatch = blockHtml.match(/<p[^>]*class="[^"]*alert-summary[^"]*"[^>]*>([\s\S]*?)<\/p>/i) ||
+                         blockHtml.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+    const summaryRaw = summaryMatch ? stripHTML(summaryMatch[1]).trim() : '';
+    const summary = summaryRaw.split(/[.!?]/).slice(0, 2).join('. ').trim();
+
+    const datetimeMatch = blockHtml.match(/<time[^>]*datetime="([^"]+)"/i) ||
+                          blockHtml.match(/(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2})/);
+    const datetime = datetimeMatch ? safeDate(datetimeMatch[1]) : new Date();
+
+    const linkMatch = blockHtml.match(/<a[^>]*href="([^"]+)"/i);
+    const url = linkMatch ? (linkMatch[1].startsWith('http') ? linkMatch[1] : null) : baseUrl;
+
+    const neighborhoodMatch = blockHtml.match(/#([A-Za-z]+)/);
+    const neighborhood = neighborhoodMatch ? neighborhoodMatch[1] : 'HollywoodHills';
 
     if (title) {
-      items.push({ title, description, link, pubDate });
+      alerts.push({
+        title,
+        summary: summary || title,
+        datetime,
+        url,
+        neighborhood,
+      });
     }
   }
 
-  return items;
+  if (alerts.length === 0) {
+    const fallbackTitleRegex = /<h[234][^>]*>([\s\S]*?)<\/h[234]>/gi;
+    let titleMatch;
+    let count = 0;
+
+    while ((titleMatch = fallbackTitleRegex.exec(html)) !== null && count < 10) {
+      const title = stripHTML(titleMatch[1]).trim();
+      if (title.length > 10 && /fire|incident|alert|emergency/i.test(title)) {
+        alerts.push({
+          title,
+          summary: title,
+          datetime: new Date(),
+          url: baseUrl,
+          neighborhood: 'HollywoodHills',
+        });
+        count++;
+      }
+    }
+  }
+
+  return alerts;
 }
 
-function extractTag(content: string, tagName: string): string {
-  const regex = new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)</${tagName}>`, 'i');
-  const match = content.match(regex);
-  if (match && match[1]) {
-    return match[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim();
+function stripHTML(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractLocationLabel(neighborhood: string): string {
+  const lower = neighborhood.toLowerCase();
+
+  if (lower.includes('hollywoodhillswest')) {
+    return 'Hollywood Hills West';
+  } else if (lower.includes('hollywoodhills')) {
+    return 'Hollywood Hills';
+  } else if (lower.includes('laurelcanyon')) {
+    return 'Laurel Canyon';
+  } else if (lower.includes('mulholland')) {
+    return 'Mulholland Drive area';
+  } else {
+    return 'Hollywood Hills vicinity';
   }
-  return '';
 }

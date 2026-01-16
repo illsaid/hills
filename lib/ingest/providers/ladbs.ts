@@ -114,6 +114,7 @@ export const ladbsProvider: Provider = {
           const insertResult = await supabaseServer.from('events').insert({
             area_id: areaId,
             source_id: sourceId,
+            is_seed: false,
             ...event,
           });
           if (!insertResult.error) {

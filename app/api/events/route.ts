@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
       .from('events')
       .select('*, source:sources(*)')
       .eq('area_id', area.data.id)
+      .eq('is_seed', false)
       .gte('observed_at', cutoffDate.toISOString())
       .order('observed_at', { ascending: false })
       .limit(limit);

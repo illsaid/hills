@@ -30,6 +30,7 @@ export default async function Dashboard() {
     .from('events')
     .select('*, source:sources(*)')
     .eq('area_id', area.data.id)
+    .eq('is_seed', false)
     .order('impact', { ascending: false })
     .order('observed_at', { ascending: false })
     .limit(10);
@@ -41,6 +42,7 @@ export default async function Dashboard() {
     .from('events')
     .select('*, source:sources(*)')
     .eq('area_id', area.data.id)
+    .eq('is_seed', false)
     .in('event_type', alertTypes)
     .gte('observed_at', alertsCutoff.toISOString())
     .order('observed_at', { ascending: false })
@@ -59,6 +61,7 @@ export default async function Dashboard() {
   const lastUpdate = await supabaseServer
     .from('events')
     .select('observed_at')
+    .eq('is_seed', false)
     .order('observed_at', { ascending: false })
     .limit(1)
     .maybeSingle();
