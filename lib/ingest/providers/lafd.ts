@@ -1,8 +1,10 @@
 import { Provider, IngestionContext, IngestionResult, IngestionEvent } from '../types';
-import { safeText, safeDate } from '../utils';
+import { safeDate } from '../utils';
 import { supabaseServer } from '@/lib/supabase/server';
 
 const USER_AGENT = 'hills-ledger/0.1 (contact@example.com)';
+const MAX_PAGES = 5;
+const CUTOFF_DAYS = 90;
 
 export const lafdProvider: Provider = {
   name: 'lafd',
@@ -13,25 +15,50 @@ export const lafdProvider: Provider = {
     let inserted = 0;
 
     try {
-      const response = await fetch(sourceUrl, {
-        headers: {
-          'User-Agent': USER_AGENT,
-          'Accept': 'text/html',
-        },
-      });
+      const cutoffDate = new Date(Date.now() - CUTOFF_DAYS * 24 * 60 * 60 * 1000);
+      const allAlerts: LAFDAlert[] = [];
 
-      if (!response.ok) {
-        const text = await response.text().catch(() => '');
-        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${text.slice(0, 200)}`);
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const url = page === 0 ? sourceUrl : `${sourceUrl}&page=${page}`;
+
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': USER_AGENT,
+            'Accept': 'text/html',
+          },
+        });
+
+        if (!response.ok) {
+          if (page === 0) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          break;
+        }
+
+        const html = await response.text();
+        const alerts = parseHTMLAlerts(html, sourceUrl);
+
+        if (alerts.length === 0) {
+          break;
+        }
+
+        allAlerts.push(...alerts);
+
+        const oldestDate = alerts.reduce((oldest, alert) => {
+          if (!alert.datetime) return oldest;
+          return alert.datetime < oldest ? alert.datetime : oldest;
+        }, new Date());
+
+        if (oldestDate < cutoffDate) {
+          break;
+        }
       }
 
-      const html = await response.text();
-      const alerts = parseHTMLAlerts(html, sourceUrl);
-      fetched = alerts.length;
+      fetched = allAlerts.length;
 
       const events: IngestionEvent[] = [];
 
-      for (const alert of alerts) {
+      for (const alert of allAlerts) {
         const title = alert.title;
         const summary = alert.summary;
         const fullText = `${title} ${summary}`;
@@ -39,11 +66,12 @@ export const lafdProvider: Provider = {
         const isCritical = /evacuation|evacuate|fatality|immediate threat/i.test(fullText);
         const isFire = /fire|brush|structure/i.test(title);
         const isTraffic = /traffic|collision|vehicle/i.test(title);
+        const isDebrisFlow = /debris flow|mudslide/i.test(title);
 
         let eventType: 'FIRE' | 'CLOSURE' | 'OTHER' = 'OTHER';
         if (isFire) {
           eventType = 'FIRE';
-        } else if (isTraffic) {
+        } else if (isTraffic || isDebrisFlow) {
           eventType = 'CLOSURE';
         }
 
@@ -72,7 +100,7 @@ export const lafdProvider: Provider = {
           location_label: locationLabel,
           lat: null,
           lng: null,
-          occurred_at: alert.datetime,
+          occurred_at: alert.datetime || new Date(),
           observed_at: new Date(),
           source_url: alert.url,
         });
@@ -118,53 +146,60 @@ interface LAFDAlert {
 function parseHTMLAlerts(html: string, baseUrl: string): LAFDAlert[] {
   const alerts: LAFDAlert[] = [];
 
-  const alertBlockRegex = /<article[^>]*class="[^"]*alert-item[^"]*"[^>]*>([\s\S]*?)<\/article>/gi;
+  const sectionRegex = /<h[23][^>]*>\s*<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>\s*<\/h[23]>\s*<p[^>]*>(.*?)<\/p>/gis;
   let match;
 
-  while ((match = alertBlockRegex.exec(html)) !== null) {
-    const blockHtml = match[1];
+  while ((match = sectionRegex.exec(html)) !== null) {
+    const href = match[1];
+    const titleRaw = match[2];
+    const bodyRaw = match[3];
 
-    const titleMatch = blockHtml.match(/<h[234][^>]*class="[^"]*alert-title[^"]*"[^>]*>([\s\S]*?)<\/h[234]>/i) ||
-                       blockHtml.match(/<h[234][^>]*>([\s\S]*?)<\/h[234]>/i);
-    const title = titleMatch ? stripHTML(titleMatch[1]).trim() : '';
+    const title = stripHTML(titleRaw).trim();
+    const body = stripHTML(bodyRaw).trim();
 
-    const summaryMatch = blockHtml.match(/<p[^>]*class="[^"]*alert-summary[^"]*"[^>]*>([\s\S]*?)<\/p>/i) ||
-                         blockHtml.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
-    const summaryRaw = summaryMatch ? stripHTML(summaryMatch[1]).trim() : '';
-    const summary = summaryRaw.split(/[.!?]/).slice(0, 2).join('. ').trim();
+    if (!title || title.length < 5) continue;
 
-    const datetimeMatch = blockHtml.match(/<time[^>]*datetime="([^"]+)"/i) ||
-                          blockHtml.match(/(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2})/);
-    const datetime = datetimeMatch ? safeDate(datetimeMatch[1]) : new Date();
+    const summary = body.split(/[.!?]/).slice(0, 2).join('. ').trim() || title;
 
-    const linkMatch = blockHtml.match(/<a[^>]*href="([^"]+)"/i);
-    const url = linkMatch ? (linkMatch[1].startsWith('http') ? linkMatch[1] : null) : baseUrl;
+    const dateMatch = title.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+    let datetime: Date | null = null;
+    if (dateMatch) {
+      datetime = safeDate(dateMatch[1]);
+    }
+    if (!datetime) {
+      const bodyDateMatch = body.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+      if (bodyDateMatch) {
+        datetime = safeDate(bodyDateMatch[1]);
+      }
+    }
 
-    const neighborhoodMatch = blockHtml.match(/#([A-Za-z]+)/);
+    const neighborhoodMatch = body.match(/#(\w+)/);
     const neighborhood = neighborhoodMatch ? neighborhoodMatch[1] : 'HollywoodHills';
 
-    if (title) {
-      alerts.push({
-        title,
-        summary: summary || title,
-        datetime,
-        url,
-        neighborhood,
-      });
-    }
+    const url = href.startsWith('http') ? href : (href.startsWith('/') ? `https://lafd.org${href}` : baseUrl);
+
+    alerts.push({
+      title,
+      summary,
+      datetime: datetime || new Date(),
+      url,
+      neighborhood,
+    });
   }
 
   if (alerts.length === 0) {
-    const fallbackTitleRegex = /<h[234][^>]*>([\s\S]*?)<\/h[234]>/gi;
-    let titleMatch;
+    const h2Regex = /<h2[^>]*>(.*?)<\/h2>/gis;
+    let h2Match;
     let count = 0;
 
-    while ((titleMatch = fallbackTitleRegex.exec(html)) !== null && count < 10) {
-      const title = stripHTML(titleMatch[1]).trim();
-      if (title.length > 10 && /fire|incident|alert|emergency/i.test(title)) {
+    while ((h2Match = h2Regex.exec(html)) !== null && count < 10) {
+      const titleContent = stripHTML(h2Match[1]).trim();
+      const titleClean = titleContent.replace(/<[^>]*>/g, '').trim();
+
+      if (titleClean.length > 10 && /fire|incident|alert|emergency|brush|structure/i.test(titleClean)) {
         alerts.push({
-          title,
-          summary: title,
+          title: titleClean,
+          summary: titleClean,
           datetime: new Date(),
           url: baseUrl,
           neighborhood: 'HollywoodHills',
@@ -186,6 +221,10 @@ function stripHTML(html: string): string {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&rsquo;/g, "'")
+    .replace(/&lsquo;/g, "'")
+    .replace(/&rdquo;/g, '"')
+    .replace(/&ldquo;/g, '"')
     .replace(/\s+/g, ' ')
     .trim();
 }

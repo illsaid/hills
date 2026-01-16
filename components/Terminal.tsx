@@ -7,6 +7,8 @@ import { EventCard } from './EventCard';
 import { ProjectCard } from './ProjectCard';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import Link from 'next/link';
+import { Home } from 'lucide-react';
 
 interface OutputEntry {
   id: string;
@@ -90,9 +92,21 @@ export function Terminal() {
 
   return (
     <div className="flex flex-col h-screen bg-black text-green-400 font-mono">
-      <div className="border-b border-green-900 p-4">
-        <h1 className="text-lg font-bold">THE HILLS LEDGER :: TERMINAL</h1>
-        <p className="text-xs text-green-600">Type &apos;help&apos; for available commands</p>
+      <div className="border-b border-green-900 p-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold">THE HILLS LEDGER :: TERMINAL</h1>
+          <p className="text-xs text-green-600">Type &apos;help&apos; for available commands</p>
+        </div>
+        <Link href="/">
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-green-950 border-green-800 text-green-400 hover:bg-green-900 gap-2"
+          >
+            <Home className="w-4 h-4" />
+            Back to Dashboard
+          </Button>
+        </Link>
       </div>
 
       <div className="flex-1 overflow-auto p-4 space-y-4" ref={outputRef}>
