@@ -9,34 +9,22 @@ import { Terminal, Activity, AlertTriangle, Briefcase } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 
 export default async function Dashboard() {
-  try {
-    const area = await supabaseServer
-      .from('areas')
-      .select('id, name, slug')
-      .eq('slug', 'hollywood-hills')
-      .single();
+  const area = await supabaseServer
+    .from('areas')
+    .select('id, name, slug')
+    .eq('slug', 'hollywood-hills')
+    .single();
 
-    if (area.error) {
-      console.error('Supabase error:', area.error);
-      return (
-        <div className="p-8">
-          <h1 className="text-2xl font-bold mb-4">Database Error</h1>
-          <pre className="bg-gray-100 p-4 rounded">{JSON.stringify(area.error, null, 2)}</pre>
-          <p className="mt-4">Environment check:</p>
-          <ul className="list-disc pl-6">
-            <li>URL present: {process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Yes' : 'No'}</li>
-            <li>Service Key present: {process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Yes' : 'No'}</li>
-          </ul>
+  if (!area.data) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Area Not Found</h1>
+          <p className="text-gray-600">Hollywood Hills area has not been configured yet.</p>
         </div>
-      );
-    }
-
-    if (!area.data) {
-      return <div>Area not found</div>;
-    }
-
-  const todayCutoff = new Date();
-  todayCutoff.setHours(0, 0, 0, 0);
+      </div>
+    );
+  }
 
   const topEvents = await supabaseServer
     .from('events')
@@ -105,7 +93,7 @@ export default async function Dashboard() {
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
             <Activity className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-900">Today&apos;s Top Events</h2>
+            <h2 className="text-xl font-bold text-gray-900">Top Events</h2>
             <Badge variant="outline" className="ml-auto">
               {topEvents.data?.length || 0} events
             </Badge>
@@ -119,7 +107,7 @@ export default async function Dashboard() {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              No events reported today
+              No events reported
             </div>
           )}
         </section>
@@ -148,7 +136,7 @@ export default async function Dashboard() {
 
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <Briefcase className="w-6 h-6 text-purple-600" />
+            <Briefcase className="w-6 h-6 text-teal-600" />
             <h2 className="text-xl font-bold text-gray-900">Projects to Watch</h2>
             <Badge variant="outline" className="ml-auto">
               Last 30 days
@@ -178,14 +166,4 @@ export default async function Dashboard() {
       </footer>
     </div>
   );
-  } catch (error: any) {
-    console.error('Dashboard error:', error);
-    return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">Error Loading Dashboard</h1>
-        <pre className="bg-red-100 p-4 rounded text-red-800">{error.message}</pre>
-        <pre className="bg-gray-100 p-4 rounded mt-4 text-xs">{error.stack}</pre>
-      </div>
-    );
-  }
 }

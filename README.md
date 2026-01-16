@@ -86,12 +86,11 @@ npm install
 
 ### 3. Configure Environment Variables
 
-The `.env` file is already configured with Supabase credentials. The following variables are set:
+The `.env` file should contain:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
-SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 INGEST_KEY=hills-ledger-ingest-key-2024
 ```
 
@@ -278,8 +277,73 @@ The system checks for existing events with the same source, title, and date befo
 ### Geofencing
 
 Events are filtered to the Hollywood Hills area using:
-- **Bounding box**: Lat/lng coordinates (34.0930 to 34.1450, -118.3900 to -118.3100)
-- **Keyword matching**: For text-only sources (Mulholland, Laurel Canyon, etc.)
+- **Bounding box**: Lat/lng coordinates (34.077 to 34.152, -118.392 to -118.298)
+- **Keyword matching**: For text-only sources (Mulholland, Laurel Canyon, Nichols Canyon, Runyon, etc.)
+
+## How to Run Live Ingestion
+
+To pull real data from external sources, use the ingestion API endpoint:
+
+### NWS Weather Alerts (recommended to test first)
+
+```bash
+curl -X POST "http://localhost:3000/api/ingest/run?provider=nws&area=hollywood-hills" \
+  -H "x-ingest-key: hills-ledger-ingest-key-2024"
+```
+
+### LAFD Fire Alerts
+
+```bash
+curl -X POST "http://localhost:3000/api/ingest/run?provider=lafd&area=hollywood-hills" \
+  -H "x-ingest-key: hills-ledger-ingest-key-2024"
+```
+
+### LADBS Building Permits
+
+```bash
+curl -X POST "http://localhost:3000/api/ingest/run?provider=ladbs&area=hollywood-hills" \
+  -H "x-ingest-key: hills-ledger-ingest-key-2024"
+```
+
+### Verify Ingestion Worked
+
+Check the status endpoint to see ingestion results:
+
+```bash
+curl http://localhost:3000/api/status
+```
+
+Response includes:
+- `sources_active`: Number of active data sources
+- `last_ingest`: Details of the most recent ingestion run
+- `last_event_time`: Most recent event timestamp
+- `total_events`: Total number of events in database
+- `recent_ingests`: Last 5 ingestion runs with stats
+
+### Expected Response
+
+Successful ingestion returns:
+```json
+{
+  "success": true,
+  "provider": "nws",
+  "area": "hollywood-hills",
+  "fetched": 150,
+  "inserted": 5
+}
+```
+
+If an error occurs:
+```json
+{
+  "success": false,
+  "provider": "nws",
+  "area": "hollywood-hills",
+  "fetched": 0,
+  "inserted": 0,
+  "error": "HTTP 403: Forbidden - User-Agent required"
+}
+```
 
 ## Build for Production
 
@@ -314,7 +378,6 @@ The app can be deployed to any platform that supports Next.js:
 **Important**: Set environment variables in your deployment platform:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
 - `INGEST_KEY`
 
 ## Security Considerations

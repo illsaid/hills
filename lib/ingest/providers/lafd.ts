@@ -1,38 +1,30 @@
 import { Provider, IngestionContext, IngestionResult, IngestionEvent } from '../types';
-import { matchesKeywords, findMatchedKeyword, safeText, safeDate, HOLLYWOOD_HILLS_KEYWORDS } from '../utils';
+import { matchesKeywords, findMatchedKeyword, safeText, safeDate } from '../utils';
 import { supabaseServer } from '@/lib/supabase/server';
+
+const USER_AGENT = 'hills-ledger/0.1 (contact@example.com)';
 
 export const lafdProvider: Provider = {
   name: 'lafd',
 
   async ingest(context: IngestionContext): Promise<IngestionResult> {
-    const { areaId, sourceId } = context;
+    const { areaId, sourceId, sourceUrl, keywords } = context;
     let fetched = 0;
     let inserted = 0;
 
     try {
-      const source = await supabaseServer
-        .from('sources')
-        .select('url')
-        .eq('id', sourceId)
-        .single();
-
-      if (!source.data) {
-        throw new Error('Source not found');
-      }
-
-      const response = await fetch(source.data.url, {
+      const response = await fetch(sourceUrl, {
         headers: {
-          'User-Agent': 'The-Hills-Ledger/1.0',
+          'User-Agent': USER_AGENT,
         },
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const text = await response.text().catch(() => '');
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${text.slice(0, 200)}`);
       }
 
       const xmlText = await response.text();
-
       const items = parseRSSItems(xmlText);
       fetched = items.length;
 
@@ -43,12 +35,11 @@ export const lafdProvider: Provider = {
         const description = safeText(item.description);
         const fullText = `${title} ${description}`;
 
-        if (!matchesKeywords(fullText, HOLLYWOOD_HILLS_KEYWORDS)) {
+        if (!matchesKeywords(fullText, keywords)) {
           continue;
         }
 
-        const matchedKeyword = findMatchedKeyword(fullText, HOLLYWOOD_HILLS_KEYWORDS);
-
+        const matchedKeyword = findMatchedKeyword(fullText, keywords);
         const isCritical = /evacuation|evacuate|immediate threat/i.test(fullText);
         const level = isCritical ? 'CRITICAL' : 'ADVISORY';
 
@@ -63,7 +54,7 @@ export const lafdProvider: Provider = {
           impact,
           confidence_basis: `Keyword match: ${matchedKeyword}`,
           title,
-          summary: description,
+          summary: description.slice(0, 1000),
           location_label: `${matchedKeyword} vicinity`,
           lat: null,
           lng: null,
@@ -83,12 +74,14 @@ export const lafdProvider: Provider = {
           .maybeSingle();
 
         if (!exists.data) {
-          await supabaseServer.from('events').insert({
+          const insertResult = await supabaseServer.from('events').insert({
             area_id: areaId,
             source_id: sourceId,
             ...event,
           });
-          inserted++;
+          if (!insertResult.error) {
+            inserted++;
+          }
         }
       }
 
@@ -108,13 +101,11 @@ interface RSSItem {
 
 function parseRSSItems(xmlText: string): RSSItem[] {
   const items: RSSItem[] = [];
-
   const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
   let itemMatch;
 
   while ((itemMatch = itemRegex.exec(xmlText)) !== null) {
     const itemContent = itemMatch[1];
-
     const title = extractTag(itemContent, 'title');
     const description = extractTag(itemContent, 'description');
     const link = extractTag(itemContent, 'link');

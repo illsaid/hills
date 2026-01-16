@@ -42,14 +42,14 @@ export async function runProvider(
     .from('sources')
     .select('*')
     .eq('area_id', area.data.id)
-    .ilike('name', `%${providerName}%`)
+    .eq('provider_key', providerName)
     .single();
 
-  if (!source.data) {
+  if (source.error || !source.data) {
     return {
       fetched: 0,
       inserted: 0,
-      error: `Source not found for provider: ${providerName}`,
+      error: `Source not found for provider_key '${providerName}' in area '${areaSlug}': ${source.error?.message || 'no data'}`,
     };
   }
 
@@ -65,6 +65,7 @@ export async function runProvider(
   const context: IngestionContext = {
     areaId: area.data.id,
     sourceId: source.data.id,
+    sourceUrl: source.data.url,
     bbox: {
       min_lat: area.data.bbox_min_lat,
       max_lat: area.data.bbox_max_lat,

@@ -26,6 +26,7 @@ export interface BoundingBox {
 export interface IngestionContext {
   areaId: string;
   sourceId: string;
+  sourceUrl: string;
   bbox: BoundingBox;
   keywords: string[];
 }
