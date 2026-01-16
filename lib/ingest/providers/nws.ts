@@ -41,17 +41,24 @@ export const nwsProvider: Provider = {
 
         const fullText = `${eventName} ${headline} ${description} ${areaDesc}`;
 
-        const isLosAngelesRelated = /los angeles|la county/i.test(fullText);
+        const isLosAngelesRelated = /los angeles|la county|southern california/i.test(fullText);
         const matchesHillsKeywords = matchesKeywords(fullText, keywords);
 
         if (!isLosAngelesRelated && !matchesHillsKeywords) {
           continue;
         }
 
+        const isFireWeather = /red flag|fire weather|wind warning|wind watch|extreme wind|santa ana|high wind.*fire|critical fire/i.test(eventName + ' ' + headline);
+
+        let eventType: 'WEATHER' | 'FIRE_WEATHER' = 'WEATHER';
+        if (isFireWeather) {
+          eventType = 'FIRE_WEATHER';
+        }
+
         let level: 'INFO' | 'ADVISORY' | 'CRITICAL' = 'INFO';
         let impact = 1;
 
-        if (severity === 'Extreme') {
+        if (severity === 'Extreme' || (isFireWeather && /warning/i.test(eventName))) {
           level = 'CRITICAL';
           impact = 5;
         } else if (severity === 'Severe' || /warning/i.test(eventName)) {
@@ -59,7 +66,7 @@ export const nwsProvider: Provider = {
           impact = 4;
         } else if (/advisory|watch/i.test(eventName)) {
           level = 'ADVISORY';
-          impact = 3;
+          impact = isFireWeather ? 3 : 2;
         } else {
           level = 'INFO';
           impact = 2;
@@ -74,7 +81,7 @@ export const nwsProvider: Provider = {
           : 'Los Angeles County coverage';
 
         events.push({
-          event_type: 'WEATHER',
+          event_type: eventType,
           level,
           verification: 'VERIFIED',
           impact,

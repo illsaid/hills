@@ -1,4 +1,4 @@
-export type EventType = 'FIRE' | 'WEATHER' | 'CLOSURE' | 'PURSUIT' | 'CRIME' | 'PERMIT' | 'OTHER';
+export type EventType = 'FIRE' | 'FIRE_WEATHER' | 'WEATHER' | 'CLOSURE' | 'PURSUIT' | 'CRIME' | 'PERMIT' | 'OTHER';
 export type EventLevel = 'INFO' | 'ADVISORY' | 'CRITICAL';
 export type EventVerification = 'VERIFIED' | 'SINGLE_SOURCE' | 'UNVERIFIED';
 export type SourceType = 'rss' | 'html' | 'pdf' | 'api' | 'socrata';

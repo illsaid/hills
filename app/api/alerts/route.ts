@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-    const alertTypes = ['FIRE', 'WEATHER', 'CLOSURE', 'PURSUIT'];
+    const alertTypes = ['FIRE', 'FIRE_WEATHER', 'WEATHER', 'CLOSURE', 'PURSUIT'];
 
     let query = supabaseServer
       .from('events')

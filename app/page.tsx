@@ -36,7 +36,7 @@ export default async function Dashboard() {
     .limit(10);
 
   const alertsCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const alertTypes = ['FIRE', 'WEATHER', 'CLOSURE', 'PURSUIT'];
+  const alertTypes = ['FIRE', 'FIRE_WEATHER', 'WEATHER', 'CLOSURE', 'PURSUIT'];
 
   const recentAlerts = await supabaseServer
     .from('events')

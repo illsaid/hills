@@ -7,11 +7,12 @@ A production-ready decision-support platform for monitoring events, alerts, and 
 - **Dashboard**: Clean, premium interface showing today's top events, recent alerts, and active projects
 - **Terminal**: Command-line interface for power users with advanced querying capabilities
 - **Real-time Data Ingestion**: Automated pipeline pulling from multiple public data sources:
-  - LAFD Alerts (RSS)
-  - National Weather Service (API)
+  - LAFD Alerts (HTML scraping - filtered to neighborhood, expect low volume)
+  - National Weather Service (API - includes fire weather warnings)
   - LA Department of Building & Safety Permits (Socrata API)
+- **Admin Interface**: `/admin/ingest` page for manual ingestion triggers and debugging
 - **Smart Geofencing**: Filters events to the Hollywood Hills area using bounding box coordinates
-- **Event Classification**: Categorizes events by type (FIRE, WEATHER, CLOSURE, PURSUIT, CRIME, PERMIT, OTHER)
+- **Event Classification**: Categorizes events by type (FIRE, FIRE_WEATHER, WEATHER, CLOSURE, PURSUIT, CRIME, PERMIT, OTHER)
 - **Impact Scoring**: Ranks events by impact level (0-5) for prioritization
 - **Verification System**: Tracks source reliability (VERIFIED, SINGLE_SOURCE, UNVERIFIED)
 
@@ -108,6 +109,13 @@ Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
 
 Navigate to [http://localhost:3000/terminal](http://localhost:3000/terminal) to use the command-line interface.
 
+### 6. Access the Admin Interface
+
+Navigate to [http://localhost:3000/admin/ingest](http://localhost:3000/admin/ingest) to:
+- Manually trigger ingestion for each provider
+- Debug parse results without inserting to database
+- View recent ingestion run history with status and error details
+
 ## Database Schema
 
 The application uses the following tables:
@@ -142,7 +150,7 @@ events --area=hollywood-hills --days=30 --type=WEATHER --limit=20
 **Parameters**:
 - `--area`: Area slug (default: hollywood-hills)
 - `--days`: Number of days to look back (default: 7)
-- `--type`: Event type filter (FIRE, WEATHER, CLOSURE, PURSUIT, CRIME, PERMIT, OTHER)
+- `--type`: Event type filter (FIRE, FIRE_WEATHER, WEATHER, CLOSURE, PURSUIT, CRIME, PERMIT, OTHER)
 - `--limit`: Maximum results (default: 10)
 
 ### Alert Queries
@@ -159,7 +167,7 @@ alerts --area=hollywood-hills --days=14 --level=ADVISORY
 - `--level`: Alert level filter (INFO, ADVISORY, CRITICAL)
 - `--limit`: Maximum results (default: 10)
 
-Alerts are events filtered to types: FIRE, WEATHER, CLOSURE, PURSUIT
+Alerts are events filtered to types: FIRE, FIRE_WEATHER, WEATHER, CLOSURE, PURSUIT
 
 ### Project Queries
 
@@ -249,26 +257,70 @@ curl -X POST "http://localhost:3000/api/ingest/run?provider=nws&area=hollywood-h
 **Headers**:
 - `x-ingest-key`: Must match `INGEST_KEY` environment variable
 
+### GET /api/ingest/debug
+
+Test provider parsing without inserting to database (useful for debugging).
+
+```bash
+curl "http://localhost:3000/api/ingest/debug?provider=nws&area=hollywood-hills"
+```
+
+**Parameters**:
+- `provider`: One of `lafd`, `nws`, or `ladbs`
+- `area`: Area slug (default: hollywood-hills)
+
+**Response**:
+```json
+{
+  "ok": true,
+  "provider": "nws",
+  "source_url": "https://api.weather.gov/alerts/active?area=CA",
+  "fetched_count": 42,
+  "parsed_sample": [...],
+  "raw_sample": [...]
+}
+```
+
+### GET /api/ingest/runs
+
+View recent ingestion run history.
+
+```bash
+curl "http://localhost:3000/api/ingest/runs?area=hollywood-hills&limit=20"
+```
+
+**Parameters**:
+- `area`: Area slug (default: hollywood-hills)
+- `limit`: Maximum results (default: 50)
+
 ## Ingestion Pipeline
 
 The ingestion pipeline automatically fetches data from public sources and normalizes it into the database.
 
 ### Providers
 
-1. **LAFD (RSS)**: Fire department alerts
-   - Keyword matching for Hollywood Hills relevance
+1. **LAFD (HTML)**: Fire department alerts
+   - Scrapes HTML from filtered neighborhood alerts page
+   - **Note**: LAFD neighborhood alerts are sparse and NOT comprehensive dispatch logs
+   - Parses multiple pages for historical coverage (up to 90 days)
    - Critical level for evacuation orders
    - Impact scoring based on severity keywords
+   - Expect low volume - zero results during calm periods is normal
 
 2. **NWS (API)**: National Weather Service alerts
-   - Geofenced to Los Angeles region
-   - Verified source
+   - Fetches from api.weather.gov/alerts/active
+   - Geofenced to Los Angeles County / Southern California
+   - Classifies fire weather alerts separately:
+     - **FIRE_WEATHER**: Red Flag Warnings, Wind Warnings, Santa Ana events
+     - **WEATHER**: Other weather alerts (storms, fog, etc.)
+   - Verified source with proper User-Agent header
    - Impact based on severity levels
 
 3. **LADBS (Socrata)**: Building & Safety permits
-   - Geofenced using lat/lng coordinates
+   - Geofenced using lat/lng bounding box
    - Info level by default
    - Recent permits only (last 14 days)
+   - Filtered to Hollywood Hills area
 
 ### Deduplication
 

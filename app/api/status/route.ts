@@ -42,6 +42,19 @@ export async function GET() {
       .order('started_at', { ascending: false })
       .limit(5);
 
+    const coverageByProvider: Record<string, any> = {};
+    for (const provider of ['lafd', 'nws', 'ladbs']) {
+      const lastRun = await supabaseServer
+        .from('ingest_runs')
+        .select('provider, status, finished_at, started_at, items_fetched, items_inserted, error')
+        .eq('provider', provider)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      coverageByProvider[provider] = lastRun.data || null;
+    }
+
     return NextResponse.json({
       ok: true,
       area: area.data,
@@ -51,6 +64,7 @@ export async function GET() {
       last_event_time: lastEventResult.data?.observed_at || null,
       total_events: eventCountResult.count || 0,
       recent_ingests: recentIngestsResult.data || [],
+      coverage: coverageByProvider,
     });
   } catch (error: any) {
     return NextResponse.json(
