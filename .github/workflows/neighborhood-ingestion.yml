@@ -1,0 +1,22 @@
+name: Neighborhood Intelligence Sweep
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Wakes up every 6 hours
+  workflow_dispatch: # Allows you to trigger it manually
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - name: Run Scrapers
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          node scripts/universal-scraper.js --config scripts/scraper-configs/cd4-press.json
+          node scripts/universal-scraper.js --config scripts/scraper-configs/hollywood-hills-tourism.json

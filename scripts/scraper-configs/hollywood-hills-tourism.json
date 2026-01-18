@@ -1,0 +1,8 @@
+{
+    "name": "Hollywood Hills Tourism",
+    "url": "https://cd4.lacity.gov/hollywood-hills-tourism/",
+    "selector": "article, .content-block, section",
+    "titleSelector": "h2, h3",
+    "descSelector": "p",
+    "urlSelector": "a"
+}
