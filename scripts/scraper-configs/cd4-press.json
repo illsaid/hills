@@ -1,0 +1,9 @@
+{
+    "name": "CD4 Press Releases",
+    "url": "https://cd4.lacity.gov/press-releases/",
+    "selector": "article",
+    "titleSelector": "h2 a, h2",
+    "descSelector": "p",
+    "urlSelector": "a",
+    "dateSelector": ".date, time"
+}

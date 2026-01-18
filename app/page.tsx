@@ -1,10 +1,15 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { EventCard } from '@/components/EventCard';
-import { ProjectCard } from '@/components/ProjectCard';
+import { WeatherWidget, SystemStatusWidget, CommunityUpdatesWidget } from '@/components/DashboardWidgets';
+import { PermitDashboard } from '@/components/PermitDashboard';
+import { NeighborhoodFrictionDashboard } from '@/components/RoadWorkDashboard';
+import { LegislativeSentinelDashboard } from '@/components/LegislativeSentinelDashboard';
+import { NeighborhoodFeedDashboard } from '@/components/NeighborhoodFeedDashboard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import Link from 'next/link';
-import { Terminal, Activity, AlertTriangle, Briefcase } from 'lucide-react';
+import { Terminal, Shield, Building2, TrafficCone, Landmark, Newspaper } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,15 +22,16 @@ export default async function Dashboard() {
 
   if (!area.data) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-titanium-900 text-slate-900 dark:text-titanium-50">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Area Not Found</h1>
-          <p className="text-gray-600">Hollywood Hills area has not been configured yet.</p>
+          <h1 className="text-2xl font-light mb-2">Area Not Found</h1>
+          <p className="text-slate-500 dark:text-titanium-400">Hollywood Hills area has not been configured yet.</p>
         </div>
       </div>
     );
   }
 
+  // Fetch only Top Events for the center feed
   const topEvents = await supabaseServer
     .from('events')
     .select('*, source:sources(*)')
@@ -33,30 +39,7 @@ export default async function Dashboard() {
     .eq('is_seed', false)
     .order('impact', { ascending: false })
     .order('observed_at', { ascending: false })
-    .limit(10);
-
-  const alertsCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const alertTypes = ['FIRE', 'FIRE_WEATHER', 'WEATHER', 'CLOSURE', 'PURSUIT'];
-
-  const recentAlerts = await supabaseServer
-    .from('events')
-    .select('*, source:sources(*)')
-    .eq('area_id', area.data.id)
-    .eq('is_seed', false)
-    .in('event_type', alertTypes)
-    .gte('observed_at', alertsCutoff.toISOString())
-    .order('observed_at', { ascending: false })
-    .limit(10);
-
-  const projectsCutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-  const recentProjects = await supabaseServer
-    .from('projects')
-    .select('*')
-    .eq('area_id', area.data.id)
-    .gte('last_activity_at', projectsCutoff.toISOString())
-    .order('last_activity_at', { ascending: false })
-    .limit(10);
+    .limit(20); // Increased limit as it's the main feed now
 
   const lastUpdate = await supabaseServer
     .from('events')
@@ -67,106 +50,137 @@ export default async function Dashboard() {
     .maybeSingle();
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-slate-50 dark:bg-transparent text-slate-900 dark:text-titanium-50 font-sans selection:bg-blue-500/30">
+      {/* HUD Header */}
+      <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-titanium-900/80 backdrop-blur-xl">
+        <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">THE HILLS LEDGER</h1>
-              <p className="text-sm text-gray-600">{area.data.name} Decision Support Brief</p>
+              <h1 className="text-lg font-medium tracking-wide text-slate-900 dark:text-titanium-50">THE HILLS LEDGER</h1>
+              <p className="text-[10px] text-slate-500 dark:text-titanium-400 uppercase tracking-widest">Decision Support Brief • {area.data.name}</p>
             </div>
-            <div className="flex items-center gap-4">
-              {lastUpdate.data && (
-                <div className="text-xs text-gray-500">
-                  Last update: {new Date(lastUpdate.data.observed_at).toLocaleString()}
-                </div>
-              )}
-              <Link href="/terminal">
-                <Button variant="outline" className="gap-2">
-                  <Terminal className="w-4 h-4" />
-                  Terminal
-                </Button>
-              </Link>
-            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {lastUpdate.data && (
+              <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 dark:text-titanium-400 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Updated: {new Date(lastUpdate.data.observed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            )}
+            <ThemeToggle />
+            <Link href="/terminal">
+              <Button variant="outline" size="sm" className="gap-2 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-titanium-300 transition-all">
+                <Terminal className="w-4 h-4" />
+                <span className="hidden sm:inline">Terminal</span>
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <section className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <Activity className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-900">Top Events</h2>
-            <Badge variant="outline" className="ml-auto">
-              {topEvents.data?.length || 0} events
-            </Badge>
+      <main className="max-w-[1600px] mx-auto px-6 py-8">
+
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+          {/* Left Column: Widgets (Weather, Status) */}
+          <div className="lg:col-span-3 space-y-6 lg:sticky lg:top-24">
+            <div className="flex items-center justify-between mb-2 px-2">
+              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100">
+                Conditions
+              </h2>
+            </div>
+            <div className="h-64">
+              <WeatherWidget />
+            </div>
+            <div>
+              <SystemStatusWidget />
+            </div>
           </div>
 
-          {topEvents.data && topEvents.data.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {topEvents.data.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
+          {/* Middle Column: Main Feed */}
+          <div className="lg:col-span-6 space-y-6">
+            <div className="flex items-center justify-between mb-2 px-2">
+              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
+                Top Events <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">Live Feed</span>
+              </h2>
+              <Badge variant="outline" className="border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 text-slate-500 dark:text-titanium-400">
+                {topEvents.data?.length || 0} Active
+              </Badge>
             </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No events reported
-            </div>
-          )}
-        </section>
 
-        <section className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <AlertTriangle className="w-6 h-6 text-orange-600" />
-            <h2 className="text-xl font-bold text-gray-900">Recent Alerts</h2>
-            <Badge variant="outline" className="ml-auto">
-              Last 7 days
-            </Badge>
+            <div className="space-y-4 min-h-[500px]">
+              {topEvents.data && topEvents.data.length > 0 ? (
+                topEvents.data.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))
+              ) : (
+                <div className="text-center py-20 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-white/5">
+                  <Shield className="w-12 h-12 text-slate-300 dark:text-titanium-600 mx-auto mb-3" />
+                  <p className="text-slate-500 dark:text-titanium-400">No active events reported in your area.</p>
+                  <p className="text-xs text-slate-400 dark:text-titanium-600 mt-1">System is monitoring 24/7</p>
+                </div>
+              )}
+            </div>
+
+            {/* Infrastructure Section - Live Permits from LA City Open Data */}
+            <div className="flex items-center justify-between mb-2 px-2 mt-8 border-t border-slate-200 dark:border-white/5 pt-6">
+              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-blue-500" />
+                Permit Tracker
+                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">90068 • 90046 • 90069</span>
+              </h2>
+            </div>
+
+            <PermitDashboard />
+
+            {/* Neighborhood Friction - StreetsLA Pavement & Road Work */}
+            <div className="flex items-center justify-between mb-2 px-2 mt-8 border-t border-slate-200 dark:border-white/5 pt-6">
+              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
+                <TrafficCone className="w-5 h-5 text-amber-500" />
+                Neighborhood Friction
+                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">Street Work & Delays</span>
+              </h2>
+            </div>
+
+            <NeighborhoodFrictionDashboard />
+
+            {/* Legislative Sentinel - CD4 Press Releases & Updates */}
+            <div className="flex items-center justify-between mb-2 px-2 mt-8 border-t border-slate-200 dark:border-white/5 pt-6">
+              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
+                <Landmark className="w-5 h-5 text-indigo-500" />
+                Legislative Sentinel
+                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">CD4 Updates</span>
+              </h2>
+            </div>
+
+            <LegislativeSentinelDashboard />
+
+            {/* Neighborhood Feed - Scraped Intel from Various Sources */}
+            <div className="flex items-center justify-between mb-2 px-2 mt-8 border-t border-slate-200 dark:border-white/5 pt-6">
+              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
+                <Newspaper className="w-5 h-5 text-cyan-500" />
+                Neighborhood Feed
+                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">Scraped Intel</span>
+              </h2>
+            </div>
+
+            <NeighborhoodFeedDashboard />
           </div>
 
-          {recentAlerts.data && recentAlerts.data.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {recentAlerts.data.map((alert) => (
-                <EventCard key={alert.id} event={alert} />
-              ))}
+          {/* Right Column: Community Updates */}
+          <div className="lg:col-span-3 lg:sticky lg:top-24">
+            <div className="flex items-center justify-between mb-2 px-2">
+              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100">
+                Community
+              </h2>
             </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No recent alerts
-            </div>
-          )}
-        </section>
-
-        <section className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <Briefcase className="w-6 h-6 text-teal-600" />
-            <h2 className="text-xl font-bold text-gray-900">Projects to Watch</h2>
-            <Badge variant="outline" className="ml-auto">
-              Last 30 days
-            </Badge>
+            <CommunityUpdatesWidget />
           </div>
 
-          {recentProjects.data && recentProjects.data.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {recentProjects.data.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No recent project activity
-            </div>
-          )}
-        </section>
-      </main>
-
-      <footer className="bg-white border-t border-gray-200 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-xs text-gray-500 text-center">
-            Decision-support brief. For emergencies follow official channels. Data sources may vary in reliability and timeliness.
-          </p>
         </div>
-      </footer>
+      </main>
     </div>
   );
 }

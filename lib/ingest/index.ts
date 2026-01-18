@@ -1,12 +1,11 @@
 import { Provider, IngestionContext, IngestionResult } from './types';
-import { lafdProvider } from './providers/lafd';
+// lafd provider removed
 import { nwsProvider } from './providers/nws';
 import { ladbsProvider } from './providers/ladbs';
 import { supabaseServer } from '@/lib/supabase/server';
 import { HOLLYWOOD_HILLS_KEYWORDS } from './utils';
 
 const providers: Record<string, Provider> = {
-  lafd: lafdProvider,
   nws: nwsProvider,
   ladbs: ladbsProvider,
 };

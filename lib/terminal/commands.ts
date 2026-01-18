@@ -176,7 +176,7 @@ async function executeIngest(args: Record<string, string>): Promise<CommandResul
     if (!provider) {
       return {
         type: 'error',
-        message: 'Usage: ingest --provider=<lafd|nws|ladbs> --area=<slug>',
+        message: 'Usage: ingest --provider=<nws|ladbs> --area=<slug>',
       };
     }
 
@@ -230,7 +230,7 @@ Available Commands:
   project <project_id>
     Get detailed information about a specific project
 
-  ingest --provider=<lafd|nws|ladbs> --area=<slug>
+  ingest --provider=<nws|ladbs> --area=<slug>
     Manually trigger data ingestion (requires ingest key)
 
   clear

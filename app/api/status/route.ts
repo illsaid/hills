@@ -43,7 +43,7 @@ export async function GET() {
       .limit(5);
 
     const coverageByProvider: Record<string, any> = {};
-    for (const provider of ['lafd', 'nws', 'ladbs']) {
+    for (const provider of ['nws', 'ladbs']) {
       const lastRun = await supabaseServer
         .from('ingest_runs')
         .select('provider, status, finished_at, started_at, items_fetched, items_inserted, error')

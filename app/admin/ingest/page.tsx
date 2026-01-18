@@ -123,7 +123,7 @@ export default function AdminIngestPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {['lafd', 'nws', 'ladbs'].map((provider) => (
+              {['nws', 'ladbs'].map((provider) => (
                 <div key={provider} className="flex flex-col gap-2 p-4 border rounded-lg">
                   <h3 className="font-semibold uppercase text-sm">{provider}</h3>
                   <div className="flex gap-2">
@@ -215,8 +215,8 @@ export default function AdminIngestPage() {
                             run.status === 'SUCCESS'
                               ? 'default'
                               : run.status === 'ERROR'
-                              ? 'destructive'
-                              : 'secondary'
+                                ? 'destructive'
+                                : 'secondary'
                           }
                         >
                           {run.status}

@@ -7,7 +7,7 @@ A production-ready decision-support platform for monitoring events, alerts, and 
 - **Dashboard**: Clean, premium interface showing today's top events, recent alerts, and active projects
 - **Terminal**: Command-line interface for power users with advanced querying capabilities
 - **Real-time Data Ingestion**: Automated pipeline pulling from multiple public data sources:
-  - LAFD Alerts (HTML scraping - filtered to neighborhood, expect low volume)
+
   - National Weather Service (API - includes fire weather warnings)
   - LA Department of Building & Safety Permits (Socrata API)
 - **Admin Interface**: `/admin/ingest` page for manual ingestion triggers and debugging
@@ -299,15 +299,7 @@ The ingestion pipeline automatically fetches data from public sources and normal
 
 ### Providers
 
-1. **LAFD (HTML)**: Fire department alerts
-   - Scrapes HTML from filtered neighborhood alerts page
-   - **Note**: LAFD neighborhood alerts are sparse and NOT comprehensive dispatch logs
-   - Parses multiple pages for historical coverage (up to 90 days)
-   - Critical level for evacuation orders
-   - Impact scoring based on severity keywords
-   - Expect low volume - zero results during calm periods is normal
-
-2. **NWS (API)**: National Weather Service alerts
+1. **NWS (API)**: National Weather Service alerts
    - Fetches from api.weather.gov/alerts/active
    - Geofenced to Los Angeles County / Southern California
    - Classifies fire weather alerts separately:
@@ -316,7 +308,7 @@ The ingestion pipeline automatically fetches data from public sources and normal
    - Verified source with proper User-Agent header
    - Impact based on severity levels
 
-3. **LADBS (Socrata)**: Building & Safety permits
+2. **LADBS (Socrata)**: Building & Safety permits
    - Geofenced using lat/lng bounding box
    - Info level by default
    - Recent permits only (last 14 days)
