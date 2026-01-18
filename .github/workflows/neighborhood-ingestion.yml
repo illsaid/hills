@@ -15,8 +15,8 @@ jobs:
       - run: npm install
       - name: Run Scrapers
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           node scripts/universal-scraper.js --config scripts/scraper-configs/cd4-press.json
           node scripts/universal-scraper.js --config scripts/scraper-configs/hollywood-hills-tourism.json
