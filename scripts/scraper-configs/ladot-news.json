@@ -1,0 +1,9 @@
+{
+    "name": "LADOT News",
+    "url": "https://ladot.lacity.gov/dotnews",
+    "selector": "article, .news-item, .card, .content-block",
+    "titleSelector": "h2, h3, .title",
+    "descSelector": "p, .description, .summary",
+    "urlSelector": "a",
+    "notes": "LADOT traffic advisories and road closures for Hollywood Hills area (90068, 90046, 90069)"
+}
