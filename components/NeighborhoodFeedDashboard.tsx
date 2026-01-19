@@ -17,6 +17,12 @@ interface IntelItem {
     priority?: number;
     published_at: string | null;
     created_at: string;
+    metadata?: {
+        source_type?: string;
+        source_name?: string;
+        image_url?: string;
+        [key: string]: any;
+    };
 }
 
 interface FeedResponse {
@@ -48,10 +54,16 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string; icon: any }> =
         text: 'text-purple-700 dark:text-purple-400',
         icon: Palmtree,
     },
-    'Social Pulse': {
+    'News Feed': {
         bg: 'bg-cyan-100 dark:bg-cyan-900/30 border-cyan-300 dark:border-cyan-700/50',
         text: 'text-cyan-700 dark:text-cyan-400',
         icon: MessageSquare,
+    },
+    // Different tint for news articles (from NewsData)
+    'News Article': {
+        bg: 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-700/50',
+        text: 'text-indigo-700 dark:text-indigo-400',
+        icon: Newspaper,
     },
     News: {
         bg: 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700/50',
@@ -171,27 +183,35 @@ export function NeighborhoodFeedDashboard({ category, limit = 10 }: DashboardPro
     return (
         <div className="space-y-3">
             {items.map((item) => {
-                const style = getCategoryStyle(item.category);
+                // Determine if this is a news article (from NewsData) vs social post
+                const isNewsArticle = item.metadata?.source_type === 'news' ||
+                    item.source_name?.includes('NewsData');
+                const isSocialPost = item.source_name?.includes('SociaVault') ||
+                    item.source_name?.includes('Google Search') ||
+                    item.url?.includes('x.com') ||
+                    item.url?.includes('twitter.com');
+
+                // Use different styles for news vs social
+                let styleKey = item.category;
+                if (isNewsArticle) styleKey = 'News Article';
+                else if (isSocialPost && item.category === 'News Feed') styleKey = 'News Feed';
+
+                const style = getCategoryStyle(styleKey);
                 const IconComponent = style.icon;
 
-                if (item.category === 'Social Pulse') {
-                    // Extract handle from source_name or title if possible, or use source_name
-                    // Our script saves "Search Sentinel (X)" as source_name, but handle might be in title
-                    // Actually, the new script sets source_name='Search Sentinel (X)'
-                    // but we probably want to extract the actual handle from the title/description or url if possible.
-                    // For now, let's parse the URL for handle if it's an x.com link
+                // Render social posts with SocialPulseCard
+                if (isSocialPost && item.category === 'News Feed') {
                     let handle = item.source_name;
                     const linkMatch = item.url?.match(/x\.com\/([^\/]+)/);
                     if (linkMatch) handle = linkMatch[1];
                     else if (handle.startsWith('@')) handle = handle.substring(1);
-                    // If source is Search Sentinel (X), try to parse author from title if possible, or just leave it
-                    if (handle === 'Search Sentinel (X)' && item.title.includes('(@')) {
+                    if (handle?.includes('SociaVault') && item.title.includes('(@')) {
                         const titleMatch = item.title.match(/\(@([^)]+)\)/);
                         if (titleMatch) handle = titleMatch[1];
                     }
 
                     const post = {
-                        author: handle,
+                        author: handle || 'Unknown',
                         content: item.description || item.title,
                         time_ago: item.published_at ? new Date(item.published_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now',
                         priority: item.priority === 1 ? 'High' : 'Normal',
@@ -201,6 +221,44 @@ export function NeighborhoodFeedDashboard({ category, limit = 10 }: DashboardPro
                     return <div key={item.id}><SocialPulseCard post={post} /></div>;
                 }
 
+                // Render news articles with indigo tint
+                if (isNewsArticle) {
+                    return (
+                        <div
+                            key={item.id}
+                            className="group p-4 rounded-xl border border-indigo-200 dark:border-indigo-700/50 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-all"
+                        >
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                    {/* Title with link */}
+                                    <h3 className="font-medium text-slate-900 dark:text-titanium-100 text-sm leading-tight line-clamp-2">
+                                        {item.url ? (
+                                            <a href={item.url} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline">
+                                                📰 {item.title}
+                                            </a>
+                                        ) : (
+                                            <>📰 {item.title}</>
+                                        )}
+                                    </h3>
+                                    {/* Description */}
+                                    {item.description && (
+                                        <p className="mt-1 text-xs text-slate-600 dark:text-titanium-400 line-clamp-2">
+                                            {item.description}
+                                        </p>
+                                    )}
+                                    {/* Source and date */}
+                                    <div className="mt-2 flex items-center gap-2 text-xs text-indigo-600 dark:text-indigo-400">
+                                        <span className="font-medium">{item.metadata?.source_name || item.source_name}</span>
+                                        <span>•</span>
+                                        <span>{formatDate(item.published_at)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
+                // Default card for other items
                 return (
                     <div
                         key={item.id}

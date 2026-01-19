@@ -29,8 +29,8 @@ export async function GET(request: Request) {
         if (category) {
             query = query.eq('category', category);
 
-            // For Social Pulse, only show posts from the last 48 hours
-            if (category === 'Social Pulse') {
+            // For News Feed, only show posts from the last 48 hours
+            if (category === 'News Feed') {
                 const cutoff = new Date();
                 cutoff.setHours(cutoff.getHours() - 48);
                 query = query.gte('published_at', cutoff.toISOString());

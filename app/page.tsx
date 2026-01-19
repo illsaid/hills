@@ -148,10 +148,10 @@ export default async function Dashboard() {
             <div className="flex items-center justify-between mb-2 px-2">
               <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
                 <Newspaper className="w-4 h-4 text-cyan-500" />
-                Social Feed
+                News Feed
               </h2>
             </div>
-            <NeighborhoodFeedDashboard category="Social Pulse" limit={20} />
+            <NeighborhoodFeedDashboard category="News Feed" limit={20} />
           </div>
 
         </div>

@@ -26,8 +26,11 @@ jobs:
           # Google Search for keyword backup
           GOOGLE_SEARCH_CX: ${{ secrets.GOOGLE_SEARCH_CX }}
           GOOGLE_SEARCH_API_KEY: ${{ secrets.GOOGLE_SEARCH_API_KEY }}
+          # NewsData.io for news articles
+          NEWSDATA_API_KEY: ${{ secrets.NEWSDATA_API_KEY }}
         run: |
           echo "🔔 Running hourly alert scrapers..."
           node scripts/lafd-alerts.js
           node scripts/social-sentinel.js
+          node scripts/news-sentinel.js
           echo "✅ Hourly alerts complete"

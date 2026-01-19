@@ -165,7 +165,7 @@ async function fetchFromSociaVault() {
                     title: `${displayName} (@${screenName}): "${text.slice(0, 100)}..."`,
                     description: text,
                     url: `https://x.com/${screenName}/status/${tweetId}`,
-                    category: 'Social Pulse',
+                    category: 'News Feed',
                     priority: isHighPriority ? 1 : 3,
                     published_at: tweetDate.toISOString(),
                     metadata: { tweet_id: tweetId, handle: screenName, source: 'sociavault' }
@@ -247,7 +247,7 @@ async function fetchFromGoogleSearch() {
                 title: item.title,
                 description: item.snippet,
                 url: item.link,
-                category: 'Social Pulse',
+                category: 'News Feed',
                 priority: isHighPriority ? 1 : 3,
                 published_at: (postDate || new Date()).toISOString(),
                 metadata: { handle, source: 'google' }
@@ -271,12 +271,12 @@ async function purgeOldPosts() {
     const cutoff = new Date();
     cutoff.setHours(cutoff.getHours() - MAX_AGE_HOURS);
 
-    console.log(`🧹 Purging Social Pulse posts older than ${MAX_AGE_HOURS} hours...`);
+    console.log(`🧹 Purging News Feed posts older than ${MAX_AGE_HOURS} hours...`);
 
     const { error, count } = await supabase
         .from('neighborhood_intel')
         .delete()
-        .eq('category', 'Social Pulse')
+        .eq('category', 'News Feed')
         .lt('published_at', cutoff.toISOString());
 
     if (error) {
