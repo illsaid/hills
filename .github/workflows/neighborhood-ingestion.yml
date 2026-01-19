@@ -1,23 +1,40 @@
 name: Neighborhood Intelligence Sweep
+
 on:
   schedule:
     - cron: '0 */6 * * *' # Wakes up every 6 hours
-  workflow_dispatch: # Allows you to trigger it manually
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # --- NEW GOOGLE AUTH STEP ---
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}'
+      # ----------------------------
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+
       - run: npm install
+
       - name: Run Scrapers
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # NEW: Search credentials for the Social Sentinel
+          GOOGLE_SEARCH_CX: ${{ secrets.GOOGLE_SEARCH_CX }}
+          GOOGLE_SEARCH_API_KEY: ${{ secrets.GOOGLE_SEARCH_API_KEY }}
         run: |
           node scripts/universal-scraper.js --config scripts/scraper-configs/cd4-press.json
           node scripts/universal-scraper.js --config scripts/scraper-configs/hollywood-hills-tourism.json
           node scripts/universal-scraper.js --config scripts/scraper-configs/ladot-news.json
+          # Run the new Social Sentinel
+          node scripts/social-sentinel.js
