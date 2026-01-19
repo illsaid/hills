@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Newspaper, Loader2, AlertCircle, ExternalLink, AlertTriangle, TrafficCone, Home, Palmtree, MessageSquare } from 'lucide-react';
+import { Newspaper, Loader2, AlertCircle, ExternalLink, AlertTriangle, TrafficCone, Home, Palmtree, MessageSquare, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { supabaseBrowser } from '@/lib/supabase/browser';
 import SocialPulseCard from './SocialPulseCard';
 
 interface IntelItem {
@@ -70,6 +71,7 @@ export function NeighborhoodFeedDashboard({ category, limit = 10 }: DashboardPro
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        // Initial fetch
         async function fetchFeed() {
             try {
                 const url = new URL('/api/neighborhood-feed', window.location.origin);
@@ -92,7 +94,41 @@ export function NeighborhoodFeedDashboard({ category, limit = 10 }: DashboardPro
         }
 
         fetchFeed();
-    }, []);
+
+        // Realtime Subscription
+        const channelName = category ? `neighborhood_intel:${category}` : 'neighborhood_intel:all';
+        const channel = supabaseBrowser
+            .channel(channelName)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'neighborhood_intel',
+                    // We filter manually in callback to ensure rigorous matching or if filter param limitations apply
+                },
+                (payload) => {
+                    const newItem = payload.new as IntelItem;
+
+                    // Filter by category if prop is provided
+                    if (category && newItem.category !== category) {
+                        return;
+                    }
+
+                    // Prepend new item
+                    setItems((prev) => {
+                        // Avoid duplicates just in case
+                        if (prev.some(i => i.id === newItem.id)) return prev;
+                        return [newItem, ...prev].slice(0, limit + 5); // Keep list relatively bounded
+                    });
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabaseBrowser.removeChannel(channel);
+        };
+    }, [category, limit]);
 
     if (loading) {
         return (

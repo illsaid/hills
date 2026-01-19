@@ -1,0 +1,33 @@
+name: Realtime Alerts (Hourly)
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Every hour
+  workflow_dispatch:
+
+jobs:
+  alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - run: npm install
+
+      - name: Run Hourly Scrapers
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # SociaVault for account monitoring
+          SOCIAVAULT_API_KEY: ${{ secrets.SOCIAVAULT_API_KEY }}
+          # Google Search for keyword backup
+          GOOGLE_SEARCH_CX: ${{ secrets.GOOGLE_SEARCH_CX }}
+          GOOGLE_SEARCH_API_KEY: ${{ secrets.GOOGLE_SEARCH_API_KEY }}
+        run: |
+          echo "🔔 Running hourly alert scrapers..."
+          node scripts/lafd-alerts.js
+          node scripts/social-sentinel.js
+          echo "✅ Hourly alerts complete"

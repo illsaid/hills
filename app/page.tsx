@@ -1,16 +1,15 @@
 import { supabaseServer } from '@/lib/supabase/server';
-import { EventCard } from '@/components/EventCard';
 import { WeatherWidget, SystemStatusWidget } from '@/components/DashboardWidgets';
 import { AtmosphericPulse } from '@/components/AtmosphericPulse';
 import { PermitDashboard } from '@/components/PermitDashboard';
 import { NeighborhoodFrictionDashboard } from '@/components/RoadWorkDashboard';
 import { LegislativeSentinelDashboard } from '@/components/LegislativeSentinelDashboard';
+import { UnifiedFeedDashboard } from '@/components/UnifiedFeedDashboard';
 import { NeighborhoodFeedDashboard } from '@/components/NeighborhoodFeedDashboard';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import Link from 'next/link';
-import { Terminal, Shield, Building2, TrafficCone, Landmark, Newspaper } from 'lucide-react';
+import { Terminal, Zap, Building2, TrafficCone, Landmark, Newspaper } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,25 +30,6 @@ export default async function Dashboard() {
       </div>
     );
   }
-
-  // Fetch only Top Events for the center feed
-  const topEvents = await supabaseServer
-    .from('events')
-    .select('*, source:sources(*)')
-    .eq('area_id', area.data.id)
-    .eq('is_seed', false)
-    .order('impact', { ascending: false })
-    .order('observed_at', { ascending: false })
-    .limit(20); // Increased limit as it's the main feed now
-
-  const lastUpdate = await supabaseServer
-    .from('events')
-    .select('observed_at')
-    .eq('is_seed', false)
-    .order('observed_at', { ascending: false })
-    .limit(1)
-    .limit(1)
-    .maybeSingle();
 
   // Fetch AQI Data
   const aqiData = await supabaseServer
@@ -81,12 +61,6 @@ export default async function Dashboard() {
           </div>
 
           <div className="flex items-center gap-4">
-            {lastUpdate.data && (
-              <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 dark:text-titanium-400 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Updated: {new Date(lastUpdate.data.observed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </div>
-            )}
             <ThemeToggle />
             <Link href="/terminal">
               <Button variant="outline" size="sm" className="gap-2 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-titanium-300 transition-all">
@@ -123,40 +97,17 @@ export default async function Dashboard() {
             </div>
           </div>
 
-          {/* Middle Column: Main Feed */}
+          {/* Middle Column: Unified Chronological Feed */}
           <div className="lg:col-span-6 space-y-6">
             <div className="flex items-center justify-between mb-2 px-2">
               <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-red-500" />
-                Safety Alerts
-                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">Official LAFD Updates</span>
+                <Zap className="w-5 h-5 text-amber-500" />
+                Live Updates
+                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">All Sources • Sorted by Recency</span>
               </h2>
             </div>
 
-            <NeighborhoodFeedDashboard category="Safety" limit={5} />
-
-            <div className="flex items-center justify-between mb-2 px-2 pt-6 border-t border-slate-200 dark:border-white/5">
-              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
-                Top Events <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">Live Feed</span>
-              </h2>
-              <Badge variant="outline" className="border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 text-slate-500 dark:text-titanium-400">
-                {topEvents.data?.length || 0} Active
-              </Badge>
-            </div>
-
-            <div className="space-y-4 min-h-[500px]">
-              {topEvents.data && topEvents.data.length > 0 ? (
-                topEvents.data.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))
-              ) : (
-                <div className="text-center py-20 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-white/5">
-                  <Shield className="w-12 h-12 text-slate-300 dark:text-titanium-600 mx-auto mb-3" />
-                  <p className="text-slate-500 dark:text-titanium-400">No active events reported in your area.</p>
-                  <p className="text-xs text-slate-400 dark:text-titanium-600 mt-1">System is monitoring 24/7</p>
-                </div>
-              )}
-            </div>
+            <UnifiedFeedDashboard />
 
             {/* Infrastructure Section - Live Permits from LA City Open Data */}
             <div className="flex items-center justify-between mb-2 px-2 mt-8 border-t border-slate-200 dark:border-white/5 pt-6">

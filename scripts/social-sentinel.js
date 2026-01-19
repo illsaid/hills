@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 /**
- * Social Sentinel via Google Custom Search API
+ * Social Sentinel - Hybrid Approach
  * 
- * Uses the official Google Custom Search JSON API to find X.com posts.
- * Filters: "90068" OR "90046" OR "90069" OR "Hollywood Hills"
- * Timeframe: Past 24 hours (dateRestrict='d')
+ * Two data sources:
+ * 1. SociaVault: Monitor high-signal Twitter accounts
+ * 2. Google Custom Search: Keyword-based backup search
+ * 
+ * Strict 48-hour filter on actual post dates.
  */
 
 const { createClient } = require('@supabase/supabase-js');
@@ -16,114 +18,309 @@ require('dotenv').config();
 // Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const searchApiKey = process.env.GOOGLE_SEARCH_API_KEY || process.env.GOOGLE_MAPS_API_KEY; // Fallback
-const searchCx = process.env.GOOGLE_SEARCH_CX;
+const sociaVaultApiKey = process.env.SOCIAVAULT_API_KEY;
+const googleSearchApiKey = process.env.GOOGLE_SEARCH_API_KEY;
+const googleSearchCx = process.env.GOOGLE_SEARCH_CX;
 
 if (!supabaseUrl || !supabaseKey) {
     console.error('❌ Missing Supabase credentials');
     process.exit(1);
 }
 
-if (!searchApiKey || !searchCx) {
-    console.error('❌ Missing Google Search credentials (GOOGLE_SEARCH_API_KEY or GOOGLE_SEARCH_CX)');
-    process.exit(1);
-}
-
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const HIGH_PRIORITY_KEYWORDS = ['Fire', 'Smoke', 'LAPD', 'Emergency', 'Blaze', 'Combustion'];
-// Exact query requested: site:x.com ("90068" OR "90046" OR "90069" OR "Hollywood Hills")
-const SEARCH_QUERY = 'site:x.com ("90068" OR "90046" OR "90069" OR "Hollywood Hills" OR "Beachwood Canyon" OR "Laurel Canyon" OR "Runyon Canyon" OR "Sunset Plaza" OR "Bird Streets" OR "Hollywood Dell" OR "Outpost Estates")';
+// High-priority keywords for priority assignment
+const HIGH_PRIORITY_KEYWORDS = ['Fire', 'Smoke', 'LAPD', 'Emergency', 'Blaze', 'Evacuation', 'Wildfire', 'Brush'];
 
-async function searchGoogleAPI() {
-    const url = new URL('https://www.googleapis.com/customsearch/v1');
-    url.searchParams.append('key', searchApiKey);
-    url.searchParams.append('cx', searchCx);
-    url.searchParams.append('q', SEARCH_QUERY);
-    url.searchParams.append('dateRestrict', 'h[1]'); // Restrict to past 1 hour (aligns with hourly cron)
-    url.searchParams.append('sort', 'date'); // Sort by date (newest first)
+// Core Hills Ledger keywords for filtering
+const HILLS_KEYWORDS = [
+    'hollywood hills', 'beachwood canyon', 'laurel canyon',
+    'runyon canyon', 'sunset plaza', 'bird streets',
+    'hollywood dell', 'outpost estates', 'nichols canyon',
+    'lake hollywood', 'cahuenga pass', '90068', '90046', '90069'
+];
 
-    console.log(`🔍 Searching API: ${SEARCH_QUERY}`);
+// High-signal Twitter handles to monitor
+const HIGH_SIGNAL_HANDLES = [
+    'LAFD', 'LAPDHQ', 'LACoFD', 'CD4LosAngeles', 'MayorOfLA',
+    'KTLA', 'CBSLA', 'ABC7', 'NBCLA', 'LAist', 'LADailyNews'
+];
+
+// Strict 48-hour filter
+const MAX_AGE_HOURS = 48;
+
+/**
+ * Check if a date is within the last 48 hours
+ */
+function isWithin48Hours(date) {
+    if (!date) return false;
+    const now = new Date();
+    const cutoff = new Date(now.getTime() - MAX_AGE_HOURS * 60 * 60 * 1000);
+    return date >= cutoff && date <= now;
+}
+
+/**
+ * Parse date from text (for Google results)
+ */
+function parseDateFromText(text) {
+    const now = new Date();
+
+    // "X days ago"
+    const daysMatch = text.match(/(\d+)\s*days?\s*ago/i);
+    if (daysMatch) {
+        const daysAgo = parseInt(daysMatch[1]);
+        return new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+    }
+
+    // "X hours ago"
+    const hoursMatch = text.match(/(\d+)\s*hours?\s*ago/i);
+    if (hoursMatch) {
+        const hoursAgo = parseInt(hoursMatch[1]);
+        return new Date(now.getTime() - hoursAgo * 60 * 60 * 1000);
+    }
+
+    // "X minutes ago"
+    const minsMatch = text.match(/(\d+)\s*min(ute)?s?\s*ago/i);
+    if (minsMatch) {
+        const minsAgo = parseInt(minsMatch[1]);
+        return new Date(now.getTime() - minsAgo * 60 * 1000);
+    }
+
+    // Absolute date: "Jan 19, 2026"
+    const dateMatch = text.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),?\s+(\d{4})/i);
+    if (dateMatch) {
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const month = monthNames.findIndex(m => m.toLowerCase() === dateMatch[1].toLowerCase());
+        const day = parseInt(dateMatch[2]);
+        const year = parseInt(dateMatch[3]);
+        if (month !== -1) {
+            return new Date(year, month, day);
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Check if text contains Hills keywords
+ */
+function containsHillsKeyword(text) {
+    if (!text) return false;
+    const lowerText = text.toLowerCase();
+    return HILLS_KEYWORDS.some(kw => lowerText.includes(kw.toLowerCase()));
+}
+
+// ============================================================
+// SOURCE 1: SociaVault (Account Monitoring)
+// ============================================================
+
+async function fetchFromSociaVault() {
+    if (!sociaVaultApiKey) {
+        console.log('   ⚠️ SociaVault API key not configured');
+        return [];
+    }
+
+    console.log('\n📡 SociaVault: Fetching from high-signal handles...');
+    const results = [];
+
+    for (const handle of HIGH_SIGNAL_HANDLES) {
+        try {
+            const url = `https://api.sociavault.com/v1/scrape/twitter/user-tweets?handle=${handle}`;
+            const response = await fetch(url, {
+                headers: { 'X-API-Key': sociaVaultApiKey, 'Accept': 'application/json' },
+            });
+
+            if (!response.ok) continue;
+
+            const data = await response.json();
+            const tweets = data.data?.tweets ? Object.values(data.data.tweets) : [];
+
+            for (const tweet of tweets) {
+                const legacy = tweet.legacy || tweet;
+                const text = legacy.full_text || legacy.text || '';
+
+                // Skip if no Hills keywords
+                if (!containsHillsKeyword(text)) continue;
+
+                // Parse tweet date
+                const tweetDate = legacy.created_at ? new Date(legacy.created_at) : null;
+
+                // Strict 48-hour filter
+                if (!isWithin48Hours(tweetDate)) {
+                    continue;
+                }
+
+                const tweetId = tweet.rest_id || legacy.id_str || '';
+                const userResult = tweet.core?.user_results?.result || {};
+                const userLegacy = userResult.legacy || {};
+                const screenName = userLegacy.screen_name || handle;
+                const displayName = userLegacy.name || screenName;
+
+                const isHighPriority = HIGH_PRIORITY_KEYWORDS.some(kw =>
+                    text.toLowerCase().includes(kw.toLowerCase())
+                );
+
+                results.push({
+                    source_name: 'SociaVault (X)',
+                    title: `${displayName} (@${screenName}): "${text.slice(0, 100)}..."`,
+                    description: text,
+                    url: `https://x.com/${screenName}/status/${tweetId}`,
+                    category: 'Social Pulse',
+                    priority: isHighPriority ? 1 : 3,
+                    published_at: tweetDate.toISOString(),
+                    metadata: { tweet_id: tweetId, handle: screenName, source: 'sociavault' }
+                });
+
+                console.log(`   ✅ @${screenName}: ${text.slice(0, 50)}...`);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 200));
+        } catch (error) {
+            console.error(`   ❌ @${handle}: ${error.message}`);
+        }
+    }
+
+    console.log(`   📦 SociaVault found ${results.length} matching tweets`);
+    return results;
+}
+
+// ============================================================
+// SOURCE 2: Google Custom Search (Keyword Backup)
+// ============================================================
+
+async function fetchFromGoogleSearch() {
+    if (!googleSearchApiKey || !googleSearchCx) {
+        console.log('   ⚠️ Google Search API not configured');
+        return [];
+    }
+
+    console.log('\n🔍 Google: Searching for Hills keywords on X.com...');
+    const results = [];
+
+    const SEARCH_QUERY = 'site:x.com ("Hollywood Hills" OR "Laurel Canyon" OR "Runyon Canyon" OR "90068" OR "90046")';
 
     try {
+        const url = new URL('https://www.googleapis.com/customsearch/v1');
+        url.searchParams.append('key', googleSearchApiKey);
+        url.searchParams.append('cx', googleSearchCx);
+        url.searchParams.append('q', SEARCH_QUERY);
+        url.searchParams.append('dateRestrict', 'd[2]'); // Last 2 days
+        url.searchParams.append('sort', 'date');
+        url.searchParams.append('num', '10');
+
         const response = await fetch(url.toString());
-
         if (!response.ok) {
-            const err = await response.json();
-            throw new Error(`Google API Error: ${err.error?.message || response.statusText}`);
-        }
-
-        const data = await response.json();
-        const results = [];
-
-        if (!data.items) {
-            console.log('   ℹ️ No items found in API response.');
+            console.log(`   ⚠️ Google API error: ${response.status}`);
             return [];
         }
 
-        for (const item of data.items) {
-            // Extract handle from title if possible (e.g. "Author (@handle) ...")
+        const data = await response.json();
+        const items = data.items || [];
+
+        for (const item of items) {
+            const fullText = `${item.title} ${item.snippet}`;
+
+            // Parse date from snippet
+            const postDate = parseDateFromText(fullText);
+
+            // Strict 48-hour filter
+            if (!isWithin48Hours(postDate)) {
+                console.log(`   ⏰ Skipping old: ${postDate?.toLocaleDateString() || 'unknown'}`);
+                continue;
+            }
+
+            // Extract handle from URL or title
             let handle = 'Unknown';
-            // Default title format: "Name (@handle) on X: '...'"
             const handleMatch = item.title.match(/\(@([^\)]+)\)/);
             if (handleMatch) handle = handleMatch[1];
-
-            // Fallback: try to guess from link
-            if (handle === 'Unknown' && item.link) {
-                const linkMatch = item.link.match(/x\.com\/([^\/]+)/);
+            else {
+                const linkMatch = item.link?.match(/x\.com\/([^\/]+)/);
                 if (linkMatch) handle = linkMatch[1];
             }
 
-            const fullText = `${item.title} ${item.snippet}`;
-
-            // Priority Check
             const isHighPriority = HIGH_PRIORITY_KEYWORDS.some(kw =>
                 fullText.toLowerCase().includes(kw.toLowerCase())
             );
 
-            console.log(`   🐦 Found: @${handle} - ${item.title.slice(0, 50)}...`);
-
             results.push({
-                source_name: 'Search Sentinel (X)',
+                source_name: 'Google Search (X)',
                 title: item.title,
                 description: item.snippet,
-                url: item.link, // Unique ID
+                url: item.link,
                 category: 'Social Pulse',
                 priority: isHighPriority ? 1 : 3,
-                published_at: new Date().toISOString(), // We could try to parse meta tags if available, but API doesn't give clean iso date in main fields
-                metadata: {
-                    search_metadata: item.pagemap // Store extra metadata just in case
-                }
+                published_at: (postDate || new Date()).toISOString(),
+                metadata: { handle, source: 'google' }
             });
+
+            console.log(`   ✅ @${handle}: ${item.title.slice(0, 50)}...`);
         }
-
-        return results;
-
     } catch (error) {
-        console.error(`❌ API Request failed: ${error.message}`);
-        return [];
+        console.error(`   ❌ Google Search error: ${error.message}`);
+    }
+
+    console.log(`   📦 Google found ${results.length} matching tweets`);
+    return results;
+}
+
+// ============================================================
+// MAIN
+// ============================================================
+
+async function purgeOldPosts() {
+    const cutoff = new Date();
+    cutoff.setHours(cutoff.getHours() - MAX_AGE_HOURS);
+
+    console.log(`🧹 Purging Social Pulse posts older than ${MAX_AGE_HOURS} hours...`);
+
+    const { error, count } = await supabase
+        .from('neighborhood_intel')
+        .delete()
+        .eq('category', 'Social Pulse')
+        .lt('published_at', cutoff.toISOString());
+
+    if (error) {
+        console.error('   ⚠️ Purge error:', error.message);
+    } else {
+        console.log(`   🗑️ Purged ${count || 0} old posts`);
     }
 }
 
 async function main() {
-    console.log('\n🕵️ Search Sentinel (Official API) Starting...\n');
+    console.log('\n🕵️ Social Sentinel (Hybrid) Starting...\n');
 
-    const items = await searchGoogleAPI();
+    // Step 1: Purge old posts
+    await purgeOldPosts();
 
-    if (items.length === 0) {
-        console.log('\n⚠️ No relevant items found.');
+    // Step 2: Fetch from both sources
+    const sociaVaultItems = await fetchFromSociaVault();
+    const googleItems = await fetchFromGoogleSearch();
+
+    // Combine and dedupe by URL
+    const seenUrls = new Set();
+    const allItems = [];
+
+    for (const item of [...sociaVaultItems, ...googleItems]) {
+        if (seenUrls.has(item.url)) continue;
+        seenUrls.add(item.url);
+        allItems.push(item);
+    }
+
+    // Step 3: Upsert to Supabase
+    if (allItems.length === 0) {
+        console.log('\n⚠️ No matching items found within last 48 hours.');
     } else {
-        console.log(`\n✅ Staging ${items.length} items for ingest...`);
+        console.log(`\n✅ Total: ${allItems.length} unique items to sync...`);
 
         const { data, error } = await supabase
             .from('neighborhood_intel')
-            .upsert(items, { onConflict: 'url', ignoreDuplicates: true })
+            .upsert(allItems, { onConflict: 'url', ignoreDuplicates: true })
             .select();
 
         if (error) {
             console.error('❌ Database Error:', error.message);
         } else {
-            console.log(`✅ Successfully synced ${data.length} items.`);
+            console.log(`✅ Successfully synced ${data?.length || 0} items.`);
         }
     }
 

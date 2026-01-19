@@ -28,6 +28,13 @@ export async function GET(request: Request) {
         // Optional category filter
         if (category) {
             query = query.eq('category', category);
+
+            // For Social Pulse, only show posts from the last 48 hours
+            if (category === 'Social Pulse') {
+                const cutoff = new Date();
+                cutoff.setHours(cutoff.getHours() - 48);
+                query = query.gte('published_at', cutoff.toISOString());
+            }
         }
 
         const { data, error } = await query;
