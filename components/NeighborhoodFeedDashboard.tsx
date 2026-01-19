@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Newspaper, Loader2, AlertCircle, ExternalLink, AlertTriangle, TrafficCone, Home, Palmtree } from 'lucide-react';
+import { Newspaper, Loader2, AlertCircle, ExternalLink, AlertTriangle, TrafficCone, Home, Palmtree, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import SocialPulseCard from './SocialPulseCard';
 
 interface IntelItem {
     id: string;
@@ -12,6 +13,7 @@ interface IntelItem {
     description: string | null;
     url: string;
     category: string;
+    priority?: number;
     published_at: string | null;
     created_at: string;
 }
@@ -45,6 +47,11 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string; icon: any }> =
         text: 'text-purple-700 dark:text-purple-400',
         icon: Palmtree,
     },
+    'Social Pulse': {
+        bg: 'bg-cyan-100 dark:bg-cyan-900/30 border-cyan-300 dark:border-cyan-700/50',
+        text: 'text-cyan-700 dark:text-cyan-400',
+        icon: MessageSquare,
+    },
     News: {
         bg: 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700/50',
         text: 'text-blue-700 dark:text-blue-400',
@@ -52,7 +59,12 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string; icon: any }> =
     },
 };
 
-export function NeighborhoodFeedDashboard() {
+interface DashboardProps {
+    category?: string;
+    limit?: number;
+}
+
+export function NeighborhoodFeedDashboard({ category, limit = 10 }: DashboardProps) {
     const [items, setItems] = useState<IntelItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -60,7 +72,11 @@ export function NeighborhoodFeedDashboard() {
     useEffect(() => {
         async function fetchFeed() {
             try {
-                const res = await fetch('/api/neighborhood-feed?limit=10');
+                const url = new URL('/api/neighborhood-feed', window.location.origin);
+                url.searchParams.set('limit', limit.toString());
+                if (category) url.searchParams.set('category', category);
+
+                const res = await fetch(url.toString());
                 const data: FeedResponse = await res.json();
 
                 if (!data.success) {
@@ -122,6 +138,33 @@ export function NeighborhoodFeedDashboard() {
                 const style = getCategoryStyle(item.category);
                 const IconComponent = style.icon;
 
+                if (item.category === 'Social Pulse') {
+                    // Extract handle from source_name or title if possible, or use source_name
+                    // Our script saves "Search Sentinel (X)" as source_name, but handle might be in title
+                    // Actually, the new script sets source_name='Search Sentinel (X)'
+                    // but we probably want to extract the actual handle from the title/description or url if possible.
+                    // For now, let's parse the URL for handle if it's an x.com link
+                    let handle = item.source_name;
+                    const linkMatch = item.url?.match(/x\.com\/([^\/]+)/);
+                    if (linkMatch) handle = linkMatch[1];
+                    else if (handle.startsWith('@')) handle = handle.substring(1);
+                    // If source is Search Sentinel (X), try to parse author from title if possible, or just leave it
+                    if (handle === 'Search Sentinel (X)' && item.title.includes('(@')) {
+                        const titleMatch = item.title.match(/\(@([^)]+)\)/);
+                        if (titleMatch) handle = titleMatch[1];
+                    }
+
+                    const post = {
+                        author: handle,
+                        content: item.description || item.title,
+                        time_ago: item.published_at ? new Date(item.published_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now',
+                        priority: item.priority === 1 ? 'High' : 'Normal',
+                        url: item.url
+                    };
+
+                    return <div key={item.id}><SocialPulseCard post={post} /></div>;
+                }
+
                 return (
                     <div
                         key={item.id}
@@ -130,8 +173,20 @@ export function NeighborhoodFeedDashboard() {
                         <div className="flex items-start justify-between gap-4">
                             <div className="flex-1 min-w-0">
                                 {/* Title */}
+                                {/* Title */}
                                 <h3 className="font-medium text-slate-900 dark:text-titanium-100 text-sm leading-tight line-clamp-2">
-                                    {item.title}
+                                    {item.url ? (
+                                        <a
+                                            href={item.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                                        >
+                                            {item.title}
+                                        </a>
+                                    ) : (
+                                        item.title
+                                    )}
                                 </h3>
 
                                 {/* Description */}
@@ -162,29 +217,29 @@ export function NeighborhoodFeedDashboard() {
 
                             {/* Read More button */}
                             {item.url && (
-                                <a
-                                    href={item.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex-shrink-0"
+                                <Button
+                                    asChild
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-shrink-0 gap-1.5 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-titanium-300 transition-all"
                                 >
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="gap-1.5 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-titanium-300 transition-all"
+                                    <a
+                                        href={item.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                     >
                                         <ExternalLink className="w-3.5 h-3.5" />
-                                    </Button>
-                                </a>
+                                    </a>
+                                </Button>
                             )}
                         </div>
                     </div>
                 );
             })}
 
-            {items.length >= 10 && (
+            {items.length >= limit && (
                 <p className="text-center text-[10px] text-slate-400 dark:text-titanium-600 pt-2">
-                    Showing latest 10 items
+                    Showing latest {limit} items
                 </p>
             )}
         </div>

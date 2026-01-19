@@ -1,6 +1,7 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { EventCard } from '@/components/EventCard';
-import { WeatherWidget, SystemStatusWidget, CommunityUpdatesWidget } from '@/components/DashboardWidgets';
+import { WeatherWidget, SystemStatusWidget } from '@/components/DashboardWidgets';
+import { AtmosphericPulse } from '@/components/AtmosphericPulse';
 import { PermitDashboard } from '@/components/PermitDashboard';
 import { NeighborhoodFrictionDashboard } from '@/components/RoadWorkDashboard';
 import { LegislativeSentinelDashboard } from '@/components/LegislativeSentinelDashboard';
@@ -47,7 +48,25 @@ export default async function Dashboard() {
     .eq('is_seed', false)
     .order('observed_at', { ascending: false })
     .limit(1)
+    .limit(1)
     .maybeSingle();
+
+  // Fetch AQI Data
+  const aqiData = await supabaseServer
+    .from('neighborhood_intel')
+    .select('*')
+    .eq('source_name', 'Google AQI')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const aqiProps = aqiData.data ? {
+    avgAQI: aqiData.data.metadata?.avg_aqi || 0,
+    locations: aqiData.data.metadata?.locations || [],
+    spikeDetected: aqiData.data.metadata?.spike_detected || false,
+    dominantPollutant: aqiData.data.description?.split('Dominant: ')[1]?.replace('.', '') || 'Unknown',
+    lastUpdated: aqiData.data.published_at || new Date().toISOString()
+  } : null;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-transparent text-slate-900 dark:text-titanium-50 font-sans selection:bg-blue-500/30">
@@ -85,7 +104,7 @@ export default async function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
           {/* Left Column: Widgets (Weather, Status) */}
-          <div className="lg:col-span-3 space-y-6 lg:sticky lg:top-24">
+          <div className="lg:col-span-3 space-y-6">
             <div className="flex items-center justify-between mb-2 px-2">
               <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100">
                 Conditions
@@ -94,6 +113,11 @@ export default async function Dashboard() {
             <div className="h-64">
               <WeatherWidget />
             </div>
+            {aqiProps && (
+              <div>
+                <AtmosphericPulse {...aqiProps} />
+              </div>
+            )}
             <div>
               <SystemStatusWidget />
             </div>
@@ -102,6 +126,16 @@ export default async function Dashboard() {
           {/* Middle Column: Main Feed */}
           <div className="lg:col-span-6 space-y-6">
             <div className="flex items-center justify-between mb-2 px-2">
+              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
+                <Shield className="w-5 h-5 text-red-500" />
+                Safety Alerts
+                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">Official LAFD Updates</span>
+              </h2>
+            </div>
+
+            <NeighborhoodFeedDashboard category="Safety" limit={5} />
+
+            <div className="flex items-center justify-between mb-2 px-2 pt-6 border-t border-slate-200 dark:border-white/5">
               <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
                 Top Events <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">Live Feed</span>
               </h2>
@@ -156,27 +190,17 @@ export default async function Dashboard() {
             </div>
 
             <LegislativeSentinelDashboard />
-
-            {/* Neighborhood Feed - Scraped Intel from Various Sources */}
-            <div className="flex items-center justify-between mb-2 px-2 mt-8 border-t border-slate-200 dark:border-white/5 pt-6">
-              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
-                <Newspaper className="w-5 h-5 text-cyan-500" />
-                Neighborhood Feed
-                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">Scraped Intel</span>
-              </h2>
-            </div>
-
-            <NeighborhoodFeedDashboard />
           </div>
 
-          {/* Right Column: Community Updates */}
-          <div className="lg:col-span-3 lg:sticky lg:top-24">
+          {/* Right Column: Neighborhood Feed (Social Sentinel) */}
+          <div className="lg:col-span-3 space-y-6">
             <div className="flex items-center justify-between mb-2 px-2">
-              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100">
-                Community
+              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
+                <Newspaper className="w-4 h-4 text-cyan-500" />
+                Social Feed
               </h2>
             </div>
-            <CommunityUpdatesWidget />
+            <NeighborhoodFeedDashboard category="Social Pulse" limit={20} />
           </div>
 
         </div>

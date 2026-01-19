@@ -1,7 +1,7 @@
 name: Neighborhood Intelligence Sweep
 on:
   schedule:
-    - cron: '0 */6 * * *' # Wakes up every 6 hours
+    - cron: '0 * * * *' # Wakes up every hour
   workflow_dispatch: # Allows you to trigger it manually
 
 jobs:
@@ -21,3 +21,6 @@ jobs:
           node scripts/universal-scraper.js --config scripts/scraper-configs/cd4-press.json
           node scripts/universal-scraper.js --config scripts/scraper-configs/hollywood-hills-tourism.json
           node scripts/universal-scraper.js --config scripts/scraper-configs/ladot-news.json
+          node scripts/safety-dispatch.js
+          node scripts/lafd-alerts.js
+          node scripts/social-sentinel.js
