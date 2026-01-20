@@ -5,12 +5,12 @@ import { PermitDashboard } from '@/components/PermitDashboard';
 import { NeighborhoodFrictionDashboard } from '@/components/RoadWorkDashboard';
 import { LegislativeSentinelDashboard } from '@/components/LegislativeSentinelDashboard';
 import { UnifiedFeedDashboard } from '@/components/UnifiedFeedDashboard';
-import { NeighborhoodFeedDashboard } from '@/components/NeighborhoodFeedDashboard';
 import { SecurityBrief } from '@/components/SecurityBrief';
 import { HillsLiveDashboard } from '@/components/HillsLiveDashboard';
 import { ActivityIndex } from '@/components/ActivityIndex';
 import { NeighborhoodSignals } from '@/components/NeighborhoodSignals';
 import { MaintenanceSignals } from '@/components/MaintenanceSignals';
+import { NewsFeed } from '@/components/NewsFeed';
 import { MarketIntel } from '@/components/MarketIntel';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -166,13 +166,7 @@ export default async function Dashboard() {
             <ActivityIndex />
             <MaintenanceSignals />
 
-            <div className="flex items-center justify-between mb-2 px-2">
-              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
-                <Newspaper className="w-4 h-4 text-cyan-500" />
-                News Feed
-              </h2>
-            </div>
-            <NeighborhoodFeedDashboard category="News Feed" limit={20} />
+            <NewsFeed />
           </div>
 
         </div>

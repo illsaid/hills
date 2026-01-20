@@ -1,0 +1,21 @@
+{
+  "updated_at": "2026-01-20T12:54:19.822385",
+  "items": [
+    {
+      "headline": "Fatal Traffic Collision On Northbound 5 Freeway",
+      "source": "Canyon News",
+      "url": "https://www.canyon-news.com/fatal-traffic-collision-on-northbound-5-freeway/",
+      "published": "2026-01-20T15:49:52",
+      "summary": "GRIFFITH PARK\u2014On Sunday, January 18, the Los Angeles Fire Department reported a traffic collision left one person dead. The LAFD reported at 3:20 a.m. on the northbound 5 freeway a five-car traffic co...",
+      "keyword_match": "Griffith Park"
+    },
+    {
+      "headline": "One dead and five injured as multiple vehicles collide near Griffith Park",
+      "source": "LA Times",
+      "url": "https://www.latimes.com/california/story/2026-01-18/griffith-park-crash-leaves-one-dead-five-injured-sunday-morning",
+      "published": "2026-01-18T18:19:03",
+      "summary": "A 25-year-old man was killed in a crash early Sunday morning on the northbound 5 Freeway near Griffith Park....",
+      "keyword_match": "Griffith Park"
+    }
+  ]
+}
