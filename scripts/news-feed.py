@@ -20,7 +20,12 @@ KEYWORDS = [
     "Beachwood Canyon", "Nichols Canyon", "Bird Streets",
     "Sunset Strip", "Hollywood Blvd", "Franklin Ave",
     "90046", "90068", "90069",
-    "Runyon", "Griffith Park", "Hollywood Bowl"
+    "Griffith Park", "Hollywood Bowl",
+    "Cahuenga Pass", "Hollywood Reservoir", "Lake Hollywood",
+    "Hollywood sign", "Sunset Plaza",
+    "Laurel Canyon Boulevard", "Laurel Cyn",
+    "Outpost Drive", "Wonderland Avenue",
+    "H'wood Hills", "Hills fire", "Hills crash", "Hills traffic"
 ]
 
 def clean_html(raw_html):
