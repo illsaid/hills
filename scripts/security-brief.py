@@ -128,43 +128,58 @@ def analyze_week(incidents):
     }
 
 def check_clustering(incidents):
-    """Check for temporal clustering (3+ similar incidents in same zone within 72h)."""
+    """Check for temporal clustering (3+ similar incidents in same zone within 72h).
+    
+    Returns deduplicated list of clusters, one per zone+type combination.
+    """
+    seen_clusters = set()  # Track (zone, type) pairs to avoid duplicates
     clusters = []
+    
     # Sort by date
     incidents.sort(key=lambda x: x["date_occ"])
     
     for i in range(len(incidents)):
         current = incidents[i]
+        zone = current["zone"]
+        crime_type = current["crime_type"]
+        
+        # Skip if we already found a cluster for this zone+type
+        cluster_key = (zone, crime_type)
+        if cluster_key in seen_clusters:
+            continue
+            
         zone_matches = [current]
         
-        # Look ahead
+        # Look ahead for matches within 72 hours
+        try:
+            current_date = datetime.fromisoformat(current["date_occ"])
+        except:
+            continue
+            
         for j in range(i + 1, len(incidents)):
             candidate = incidents[j]
             
-            # Check time diff (parsed from string)
-            # API format: 2024-01-15T00:00:00.000
-            current_date = datetime.fromisoformat(current["date_occ"])
-            candidate_date = datetime.fromisoformat(candidate["date_occ"])
+            try:
+                candidate_date = datetime.fromisoformat(candidate["date_occ"])
+            except:
+                continue
             
-            diff = (candidate_date - current_date).total_seconds() / 3600
+            diff_hours = (candidate_date - current_date).total_seconds() / 3600
             
-            if diff > 72: # More than 72 hours apart
+            if diff_hours > 72:
                 break
                 
-            if candidate["zone"] == current["zone"] and candidate["crime_type"] == current["crime_type"]:
+            if candidate["zone"] == zone and candidate["crime_type"] == crime_type:
                 zone_matches.append(candidate)
         
+        # If 3+ incidents, record the cluster
         if len(zone_matches) >= 3:
-            # Avoid duplicate reporting of same cluster
-            # Simple check: if we haven't reported this type/zone recently
-            already_reported = any(c["zone"] == current["zone"] and c["type"] == current["crime_type"] for c in clusters)
-            if not already_reported:
-                clusters.append({
-                    "zone": current["zone"],
-                    "type": current["crime_type"],
-                    "count": len(zone_matches),
-                    "days": 3
-                })
+            seen_clusters.add(cluster_key)
+            clusters.append({
+                "zone": zone,
+                "type": crime_type,
+                "count": len(zone_matches)
+            })
                 
     return clusters
 
@@ -236,12 +251,22 @@ def generate_brief(current_analysis, prev_analysis, year_ago_analysis, clusters,
         most_active_count = current_analysis["zone_counts"][most_active_zone]
         lines.append(f"**Area of Note:** {most_active_zone} ({most_active_count} incidents).")
     
-    # Notable clusters
+    # Notable clusters - group by zone for cleaner output
     if clusters:
-        cluster_texts = []
+        # Group clusters by zone
+        zone_clusters = {}
         for c in clusters:
-            cluster_texts.append(f"{c['type'].lower()} activity in {c['zone']}")
-        lines.append(f"Patterns detected: {'; '.join(cluster_texts)}.")
+            zone = c['zone']
+            if zone not in zone_clusters:
+                zone_clusters[zone] = []
+            zone_clusters[zone].append(c['type'].lower().replace(' security', ''))
+        
+        # Format as "Zone (type1, type2)"
+        cluster_parts = []
+        for zone, types in zone_clusters.items():
+            cluster_parts.append(f"{zone} ({', '.join(types)})")
+        
+        lines.append(f"Patterns detected: {'; '.join(cluster_parts)}.")
         
     return {
         "status": status,

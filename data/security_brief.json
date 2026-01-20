@@ -4,8 +4,8 @@
   "color": "green",
   "analysis_week": "2024-02-18 to 2024-02-24",
   "data_as_of": "2024-03-15",
-  "brief_text": "**SECURITY BRIEF \u2014 Week of Feb 18\u2013Feb 24**\n*(Data updated Mar 15 \u2014 typical 14-day reporting delay)*\n\n**Status:** NORMAL \u2014 Activity 17% below average\n52 property incidents mapped across Hollywood Hills neighborhoods.\n\n**Incident Breakdown:**\n\u2022 Vehicle Security: 22 incidents (42%)\n\u2022 Residential Security: 14 incidents (26%)\n\u2022 Other Property: 16 incidents (30%)\n\nTracking 13% below same week last year (52 vs 60).\n**Area of Note:** Nichols Canyon (25 incidents).\nPatterns detected: other property activity in Nichols Canyon; vehicle security activity in Beachwood Canyon; residential security activity in Beachwood Canyon; vehicle security activity in Nichols Canyon; residential security activity in Nichols Canyon.",
-  "updated_at": "2026-01-20T08:09:38.147507",
+  "brief_text": "**SECURITY BRIEF \u2014 Week of Feb 18\u2013Feb 24**\n*(Data updated Mar 15 \u2014 typical 14-day reporting delay)*\n\n**Status:** NORMAL \u2014 Activity 17% below average\n52 property incidents mapped across Hollywood Hills neighborhoods.\n\n**Incident Breakdown:**\n\u2022 Vehicle Security: 22 incidents (42%)\n\u2022 Residential Security: 14 incidents (26%)\n\u2022 Other Property: 16 incidents (30%)\n\nTracking 13% below same week last year (52 vs 60).\n**Area of Note:** Nichols Canyon (25 incidents).\nPatterns detected: Nichols Canyon (other property, vehicle, residential); Beachwood Canyon (vehicle, residential).",
+  "updated_at": "2026-01-20T08:24:31.218624",
   "stats": {
     "total": 52,
     "wow_change": -17.5,
