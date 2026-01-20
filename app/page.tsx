@@ -6,6 +6,7 @@ import { NeighborhoodFrictionDashboard } from '@/components/RoadWorkDashboard';
 import { LegislativeSentinelDashboard } from '@/components/LegislativeSentinelDashboard';
 import { UnifiedFeedDashboard } from '@/components/UnifiedFeedDashboard';
 import { NeighborhoodFeedDashboard } from '@/components/NeighborhoodFeedDashboard';
+import { SecurityBrief } from '@/components/SecurityBrief';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import Link from 'next/link';
@@ -145,6 +146,8 @@ export default async function Dashboard() {
 
           {/* Right Column: Neighborhood Feed (Social Sentinel) */}
           <div className="lg:col-span-3 space-y-6">
+            <SecurityBrief />
+
             <div className="flex items-center justify-between mb-2 px-2">
               <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
                 <Newspaper className="w-4 h-4 text-cyan-500" />
