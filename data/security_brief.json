@@ -1,19 +1,20 @@
 {
   "status": "NORMAL",
-  "status_detail": "Activity 17% below average",
+  "status_detail": "Activity 35% below average",
   "color": "green",
-  "analysis_week": "2024-02-18 to 2024-02-24",
-  "data_as_of": "2024-03-15",
-  "brief_text": "**SECURITY BRIEF \u2014 Week of Feb 18\u2013Feb 24**\n*(Data updated Mar 15 \u2014 typical 14-day reporting delay)*\n\n**Status:** NORMAL \u2014 Activity 17% below average\n52 property incidents mapped across Hollywood Hills neighborhoods.\n\n**Incident Breakdown:**\n\u2022 Vehicle Security: 22 incidents (42%)\n\u2022 Residential Security: 14 incidents (26%)\n\u2022 Other Property: 16 incidents (30%)\n\nTracking 13% below same week last year (52 vs 60).\n**Area of Note:** Nichols Canyon (25 incidents).\nPatterns detected: Nichols Canyon (other property, vehicle, residential); Beachwood Canyon (vehicle, residential).",
-  "updated_at": "2026-01-20T08:24:31.218624",
+  "analysis_week": "2025-12-21 to 2025-12-27",
+  "data_as_of": "2026-01-20",
+  "data_source": "LAPD NIBRS (y8y3-fqfu)",
+  "brief_text": "**SECURITY BRIEF \u2014 Week of Dec 21\u2013Dec 27**\n*(Data updated Jan 20 \u2014 typical 21-day reporting delay)*\n\n**Status:** NORMAL \u2014 Activity 35% below average\n24 property incidents in Hollywood Division this week.\n\n**Incident Breakdown:**\n\u2022 Residential Security: 4 incidents (16%)\n\u2022 Other Property: 20 incidents (83%)\n\nTracking 75% below same week last year (24 vs 96).\nPatterns detected: Other Property (17 in 72h); Residential Security (4 in 72h).",
+  "updated_at": "2026-01-20T08:41:52.578448",
   "stats": {
-    "total": 52,
-    "wow_change": -17.5,
-    "yoy_change": -13.3,
+    "total": 24,
+    "wow_change": -35.1,
+    "yoy_change": -75.0,
+    "yoy_available": true,
     "type_breakdown": {
-      "Vehicle Security": 22,
-      "Residential Security": 14,
-      "Other Property": 16
+      "Other Property": 20,
+      "Residential Security": 4
     }
   }
 }
