@@ -38,11 +38,11 @@ def fetch_311_data(days=30):
     
     # SoQL Query
     # status != 'Canceled' (usually we want valid requests)
-    # created_date > cutoff
-    # zip_code IN list
+    # createddate > cutoff
+    # zipcode__c IN list
     
     zips_str = "'" + "', '".join(HILLS_ZIPS) + "'"
-    where_clause = f"created_date > '{cutoff}' AND zip_code IN ({zips_str})"
+    where_clause = f"createddate > '{cutoff}' AND zipcode__c IN ({zips_str})"
     
     params = {
         "$where": where_clause,
@@ -73,7 +73,8 @@ def analyze_signals(data):
     total_reqs = len(data)
     
     # 1. Top Request Types
-    types = [d.get("request_type") for d in data if d.get("request_type")]
+    # Field: 'type'
+    types = [d.get("type") for d in data if d.get("type")]
     type_counts = Counter(types).most_common(5)
     
     # 2. Status & Efficiency
@@ -86,10 +87,9 @@ def analyze_signals(data):
         status = d.get("status", "")
         if "Closed" in status:
             closed_count += 1
-            created = d.get("created_date")
-            updated = d.get("updated_date") # effectively closed date for closed items usually
-            # Or check 'closed_date' field if exists. Socrata usually has it.
-            # 2cy6-i7zn schema confirmation needed. Assuming updated_date is close enough for median.
+            created = d.get("createddate")
+            updated = d.get("closeddate") or d.get("updateddate") 
+            
             if created and updated:
                 try:
                     c_dt = datetime.fromisoformat(created.replace("Z", ""))
@@ -114,11 +114,12 @@ def analyze_signals(data):
     clusters = defaultdict(list)
     
     for d in data:
-        rtype = d.get("request_type")
+        rtype = d.get("type")
         if rtype not in SEVERITY_TYPES:
             continue
             
         addr = d.get("address", "Unknown").strip()
+
         if not addr:
             continue
             
@@ -136,7 +137,7 @@ def analyze_signals(data):
             rtype, addr = key.split("|")
             
             # Find latest date
-            latest_date = max([x.get("created_date") for x in items])
+            latest_date = max([x.get("createddate") for x in items])
             
             feed_items.append({
                 "type": rtype,
