@@ -23,6 +23,7 @@ interface SignalData {
     hotspots: FeedItem[];
     status?: string;
     updated_at: string;
+    trend?: string;
 }
 
 export function MaintenanceSignals() {
@@ -50,6 +51,12 @@ export function MaintenanceSignals() {
 
     const hasData = data.total_requests > 0;
     const isError = !hasData && data.status?.includes("Unavailable");
+
+    // Trend Logic
+    const trend = data.trend || "Stable";
+    const isUp = trend.includes("Up");
+    const isDown = trend.includes("Down");
+    const trendColor = isUp ? "text-orange-500" : isDown ? "text-emerald-500" : "text-slate-400";
 
     return (
         <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
@@ -82,14 +89,17 @@ export function MaintenanceSignals() {
                         <div className="grid grid-cols-3 gap-2">
                             <div className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded flex flex-col items-center">
                                 <span className="text-xl font-bold text-slate-700 dark:text-slate-200">{data.total_requests}</span>
-                                <span className="text-[10px] text-slate-400 uppercase tracking-wider">Requests</span>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className={`text-[10px] font-medium ${trendColor}`}>{trend}</span>
+                                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">Reqs</span>
+                                </div>
                             </div>
                             <div className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded flex flex-col items-center">
                                 <div className="flex items-center gap-1">
                                     <Clock className="w-3 h-3 text-slate-400" />
                                     <span className="text-xl font-bold text-slate-700 dark:text-slate-200">{data.median_closure_hours}h</span>
                                 </div>
-                                <span className="text-[10px] text-slate-400 uppercase tracking-wider">Avg Fix</span>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">Avg Fix</span>
                             </div>
                             <div className="p-2 bg-emerald-50 dark:bg-emerald-900/10 rounded flex flex-col items-center border border-emerald-100 dark:border-emerald-900/30">
                                 <div className="flex items-center gap-1">

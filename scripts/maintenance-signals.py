@@ -32,13 +32,13 @@ SEVERITY_TYPES = [
 
 EXCLUDED_TYPES = [
     "Information-Only", "Service Not Complete", "Feedback/Comment",
-    "Appointment", "Referral"
+    "Appointment", "Referral", "Item Pickups"
 ]
 
-def fetch_311_data(days=30):
-    """Fetch 311 requests for the last N days."""
+def fetch_311_data(days=14):
+    """Fetch 311 requests for the last N days (default 14 for WoW)."""
     
-    # Calculate date threshold
+    # Calculate date threshold (fetching 2 weeks to calc trend)
     cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S")
     
     # SoQL Query
@@ -77,25 +77,56 @@ def analyze_signals(data):
 
     # Filter out excluded types first
     clean_data = [d for d in data if d.get("type") not in EXCLUDED_TYPES]
-    total_reqs = len(clean_data)
     
-    # 1. Top Request Types
-    # Field: 'type'
-    types = [d.get("type") for d in clean_data if d.get("type")]
+    # Split into This Week vs Last Week
+    now = datetime.now()
+    week_ago = now - timedelta(days=7)
+    two_weeks_ago = now - timedelta(days=14)
+    
+    this_week = []
+    last_week = []
+    
+    for d in clean_data:
+        try:
+            # Socrata date format: 2026-01-20T12:00:00.000
+            # createddate is usually populated
+            c_str = d.get("createddate")
+            if not c_str:
+                 continue
+            c_date = datetime.fromisoformat(c_str.replace("Z", ""))
+            
+            if c_date > week_ago:
+                this_week.append(d)
+            elif c_date > two_weeks_ago:
+                last_week.append(d)
+        except:
+            pass
+            
+    total_reqs = len(this_week)
+    prev_reqs = len(last_week)
+    
+    # Calculate Trend
+    trend_pct = 0
+    if prev_reqs > 0:
+        trend_pct = ((total_reqs - prev_reqs) / prev_reqs) * 100
+    
+    trend_str = "Stable"
+    if trend_pct > 5:
+        trend_str = f"Up {int(trend_pct)}%"
+    elif trend_pct < -5:
+        trend_str = f"Down {int(abs(trend_pct))}%"
+    
+    # 1. Top Request Types (This Week Only)
+    types = [d.get("type") for d in this_week if d.get("type")]
     type_counts = Counter(types).most_common(5)
     
-    # 2. Status & Efficiency
-    # Calculate median time to close for closed tickets
+    # 2. Status & Efficiency (This Week Only)
     closure_times = []
     open_count = 0
     closed_count = 0
     
-    for d in clean_data:
-        # Filter exclusions
-        rtype = d.get("type", "")
-        if rtype in EXCLUDED_TYPES:
-            continue
-            
+    for d in this_week:
+        # Loop over this_week, types already cleaned
         status = d.get("status", "")
         if "Closed" in status:
             closed_count += 1
@@ -125,7 +156,7 @@ def analyze_signals(data):
     # Group items by approximate location (address) and Type
     clusters = defaultdict(list)
     
-    for d in data:
+    for d in this_week:
         rtype = d.get("type")
         if rtype not in SEVERITY_TYPES:
             continue
@@ -163,8 +194,10 @@ def analyze_signals(data):
     feed_items.sort(key=lambda x: x["latest_date"], reverse=True)
     
     return {
-        "period": "Last 30 Days",
+        "period": "Last 7 Days",
         "total_requests": total_reqs,
+        "prev_requests": prev_reqs,
+        "trend": trend_str,
         "top_types": [{"type": t, "count": c} for t, c in type_counts],
         "open_count": open_count,
         "closed_count": closed_count,
@@ -175,7 +208,7 @@ def analyze_signals(data):
 def main():
     print("Starting Neighborhood Maintenance Signals (311)...")
     
-    data = fetch_311_data(days=30)
+    data = fetch_311_data(days=14)
     
     # Even if data is empty (API down), we generate a valid JSON structure (empty)
     # so the UI doesn't crash.
@@ -185,8 +218,10 @@ def main():
     if not analysis:
         # Empty state
         analysis = {
-            "period": "Last 30 Days",
+            "period": "Last 7 Days",
             "total_requests": 0,
+            "prev_requests": 0,
+            "trend": "Stable",
             "top_types": [],
             "open_count": 0,
             "closed_count": 0,

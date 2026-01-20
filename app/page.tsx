@@ -27,6 +27,7 @@ export default async function Dashboard() {
     .single();
 
   if (!area.data) {
+    console.error("❌ Area Fetch Error:", area.error?.message || "No data returned");
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-titanium-900 text-slate-900 dark:text-titanium-50">
         <div className="text-center">
