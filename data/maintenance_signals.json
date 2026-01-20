@@ -1,48 +1,48 @@
 {
   "period": "Last 7 Days",
-  "total_requests": 432,
-  "prev_requests": 406,
-  "trend": "Up 6%",
+  "total_requests": 360,
+  "prev_requests": 325,
+  "trend": "Up 10%",
   "top_types": [
     {
       "type": "Illegal Dumping Item Pickup",
-      "count": 146
+      "count": 109
     },
     {
       "type": "Street Pavement Issues",
-      "count": 66
+      "count": 54
     },
     {
       "type": "Homeless Encampment",
-      "count": 44
+      "count": 43
     },
     {
       "type": "Graffiti Removal",
-      "count": 33
+      "count": 25
     },
     {
       "type": "Streetlight Repair Services",
-      "count": 25
+      "count": 23
     }
   ],
-  "open_count": 319,
-  "closed_count": 113,
-  "median_closure_hours": 17.2,
+  "open_count": 271,
+  "closed_count": 89,
+  "median_closure_hours": 15.9,
   "hotspots": [
     {
       "type": "Homeless Encampment",
       "location": "Unknown",
-      "count": 44,
+      "count": 43,
       "latest_date": "2026-01-20T09:57:58.000",
       "status": "Resolved Cluster"
     },
     {
       "type": "Graffiti Removal",
       "location": "Unknown",
-      "count": 33,
+      "count": 25,
       "latest_date": "2026-01-20T08:27:56.000",
       "status": "Resolved Cluster"
     }
   ],
-  "updated_at": "2026-01-20T12:34:09.197178"
+  "updated_at": "2026-01-20T12:41:34.689678"
 }

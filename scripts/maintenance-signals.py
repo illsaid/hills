@@ -45,6 +45,7 @@ def fetch_311_data(days=14):
     # status != 'Canceled' (usually we want valid requests)
     # createddate > cutoff
     # zipcode__c IN list
+    # latitude > 34.077 (Exclude Flats/WeHo south of Franklin)
     
     zips_str = "'" + "', '".join(HILLS_ZIPS) + "'"
     where_clause = f"createddate > '{cutoff}' AND zipcode__c IN ({zips_str})"
@@ -87,6 +88,17 @@ def analyze_signals(data):
     last_week = []
     
     for d in clean_data:
+        # 1. LATITUDE FILTER (North of Sunset Blvd ~34.095)
+        # Excludes WeHo and Flats
+        lat_str = d.get("geolocation__latitude__s")
+        if lat_str:
+            try:
+                lat = float(lat_str)
+                if lat < 34.095:
+                    continue # Skip flats
+            except:
+                pass # If verify fails, keep or skip? Keeping for now.
+
         try:
             # Socrata date format: 2026-01-20T12:00:00.000
             # createddate is usually populated
