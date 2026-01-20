@@ -30,6 +30,11 @@ SEVERITY_TYPES = [
     "Street Light Out", "Pothole" # If available
 ]
 
+EXCLUDED_TYPES = [
+    "Information-Only", "Service Not Complete", "Feedback/Comment",
+    "Appointment", "Referral"
+]
+
 def fetch_311_data(days=30):
     """Fetch 311 requests for the last N days."""
     
@@ -70,11 +75,13 @@ def analyze_signals(data):
     if not data:
         return None
 
-    total_reqs = len(data)
+    # Filter out excluded types first
+    clean_data = [d for d in data if d.get("type") not in EXCLUDED_TYPES]
+    total_reqs = len(clean_data)
     
     # 1. Top Request Types
     # Field: 'type'
-    types = [d.get("type") for d in data if d.get("type")]
+    types = [d.get("type") for d in clean_data if d.get("type")]
     type_counts = Counter(types).most_common(5)
     
     # 2. Status & Efficiency
@@ -83,7 +90,12 @@ def analyze_signals(data):
     open_count = 0
     closed_count = 0
     
-    for d in data:
+    for d in clean_data:
+        # Filter exclusions
+        rtype = d.get("type", "")
+        if rtype in EXCLUDED_TYPES:
+            continue
+            
         status = d.get("status", "")
         if "Closed" in status:
             closed_count += 1
