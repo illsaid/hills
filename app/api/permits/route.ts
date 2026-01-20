@@ -43,7 +43,7 @@ export async function GET() {
                 'Accept': 'application/json',
                 'User-Agent': 'hills-ledger/1.0',
             },
-            next: { revalidate: 300 }, // Cache for 5 minutes
+            next: { revalidate: 0 }, // Disable cache for debugging
         });
 
         if (!response.ok) {

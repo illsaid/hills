@@ -1,0 +1,20 @@
+{
+  "activity_status": "QUIET",
+  "status_color": "blue",
+  "total_calls": 26,
+  "wow_change": -69.8,
+  "vs_baseline": -37.5,
+  "baseline_avg": 41.6,
+  "call_breakdown": {
+    "Alarm Responses": 16,
+    "Theft": 2,
+    "Burglary Related": 5,
+    "Trespass": 3
+  },
+  "context": "Alarm Responses accounts for 61% of calls.",
+  "brief_text": "**ACTIVITY INDEX \u2014 Week of Dec 28\u2013Jan 03**\n*(Data updated Jan 20 \u2014 typical 14-day lag)*\n\n**Status:** QUIET \u2014 26 security-related calls in Hollywood Division\n\n**Call Breakdown:**\n\u2022 Alarm Responses: 16 calls (61%)\n\u2022 Burglary Related: 5 calls (19%)\n\u2022 Trespass: 3 calls (11%)\n\u2022 Theft: 2 calls (7%)\n\nTracking 37% below 8-week average (26 vs 41).",
+  "analysis_week": "2025-12-28 to 2026-01-03",
+  "data_as_of": "2026-01-20",
+  "data_source": "LAPD Calls for Service (xjgu-z4ju)",
+  "updated_at": "2026-01-20T09:54:56.973206"
+}

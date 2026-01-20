@@ -100,8 +100,7 @@ export function SecurityBrief() {
                 <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
                     {contextLines.map((p, i) => (
                         <p key={i} className="leading-relaxed">
-                            {p.replace(/\*\*(.*?)\*\*/g, (match, p1) => match /* Keep markdown parsing simple or use a renderer? For now, we manually bold if needed or just strip */)}
-                            {/* Simple bold handling */}
+                            {/* Simple bold handling: split on ** and bold odd-indexed parts */}
                             {p.split('**').map((part, idx) =>
                                 idx % 2 === 1 ? <span key={idx} className="font-medium text-slate-900 dark:text-white">{part}</span> : part
                             )}

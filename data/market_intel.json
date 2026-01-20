@@ -1,0 +1,26 @@
+{
+  "quarter": "Q4 2025",
+  "generated_revenue": 4521653.86,
+  "transaction_count": 6,
+  "avg_tax": 753608.98,
+  "qoq_change_vol": -57.1,
+  "yoy_change_vol": -53.8,
+  "top_sale_tier": "$5.3-$10.6M",
+  "context": "Volume down 57% vs previous quarter. Down 53% vs same quarter last year. 66% of sales were Single-Family Residential. Note: Transaction decline may reflect anticipation of 2026 ballot initiative to repeal ULA.",
+  "updated_at": "2026-01-20T10:07:15.460687",
+  "breakdown": {
+    "tiers": {
+      "Over $10.6M": 2,
+      "$5.3-$10.6M": 4
+    },
+    "property_types": {
+      "Multi-Family Residential": 2,
+      "Single-Family Residential": 4
+    }
+  },
+  "zips_analyzed": [
+    "90046",
+    "90068",
+    "90069"
+  ]
+}

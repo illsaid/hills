@@ -1,140 +1,141 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ShieldAlert, TrendingUp, TrendingDown, Minus, Loader2, Bell, Home, Package } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Activity, TrendingDown, TrendingUp, Calendar, Phone } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
-interface ActivityCategory {
-  name: string;
-  count: number;
-  vsWeek: number;
-  vsAvg: number;
-  icon: React.ElementType;
-  color: string;
+interface ActivityData {
+    activity_status: 'QUIET' | 'NORMAL' | 'ELEVATED' | 'PENDING';
+    status_color: string;
+    total_calls: number;
+    wow_change: number;
+    vs_baseline: number;
+    call_breakdown: Record<string, number>;
+    brief_text: string;
+    updated_at: string;
 }
 
 export function ActivityIndex() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<ActivityCategory[]>([]);
+    const [data, setData] = useState<ActivityData | null>(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await fetch('/api/activity-index');
-        const json = await res.json();
-        if (json.success && json.categories) {
-          setData(json.categories);
-        } else {
-          setData(getDefaultData());
+    useEffect(() => {
+        async function fetchActivity() {
+            try {
+                const res = await fetch('/api/activity-index');
+                if (res.ok) {
+                    const json = await res.json();
+                    setData(json);
+                }
+            } catch (error) {
+                console.error('Failed to load activity index', error);
+            } finally {
+                setLoading(false);
+            }
         }
-      } catch (e) {
-        setData(getDefaultData());
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
+        fetchActivity();
+    }, []);
 
-  function getDefaultData(): ActivityCategory[] {
-    return [
-      { name: 'Alarm Responses', count: 47, vsWeek: -12, vsAvg: 8, icon: Bell, color: 'amber' },
-      { name: 'Burglary', count: 3, vsWeek: -25, vsAvg: -15, icon: Home, color: 'red' },
-      { name: 'Theft', count: 11, vsWeek: 22, vsAvg: 5, icon: Package, color: 'orange' },
-    ];
-  }
+    if (loading || !data || data.activity_status === 'PENDING') return null;
 
-  function getTrendIcon(value: number) {
-    if (value > 0) return TrendingUp;
-    if (value < 0) return TrendingDown;
-    return Minus;
-  }
-
-  function getTrendColor(value: number, inverse = false) {
-    const isPositive = inverse ? value < 0 : value > 0;
-    const isNegative = inverse ? value > 0 : value < 0;
-    if (isNegative) return 'text-emerald-500';
-    if (isPositive) return 'text-red-400';
-    return 'text-slate-400 dark:text-titanium-400';
-  }
-
-  function getIconBgColor(color: string) {
-    const colors: Record<string, string> = {
-      amber: 'bg-amber-50 dark:bg-amber-500/10 border-amber-100 dark:border-amber-500/20',
-      red: 'bg-red-50 dark:bg-red-500/10 border-red-100 dark:border-red-500/20',
-      orange: 'bg-orange-50 dark:bg-orange-500/10 border-orange-100 dark:border-orange-500/20',
+    const statusColors: Record<string, { bg: string; text: string; border: string; bar: string }> = {
+        QUIET: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', bar: 'bg-blue-500' },
+        NORMAL: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', bar: 'bg-emerald-500' },
+        ELEVATED: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', bar: 'bg-amber-500' }
     };
-    return colors[color] || colors.amber;
-  }
 
-  function getIconColor(color: string) {
-    const colors: Record<string, string> = {
-      amber: 'text-amber-600 dark:text-amber-400',
-      red: 'text-red-600 dark:text-red-400',
-      orange: 'text-orange-600 dark:text-orange-400',
-    };
-    return colors[color] || colors.amber;
-  }
+    const colors = statusColors[data.activity_status] || statusColors.NORMAL;
 
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white/60 shadow-sm dark:border-white/10 dark:bg-gradient-to-br dark:from-white/10 dark:to-white/5 dark:backdrop-blur-md p-5">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="p-2 bg-slate-100 dark:bg-white/10 rounded-lg border border-slate-200 dark:border-white/10">
-          <ShieldAlert className="w-5 h-5 text-slate-600 dark:text-titanium-300" />
-        </div>
-        <div>
-          <h3 className="font-medium text-slate-900 dark:text-titanium-50">Activity Index</h3>
-          <p className="text-xs text-slate-500 dark:text-titanium-400">7-day rolling window</p>
-        </div>
-      </div>
+    // Parse brief text for display
+    const paragraphs = data.brief_text.split('\n').filter(p => p.trim().length > 0);
+    const contextLines = paragraphs.slice(1); // Skip header
 
-      {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <div className="grid grid-cols-4 gap-2 text-[10px] uppercase tracking-wider text-slate-400 dark:text-titanium-500 px-1 pb-1">
-            <span className="col-span-2">Category</span>
-            <span className="text-center">Vs Week</span>
-            <span className="text-center">Vs Avg</span>
-          </div>
-
-          {data.map((item) => {
-            const Icon = item.icon;
-            const WeekTrend = getTrendIcon(item.vsWeek);
-            const AvgTrend = getTrendIcon(item.vsAvg);
-
-            return (
-              <div
-                key={item.name}
-                className="grid grid-cols-4 gap-2 items-center p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 transition-colors hover:bg-slate-100 dark:hover:bg-white/10"
-              >
-                <div className="col-span-2 flex items-center gap-3">
-                  <div className={`p-1.5 rounded-lg border ${getIconBgColor(item.color)}`}>
-                    <Icon className={`w-4 h-4 ${getIconColor(item.color)}`} />
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-slate-800 dark:text-titanium-100 block">{item.name}</span>
-                    <span className="text-lg font-semibold text-slate-900 dark:text-white">{item.count}</span>
-                  </div>
+    return (
+        <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+            <div className={`h-1 w-full ${colors.bar}`} />
+            <CardContent className="p-5">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <Phone className="w-5 h-5 text-slate-500" />
+                        <h3 className="font-semibold text-slate-800 dark:text-titanium-100">
+                            Activity Index
+                        </h3>
+                    </div>
+                    <Badge variant="outline" className={`${colors.bg} ${colors.text} ${colors.border}`}>
+                        {data.activity_status}
+                    </Badge>
                 </div>
 
-                <div className={`flex items-center justify-center gap-1 text-sm font-medium ${getTrendColor(item.vsWeek, true)}`}>
-                  <WeekTrend className="w-3.5 h-3.5" />
-                  <span>{Math.abs(item.vsWeek)}%</span>
+                {/* Stats Row */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-center">
+                        <div className="text-xs text-slate-500 mb-0.5">Calls</div>
+                        <div className="font-bold text-slate-700 dark:text-slate-200">{data.total_calls}</div>
+                    </div>
+                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-center">
+                        <div className="text-xs text-slate-500 mb-0.5">Vs Week</div>
+                        <TrendIndicator value={data.wow_change} />
+                    </div>
+                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-center">
+                        <div className="text-xs text-slate-500 mb-0.5">Vs Avg</div>
+                        <TrendIndicator value={data.vs_baseline} />
+                    </div>
                 </div>
 
-                <div className={`flex items-center justify-center gap-1 text-sm font-medium ${getTrendColor(item.vsAvg, true)}`}>
-                  <AvgTrend className="w-3.5 h-3.5" />
-                  <span>{Math.abs(item.vsAvg)}%</span>
+                {/* Call Breakdown */}
+                {Object.keys(data.call_breakdown || {}).length > 0 && (
+                    <div className="mb-4">
+                        <div className="text-xs font-medium text-slate-500 mb-2">Call Breakdown</div>
+                        <div className="flex flex-wrap gap-1.5">
+                            {Object.entries(data.call_breakdown)
+                                .sort(([, a], [, b]) => b - a)
+                                .map(([type, count]) => (
+                                    <span
+                                        key={type}
+                                        className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                                    >
+                                        {type}: {count}
+                                    </span>
+                                ))
+                            }
+                        </div>
+                    </div>
+                )}
+
+                {/* Context */}
+                <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                    {contextLines.slice(-2).map((p, i) => (
+                        <p key={i} className="leading-relaxed">
+                            {p.split('**').map((part, idx) =>
+                                idx % 2 === 1 ? <span key={idx} className="font-medium text-slate-900 dark:text-white">{part}</span> : part
+                            )}
+                        </p>
+                    ))}
                 </div>
-              </div>
-            );
-          })}
+
+                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 text-xs text-slate-400">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>Updated {new Date(data.updated_at).toLocaleDateString()}</span>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function TrendIndicator({ value }: { value: number }) {
+    if (value === 0) return <div className="font-semibold text-slate-500">-</div>;
+
+    // For calls, up is concerning (amber), down is quieter (green)
+    const isQuieter = value < 0;
+    const color = isQuieter ? 'text-emerald-600' : 'text-amber-600';
+    const Icon = value < 0 ? TrendingDown : TrendingUp;
+
+    return (
+        <div className={`flex items-center justify-center gap-1 font-bold ${color}`}>
+            <Icon className="w-3 h-3" />
+            {Math.abs(value)}%
         </div>
-      )}
-
-      <div className="hidden dark:block absolute -bottom-10 -right-10 w-32 h-32 bg-amber-500/5 blur-3xl rounded-full pointer-events-none" />
-    </div>
-  );
+    );
 }

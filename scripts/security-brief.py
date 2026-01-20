@@ -56,6 +56,18 @@ def get_crime_category(nibr_code):
     return None
 
 
+def load_hills_rds():
+    """Load the list of Hollywood Hills Reporting Districts."""
+    try:
+        path = os.path.join("data", "hills_rds.json")
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"⚠️ Failed to load Hills RDs: {e}")
+    return None
+
+
 def fetch_crime_data(start_date, end_date):
     """Fetch crime data from LAPD NIBRS API for a given date range.
     
@@ -88,6 +100,17 @@ def fetch_crime_data(start_date, end_date):
         response.raise_for_status()
         data = response.json()
         print(f"   Retrieved {len(data)} raw incidents")
+        
+        # Filter by RD
+        hills_rds = load_hills_rds()
+        if hills_rds:
+             # NIBRS uses 3-digit RDs (e.g., '632') while our config has '0632'
+             nibrs_rds = [rd.lstrip('0') for rd in hills_rds]
+             
+             filtered = [d for d in data if d.get("rpt_dist_no") in nibrs_rds]
+             print(f"   Filtered to {len(filtered)} incidents in Hills RDs")
+             return filtered
+             
         return data
     except requests.exceptions.RequestException as e:
         print(f"   ⚠️ API Error: {e}")

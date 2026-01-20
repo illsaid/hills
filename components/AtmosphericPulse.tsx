@@ -1,94 +1,88 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Wind, AlertTriangle, CheckCircle2, MapPin } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Cloud, Wind, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface Location {
-  name: string;
-  aqi: number;
+export interface AQILocation {
+    zip: string;
+    aqi: number;
+    pollutant: string;
+    category: string;
 }
 
 interface AtmosphericPulseProps {
-  avgAQI: number;
-  locations: Location[];
-  spikeDetected: boolean;
-  dominantPollutant: string;
-  lastUpdated: string;
+    avgAQI: number;
+    locations: AQILocation[];
+    spikeDetected: boolean;
+    dominantPollutant: string;
+    lastUpdated: string;
 }
 
-function getAQILevel(aqi: number) {
-  if (aqi <= 50) return { label: 'Good', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-950/30', border: 'border-green-200 dark:border-green-900' };
-  if (aqi <= 100) return { label: 'Moderate', color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-50 dark:bg-yellow-950/30', border: 'border-yellow-200 dark:border-yellow-900' };
-  if (aqi <= 150) return { label: 'Unhealthy for Sensitive', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-950/30', border: 'border-orange-200 dark:border-orange-900' };
-  if (aqi <= 200) return { label: 'Unhealthy', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-950/30', border: 'border-red-200 dark:border-red-900' };
-  if (aqi <= 300) return { label: 'Very Unhealthy', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-950/30', border: 'border-purple-200 dark:border-purple-900' };
-  return { label: 'Hazardous', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/30', border: 'border-rose-200 dark:border-rose-900' };
+function getAQIColor(aqi: number) {
+    if (aqi <= 50) return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
+    if (aqi <= 100) return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
+    if (aqi <= 150) return 'text-orange-500 bg-orange-500/10 border-orange-500/20';
+    return 'text-rose-600 bg-rose-600/10 border-rose-600/20 animate-pulse';
+}
+
+function getAQILabel(aqi: number) {
+    if (aqi <= 50) return 'Good';
+    if (aqi <= 100) return 'Moderate';
+    if (aqi <= 150) return 'Unhealthy (Sens.)';
+    return 'Unhealthy';
 }
 
 export function AtmosphericPulse({ avgAQI, locations, spikeDetected, dominantPollutant, lastUpdated }: AtmosphericPulseProps) {
-  const aqiLevel = getAQILevel(avgAQI);
-  const timeAgo = formatDistanceToNow(new Date(lastUpdated), { addSuffix: true });
+    if (!locations || locations.length === 0) return null;
 
-  return (
-    <Card className="p-5 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:shadow-lg dark:hover:shadow-2xl transition-shadow">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Wind className="w-4 h-4 text-slate-500 dark:text-titanium-400" />
-            <h3 className="text-sm font-medium text-slate-900 dark:text-titanium-50">Air Quality</h3>
-          </div>
-          {spikeDetected && (
-            <AlertTriangle className="w-4 h-4 text-amber-500 animate-pulse" />
-          )}
-        </div>
-
-        <div className="text-center py-4">
-          <div className="text-4xl font-light text-slate-900 dark:text-titanium-50 mb-1">
-            {Math.round(avgAQI)}
-          </div>
-          <Badge
-            variant="outline"
-            className={`${aqiLevel.bg} ${aqiLevel.border} ${aqiLevel.color} border text-xs font-medium`}
-          >
-            {aqiLevel.label}
-          </Badge>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-start gap-2 text-xs text-slate-600 dark:text-titanium-400">
-            <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-            <span>Dominant: <span className="text-slate-900 dark:text-titanium-200 font-medium">{dominantPollutant}</span></span>
-          </div>
-
-          {locations.length > 0 && (
-            <div className="pt-2 border-t border-slate-100 dark:border-white/5">
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-titanium-500 mb-2">
-                <MapPin className="w-3 h-3" />
-                <span>Local Readings</span>
-              </div>
-              <div className="space-y-1.5">
-                {locations.slice(0, 3).map((loc, i) => {
-                  const locLevel = getAQILevel(loc.aqi);
-                  return (
-                    <div key={i} className="flex items-center justify-between text-xs">
-                      <span className="text-slate-700 dark:text-titanium-300 truncate flex-1">{loc.name}</span>
-                      <span className={`font-medium ${locLevel.color} ml-2`}>{Math.round(loc.aqi)}</span>
-                    </div>
-                  );
-                })}
-              </div>
+    return (
+        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 space-y-4">
+            <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-slate-500 dark:text-titanium-400 flex items-center gap-2">
+                    <Wind className="w-4 h-4" />
+                    Canyon Breathe
+                </h3>
+                {spikeDetected && (
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-full animate-pulse">
+                        <AlertTriangle className="w-3 h-3" />
+                        SPIKE DETECTED
+                    </span>
+                )}
             </div>
-          )}
-        </div>
 
-        <div className="pt-2 border-t border-slate-100 dark:border-white/5">
-          <div className="text-[10px] text-slate-400 dark:text-titanium-500 uppercase tracking-wider">
-            Updated {timeAgo}
-          </div>
+            <div className="flex items-center justify-center py-2">
+                <div className="relative">
+                    {/* Main Pulse Ring */}
+                    <div className={cn(
+                        "w-32 h-32 rounded-full flex flex-col items-center justify-center border-4",
+                        getAQIColor(avgAQI).replace('border-', 'border-')
+                    )}>
+                        <span className="text-3xl font-bold text-slate-700 dark:text-titanium-100">
+                            {avgAQI}
+                        </span>
+                        <span className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-titanium-400">
+                            {getAQILabel(avgAQI)}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+                {locations.map((loc) => (
+                    <div key={loc.zip} className="text-center p-2 rounded-lg bg-slate-50 dark:bg-white/5">
+                        <div className="text-[10px] text-slate-400 dark:text-titanium-500 mb-1">{loc.zip}</div>
+                        <div className={cn("text-lg font-bold", getAQIColor(loc.aqi).split(' ')[0])}>
+                            {loc.aqi}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="text-[10px] text-center text-slate-400 dark:text-titanium-500 border-t border-slate-100 dark:border-white/5 pt-3">
+                Dominant: <span className="font-medium text-slate-600 dark:text-titanium-300">{dominantPollutant}</span>
+                <span className="mx-2">•</span>
+                Updated: {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
         </div>
-      </div>
-    </Card>
-  );
+    );
 }

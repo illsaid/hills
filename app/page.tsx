@@ -10,6 +10,8 @@ import { SecurityBrief } from '@/components/SecurityBrief';
 import { HillsLiveDashboard } from '@/components/HillsLiveDashboard';
 import { ActivityIndex } from '@/components/ActivityIndex';
 import { NeighborhoodSignals } from '@/components/NeighborhoodSignals';
+import { MaintenanceSignals } from '@/components/MaintenanceSignals';
+import { MarketIntel } from '@/components/MarketIntel';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import Link from 'next/link';
@@ -120,16 +122,19 @@ export default async function Dashboard() {
 
             <UnifiedFeedDashboard />
 
-            {/* Infrastructure Section - Live Permits from LA City Open Data */}
+            {/* Market & Development - Permits & Real Estate */}
             <div className="flex items-center justify-between mb-2 px-2 mt-8 border-t border-slate-200 dark:border-white/5 pt-6">
               <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-blue-500" />
-                Permit Tracker
-                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">90068 • 90046 • 90069</span>
+                Market & Development
+                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">Permits & Real Estate</span>
               </h2>
             </div>
 
-            <PermitDashboard />
+            <div className="space-y-6">
+              <MarketIntel />
+              <PermitDashboard />
+            </div>
 
             {/* Neighborhood Friction - StreetsLA Pavement & Road Work */}
             <div className="flex items-center justify-between mb-2 px-2 mt-8 border-t border-slate-200 dark:border-white/5 pt-6">
@@ -157,6 +162,8 @@ export default async function Dashboard() {
           {/* Right Column: Neighborhood Feed (Social Sentinel) */}
           <div className="lg:col-span-3 space-y-6">
             <SecurityBrief />
+            <ActivityIndex />
+            <MaintenanceSignals />
 
             <div className="flex items-center justify-between mb-2 px-2">
               <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
