@@ -1,0 +1,29 @@
+name: Hills Ledger Pulse
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # This adds the "Manual Run" button
+
+jobs:
+  update-pulse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: pip install google-api-python-client google-auth-oauthlib google-auth-httplib2 google-generativeai
+      - name: Run Pulse
+        env:
+          GMAIL_TOKEN: ${{ secrets.GMAIL_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python scripts/generate_pulse.py
+      - name: Commit changes
+        run: |
+          git config --global user.name "Hills Bot"
+          git config --global user.email "bot@hillsledger.com"
+          git add data/intelligence_pulse.json
+          git commit -m "Automated Pulse Update" || exit 0
+          git push
