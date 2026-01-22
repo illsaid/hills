@@ -55,7 +55,7 @@ export function HillsLiveDashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://raw.githubusercontent.com/illsaid/hills/main/data/intelligence_pulse.json');
+        const response = await fetch('/api/pulse');
 
         if (!response.ok) {
           throw new Error('Failed to fetch pulse data');
