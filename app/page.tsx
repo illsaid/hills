@@ -8,6 +8,8 @@ import { UnifiedFeedDashboard } from '@/components/UnifiedFeedDashboard';
 import { NeighborhoodFeedDashboard } from '@/components/NeighborhoodFeedDashboard';
 import { SecurityBrief } from '@/components/SecurityBrief';
 import { HillsLiveDashboard } from '@/components/HillsLiveDashboard';
+import { ActivityIndex } from '@/components/ActivityIndex';
+import { NeighborhoodSignals } from '@/components/NeighborhoodSignals';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import Link from 'next/link';
@@ -102,6 +104,8 @@ export default async function Dashboard() {
             <div>
               <SystemStatusWidget />
             </div>
+            <ActivityIndex />
+            <NeighborhoodSignals />
           </div>
 
           {/* Middle Column: Unified Chronological Feed */}
