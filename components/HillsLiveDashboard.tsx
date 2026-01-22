@@ -43,8 +43,15 @@ export function HillsLiveDashboard() {
   const [historicalAlerts, setHistoricalAlerts] = useState<HistoricalAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -86,7 +93,21 @@ export function HillsLiveDashboard() {
     const interval = setInterval(fetchData, 60000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [mounted]);
+
+  if (!mounted) {
+    return (
+      <div className="space-y-6">
+        <Card className="p-8 text-center bg-white dark:bg-white/5 border-slate-200 dark:border-white/10">
+          <div className="animate-pulse">
+            <div className="h-8 bg-slate-200 dark:bg-white/10 rounded w-48 mx-auto mb-4" />
+            <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-64 mx-auto mb-2" />
+            <div className="text-xs text-slate-400 dark:text-titanium-500">Loading Hills Live Intelligence...</div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading && !pulseData) {
     return (
