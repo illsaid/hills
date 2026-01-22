@@ -94,7 +94,8 @@ export function HillsLiveDashboard() {
         <Card className="p-8 text-center bg-white dark:bg-white/5 border-slate-200 dark:border-white/10">
           <div className="animate-pulse">
             <div className="h-8 bg-slate-200 dark:bg-white/10 rounded w-48 mx-auto mb-4" />
-            <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-64 mx-auto" />
+            <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-64 mx-auto mb-2" />
+            <div className="text-xs text-slate-400 dark:text-titanium-500">Loading Hills Live Intelligence...</div>
           </div>
         </Card>
       </div>
@@ -103,10 +104,22 @@ export function HillsLiveDashboard() {
 
   if (error) {
     return (
-      <Card className="p-8 text-center bg-white dark:bg-white/5 border-slate-200 dark:border-white/10">
-        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <p className="text-slate-600 dark:text-titanium-400">{error}</p>
-      </Card>
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 px-2">
+          <div className="h-px bg-gradient-to-r from-transparent via-slate-300 dark:via-white/20 to-transparent flex-1" />
+          <h2 className="text-sm font-medium text-slate-600 dark:text-titanium-400 uppercase tracking-wider">
+            Hills Live
+          </h2>
+          <div className="h-px bg-gradient-to-r from-transparent via-slate-300 dark:via-white/20 to-transparent flex-1" />
+        </div>
+        <Card className="p-8 text-center bg-white dark:bg-white/5 border-slate-200 dark:border-white/10">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-slate-600 dark:text-titanium-400 mb-2">{error}</p>
+          <p className="text-xs text-slate-500 dark:text-titanium-500">
+            Check browser console for details
+          </p>
+        </Card>
+      </div>
     );
   }
 
@@ -117,7 +130,15 @@ export function HillsLiveDashboard() {
   const StatusIcon = iconData.icon;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 px-2">
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-300 dark:via-white/20 to-transparent flex-1" />
+        <h2 className="text-sm font-medium text-slate-600 dark:text-titanium-400 uppercase tracking-wider">
+          Hills Live
+        </h2>
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-300 dark:via-white/20 to-transparent flex-1" />
+      </div>
+
       <Card
         className={`
           overflow-hidden border-2 transition-all duration-500
