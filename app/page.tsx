@@ -7,6 +7,7 @@ import { LegislativeSentinelDashboard } from '@/components/LegislativeSentinelDa
 import { UnifiedFeedDashboard } from '@/components/UnifiedFeedDashboard';
 import { NeighborhoodFeedDashboard } from '@/components/NeighborhoodFeedDashboard';
 import { SecurityBrief } from '@/components/SecurityBrief';
+import { HillsLiveDashboard } from '@/components/HillsLiveDashboard';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import Link from 'next/link';
@@ -74,6 +75,11 @@ export default async function Dashboard() {
       </header>
 
       <main className="max-w-[1600px] mx-auto px-6 py-8">
+
+        {/* Hills Live Dashboard - Hero Section */}
+        <div className="mb-8">
+          <HillsLiveDashboard />
+        </div>
 
         {/* Bento Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
