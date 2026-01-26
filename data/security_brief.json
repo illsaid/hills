@@ -1,21 +1,21 @@
 {
   "status": "NORMAL",
-  "status_detail": "Activity 15% below average",
+  "status_detail": "Activity 55% below average",
   "color": "green",
-  "analysis_week": "2025-12-21 to 2025-12-27",
-  "data_as_of": "2026-01-22",
+  "analysis_week": "2025-12-28 to 2026-01-03",
+  "data_as_of": "2026-01-26",
   "data_source": "LAPD NIBRS (y8y3-fqfu)",
-  "brief_text": "**SECURITY BRIEF \u2014 Week of Dec 21\u2013Dec 27**\n*(Data updated Jan 22 \u2014 typical 21-day reporting delay)*\n\n**Status:** NORMAL \u2014 Activity 15% below average\n59 property incidents in Hollywood Division this week.\n*(NIBRS counts each offense separately; counts may appear higher than legacy reports)*\n\n**Incident Breakdown:**\n\u2022 Vehicle Security: 20 incidents (33%)\n\u2022 Residential Security: 5 incidents (8%)\n\u2022 Other Property: 34 incidents (57%)\n\nTracking 39% below same week last year (59 vs 97).\nPatterns detected: Vehicle Security (10 in 72h); Other Property (26 in 72h); Residential Security (5 in 72h).",
-  "updated_at": "2026-01-22T20:39:24.681151",
+  "brief_text": "**SECURITY BRIEF \u2014 Week of Dec 28\u2013Jan 03**\n*(Data updated Jan 26 \u2014 typical 21-day reporting delay)*\n\n**Status:** NORMAL \u2014 Activity 55% below average\n26 property incidents in Hollywood Division this week.\n\n**Incident Breakdown:**\n\u2022 Vehicle Security: 16 incidents (61%)\n\u2022 Residential Security: 1 incidents (3%)\n\u2022 Other Property: 9 incidents (34%)\n\nTracking 76% below same week last year (26 vs 110).\nPatterns detected: Other Property (9 in 72h); Vehicle Security (16 in 72h).",
+  "updated_at": "2026-01-26T07:31:33.637908",
   "stats": {
-    "total": 59,
-    "wow_change": -15.7,
-    "yoy_change": -39.2,
+    "total": 26,
+    "wow_change": -55.9,
+    "yoy_change": -76.4,
     "yoy_available": true,
     "type_breakdown": {
-      "Other Property": 34,
-      "Vehicle Security": 20,
-      "Residential Security": 5
+      "Other Property": 9,
+      "Vehicle Security": 16,
+      "Residential Security": 1
     }
   }
 }
