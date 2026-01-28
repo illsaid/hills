@@ -31,7 +31,7 @@ def fetch_lafd_alerts(service):
 
 def summarize_with_gemini(alerts):
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-pro")
     prompt = f"Summarize these LAFD alerts for a neighborhood dashboard. Focus on location and severity. Be concise. Alerts: {alerts}"
     response = model.generate_content(prompt)
     return response.text
