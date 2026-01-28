@@ -14,12 +14,11 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install deps
-        run: pip install google-api-python-client google-auth-oauthlib google-auth-httplib2 google-generativeai
+        run: pip install google-api-python-client google-auth-oauthlib google-auth-httplib2
       - name: Run Pulse
         env:
           GMAIL_TOKEN: ${{ secrets.GMAIL_TOKEN }}
           GMAIL_CREDENTIALS: ${{ secrets.GMAIL_CREDENTIALS }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python scripts/generate_pulse.py
       - name: Commit changes
         run: |
