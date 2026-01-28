@@ -9,6 +9,12 @@ LOCAL_FILTERS = ["West Bureau", "Hollywood Hills", "FS 41", "FS 82", "FS 76", "R
 
 def get_gmail_service():
     creds_info = json.loads(os.environ['GMAIL_TOKEN'])
+    # Extract client_id and client_secret from GMAIL_CREDENTIALS
+    gmail_creds = json.loads(os.environ['GMAIL_CREDENTIALS'])
+    # Handle both 'installed' and 'web' credential types
+    cred_data = gmail_creds.get('installed') or gmail_creds.get('web') or gmail_creds
+    creds_info['client_id'] = cred_data['client_id']
+    creds_info['client_secret'] = cred_data['client_secret']
     creds = Credentials.from_authorized_user_info(creds_info)
     return build('gmail', 'v1', credentials=creds)
 
