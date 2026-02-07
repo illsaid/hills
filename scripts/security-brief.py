@@ -304,10 +304,11 @@ def main():
     print("Starting Security Brief Analysis (NIBRS)...")
     print("=" * 50)
     
-    # LAPD data typically lags 14-21 days
+    # Data lag (calls for service may have shorter lag than crime reports)
     DATA_LAG_DAYS = int(os.environ.get("DATA_LAG_DAYS", "21"))
-    
-    # Date handling
+
+    # ... (rest of date handling)
+
     ref_date_str = os.environ.get("REFERENCE_DATE")
     if ref_date_str:
         today = datetime.fromisoformat(ref_date_str)
@@ -385,6 +386,73 @@ def main():
         
     print("\nBrief generated successfully.")
     print(json.dumps(brief_data, indent=2))
+    
+    # Save to Database (Historical Trends)
+    print("\n💾 Saving trends to database...")
+    save_trends_to_db(brief_data, clusters)
+
+def save_trends_to_db(brief, clusters):
+    """Upsert trend data to Supabase 'crime_trends' table."""
+    
+    url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    
+    if not url or not key:
+        print("⚠️  Skipping DB save: Missing Supabase credentials.")
+        return
+
+    headers = {
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates"
+    }
+    
+    run_date = brief["data_as_of"]
+    stats = brief["stats"]
+    type_breakdown = stats.get("type_breakdown", {})
+    
+    # Prepare rows for insertion
+    rows = []
+    
+    # 1. Category Rows
+    for category, count in type_breakdown.items():
+        rows.append({
+            "date": run_date,
+            "district": "Hollywood", # Future: Split by RD if needed
+            "category": category,
+            "count": count,
+            "rolling_8wk_avg": None, # Todo: Calculate from DB history?
+            "status": brief["status"],
+            "sources": [] # Todo: List incident IDs?
+        })
+        
+    # 2. Total Row
+    rows.append({
+        "date": run_date,
+        "district": "Hollywood",
+        "category": "Total Property",
+        "count": stats["total"],
+        "rolling_8wk_avg": None,
+        "status": brief["status"],
+        "sources": []
+    })
+    
+    if not rows:
+        return
+
+    try:
+        # POST to Supabase REST API
+        endpoint = f"{url}/rest/v1/crime_trends"
+        resp = requests.post(endpoint, json=rows, headers=headers)
+        
+        if resp.status_code in [200, 201]:
+            print(f"✅ Successfully saved {len(rows)} trend records.")
+        else:
+            print(f"❌ Failed to save trends: {resp.status_code} {resp.text}")
+            
+    except Exception as e:
+        print(f"❌ DB Error: {e}")
 
 
 if __name__ == "__main__":

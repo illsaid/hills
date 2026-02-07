@@ -1,176 +1,202 @@
 import { supabaseServer } from '@/lib/supabase/server';
-import { WeatherWidget, SystemStatusWidget } from '@/components/DashboardWidgets';
-import { AtmosphericPulse } from '@/components/AtmosphericPulse';
-import { PermitDashboard } from '@/components/PermitDashboard';
-import { NeighborhoodFrictionDashboard } from '@/components/RoadWorkDashboard';
-import { LegislativeSentinelDashboard } from '@/components/LegislativeSentinelDashboard';
-import { UnifiedFeedDashboard } from '@/components/UnifiedFeedDashboard';
-import { SecurityBrief } from '@/components/SecurityBrief';
-import { HillsLiveDashboard } from '@/components/HillsLiveDashboard';
-import { ActivityIndex } from '@/components/ActivityIndex';
-import { NeighborhoodSignals } from '@/components/NeighborhoodSignals';
-import { MaintenanceSignals } from '@/components/MaintenanceSignals';
-import { NewsFeed } from '@/components/NewsFeed';
-import { MarketIntel } from '@/components/MarketIntel';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import Link from 'next/link';
-import { Terminal, Zap, Building2, TrafficCone, Landmark, Newspaper } from 'lucide-react';
+import { DashboardClient } from './DashboardClient';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Dashboard() {
-  const area = await supabaseServer
-    .from('areas')
-    .select('id, name, slug')
-    .eq('slug', 'hollywood-hills')
-    .single();
+// Utility to generate dedupe key
+function generateDedupeKey(title: string, date: string): string {
+  const dateStr = new Date(date).toISOString().split('T')[0];
+  const titleHash = title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
+  return `${titleHash}_${dateStr}`;
+}
 
-  if (!area.data) {
-    console.error("❌ Area Fetch Error:", area.error?.message || "No data returned");
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-titanium-900 text-slate-900 dark:text-titanium-50">
-        <div className="text-center">
-          <h1 className="text-2xl font-light mb-2">Area Not Found</h1>
-          <p className="text-slate-500 dark:text-titanium-400">Hollywood Hills area has not been configured yet.</p>
-        </div>
-      </div>
-    );
+async function fetchDashboardData() {
+  // Parallel fetch all data sources
+  const [
+    safetyRes,
+    eventsRes,
+    aqiRes,
+    codeRes,
+    newsRes,
+  ] = await Promise.all([
+    supabaseServer
+      .from('neighborhood_intel')
+      .select('*')
+      .eq('category', 'Safety')
+      .order('published_at', { ascending: false })
+      .limit(10),
+    supabaseServer
+      .from('events')
+      .select('*')
+      .eq('is_seed', false)
+      .order('observed_at', { ascending: false })
+      .limit(10),
+    supabaseServer
+      .from('neighborhood_intel')
+      .select('*')
+      .eq('source_name', 'Google AQI')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabaseServer
+      .from('code_enforcement')
+      .select('*')
+      .eq('status', 'O')
+      .order('date_opened', { ascending: false })
+      .limit(10),
+    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/news-feed`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : { items: [], updated_at: null })
+      .catch(() => ({ items: [], updated_at: null })),
+  ]);
+
+  const safetyAlerts = safetyRes.data || [];
+  const events = eventsRes.data || [];
+  const aqiData = aqiRes.data;
+  const codeEnforcement = codeRes.data || [];
+  const newsData = newsRes;
+
+  // Build normalized feed items
+  const feedItems: any[] = [];
+  const seenKeys = new Set<string>();
+
+  // Safety alerts
+  for (const item of safetyAlerts) {
+    const key = generateDedupeKey(item.title || '', item.published_at || item.created_at);
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
+
+    feedItems.push({
+      id: item.id,
+      type: 'safety',
+      severity: item.priority === 1 ? 3 : item.priority === 2 ? 2 : 1,
+      title: item.title || 'Safety Alert',
+      summary: item.description || '',
+      timestamp: item.published_at || item.created_at,
+      locationText: item.location || null,
+      geo: item.latitude && item.longitude ? { lat: item.latitude, lng: item.longitude } : null,
+      sourceName: item.source_name || 'LAFD',
+      sourceUrl: item.source_url,
+      dedupeKey: key,
+    });
   }
 
-  // Fetch AQI Data
-  const aqiData = await supabaseServer
-    .from('neighborhood_intel')
-    .select('*')
-    .eq('source_name', 'Google AQI')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // Code enforcement
+  for (const item of codeEnforcement) {
+    const key = generateDedupeKey(item.case_number || '', item.date_opened || item.created_at);
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
 
-  const aqiProps = aqiData.data ? {
-    avgAQI: aqiData.data.metadata?.avg_aqi || 0,
-    locations: aqiData.data.metadata?.locations || [],
-    spikeDetected: aqiData.data.metadata?.spike_detected || false,
-    dominantPollutant: aqiData.data.description?.split('Dominant: ')[1]?.replace('.', '') || 'Unknown',
-    lastUpdated: aqiData.data.published_at || new Date().toISOString()
-  } : null;
+    feedItems.push({
+      id: item.id,
+      type: 'code',
+      severity: 1,
+      title: `Case ${item.case_number}`,
+      summary: `${item.case_type || 'Code Violation'} • ${item.address || 'Unknown location'}`,
+      timestamp: item.date_opened || item.created_at,
+      locationText: item.address || null,
+      geo: item.latitude && item.longitude ? { lat: item.latitude, lng: item.longitude } : null,
+      sourceName: 'LA Building & Safety',
+      dedupeKey: key,
+    });
+  }
 
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-transparent text-slate-900 dark:text-titanium-50 font-sans selection:bg-blue-500/30">
-      {/* HUD Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-titanium-900/80 backdrop-blur-xl">
-        <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div>
-              <h1 className="text-lg font-medium tracking-wide text-slate-900 dark:text-titanium-50">THE HILLS LEDGER</h1>
-              <p className="text-[10px] text-slate-500 dark:text-titanium-400 uppercase tracking-widest">Decision Support Brief • {area.data.name}</p>
-            </div>
-          </div>
+  // Events
+  for (const item of events) {
+    const key = generateDedupeKey(item.event_type || '', item.observed_at || item.created_at);
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
 
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <Link href="/terminal">
-              <Button variant="outline" size="sm" className="gap-2 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-titanium-300 transition-all">
-                <Terminal className="w-4 h-4" />
-                <span className="hidden sm:inline">Terminal</span>
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+    feedItems.push({
+      id: item.id,
+      type: 'event',
+      severity: item.impact >= 4 ? 3 : item.impact >= 2 ? 2 : 0,
+      title: item.event_type || 'Community Event',
+      summary: item.summary || item.description || '',
+      timestamp: item.observed_at || item.created_at,
+      locationText: item.region || null,
+      geo: null,
+      sourceName: 'Community',
+      dedupeKey: key,
+    });
+  }
 
-      <main className="max-w-[1600px] mx-auto px-6 py-8">
+  // Build alert chips (top 3 critical alerts) with proper age formatting
+  const criticalAlerts = safetyAlerts.filter((a: any) => a.priority <= 2);
+  const alertChips = criticalAlerts
+    .slice(0, 3)
+    .map((a: any) => {
+      // Use formatAge logic inline (avoid import in server component)
+      const d = new Date(a.published_at || a.created_at);
+      const diffMs = Date.now() - d.getTime();
+      const mins = Math.floor(diffMs / 60000);
+      let age: string;
+      if (mins < 60) age = `${mins}m`;
+      else {
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) age = `${hrs}h`;
+        else {
+          const days = Math.floor(hrs / 24);
+          if (days <= 6) age = `${days}d`;
+          else age = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+      }
+      return {
+        id: a.id,
+        icon: a.priority === 1 ? 'flame' : 'alert',
+        title: a.title || 'Alert',
+        age,
+        severity: a.priority === 1 ? 'critical' : 'warning',
+      };
+    });
 
-        {/* Hills Live Dashboard - Hero Section */}
-        <div className="mb-8">
-          <HillsLiveDashboard />
-        </div>
+  const totalAlertCount = criticalAlerts.length;
 
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+  // Build news headlines
+  const newsHeadlines = (newsData.items || []).slice(0, 5).map((n: any, i: number) => ({
+    id: n.id || `news-${i}`,
+    source: n.source || 'News',
+    title: n.title || '',
+    timestamp: n.published_at || n.pubDate || new Date().toISOString(),
+    href: n.link || n.url || '#',
+  }));
 
-          {/* Left Column: Widgets (Weather, Status) */}
-          <div className="lg:col-span-3 space-y-6">
-            <div className="flex items-center justify-between mb-2 px-2">
-              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100">
-                Conditions
-              </h2>
-            </div>
-            <div className="h-64">
-              <WeatherWidget />
-            </div>
-            {aqiProps && (
-              <div>
-                <AtmosphericPulse {...aqiProps} />
-              </div>
-            )}
-            <div>
-              <SystemStatusWidget />
-            </div>
-            <ActivityIndex />
-            <NeighborhoodSignals />
-          </div>
+  // AQI data
+  const aqi = {
+    value: aqiData?.metadata?.avg_aqi || 78,
+    status: (aqiData?.metadata?.avg_aqi || 78) <= 50 ? 'Good' : (aqiData?.metadata?.avg_aqi || 78) <= 100 ? 'Moderate' : 'Unhealthy',
+    updatedAt: aqiData?.created_at || null,
+  };
 
-          {/* Middle Column: Unified Chronological Feed */}
-          <div className="lg:col-span-6 space-y-6">
-            <div className="flex items-center justify-between mb-2 px-2">
-              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-amber-500" />
-                Live Updates
-                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">All Sources • Sorted by Recency</span>
-              </h2>
-            </div>
+  // Weather (static for now)
+  const weather = {
+    temp: 72,
+    condition: 'Clear',
+    high: 78,
+    low: 64,
+    wind: '8mph',
+  };
 
-            <UnifiedFeedDashboard />
+  // Quick stats
+  const stats = [
+    { label: 'Active Alerts', value: safetyAlerts.length },
+    { label: 'Open Cases', value: codeEnforcement.length },
+  ];
 
-            {/* Market & Development - Permits & Real Estate */}
-            <div className="flex items-center justify-between mb-2 px-2 mt-8 border-t border-slate-200 dark:border-white/5 pt-6">
-              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-blue-500" />
-                Market & Development
-                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">Permits & Real Estate</span>
-              </h2>
-            </div>
+  return {
+    feedItems,
+    alertChips,
+    totalAlertCount,
+    aqi,
+    weather,
+    stats,
+    newsHeadlines,
+    newsUpdatedAt: newsData.updated_at,
+    openCases: codeEnforcement.length,
+  };
+}
 
-            <div className="space-y-6">
-              <MarketIntel />
-              <PermitDashboard />
-            </div>
+export default async function Dashboard() {
+  const data = await fetchDashboardData();
 
-            {/* Neighborhood Friction - StreetsLA Pavement & Road Work */}
-            <div className="flex items-center justify-between mb-2 px-2 mt-8 border-t border-slate-200 dark:border-white/5 pt-6">
-              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
-                <TrafficCone className="w-5 h-5 text-amber-500" />
-                Neighborhood Friction
-                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">Street Work & Delays</span>
-              </h2>
-            </div>
-
-            <NeighborhoodFrictionDashboard />
-
-            {/* Legislative Sentinel - CD4 Press Releases & Updates */}
-            <div className="flex items-center justify-between mb-2 px-2 mt-8 border-t border-slate-200 dark:border-white/5 pt-6">
-              <h2 className="text-lg font-medium text-slate-800 dark:text-titanium-100 flex items-center gap-2">
-                <Landmark className="w-5 h-5 text-indigo-500" />
-                Legislative Sentinel
-                <span className="text-slate-400 dark:text-titanium-500 text-sm font-normal">CD4 Updates</span>
-              </h2>
-            </div>
-
-            <LegislativeSentinelDashboard />
-          </div>
-
-          {/* Right Column: Neighborhood Feed (Social Sentinel) */}
-          <div className="lg:col-span-3 space-y-6">
-            <SecurityBrief />
-            <ActivityIndex />
-            <MaintenanceSignals />
-
-            <NewsFeed />
-          </div>
-
-        </div>
-      </main>
-    </div>
-  );
+  return <DashboardClient {...data} />;
 }

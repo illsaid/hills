@@ -3,13 +3,16 @@
  * Safety Dispatch Worker
  * 
  * Monitors LAFD incidents for Hollywood Hills area (90068, 90046, 90069)
- * Filters for fire-related keywords and cross-references with AQI
+ * Source: Scrapes live alerts from https://lafd.org/alerts
+ * Filters for "District 4" or specific zip codes/keywords
+ * Cross-references with Google AQI
  * 
  * Usage:
  *   node scripts/safety-dispatch.js
  */
 
 const { createClient } = require('@supabase/supabase-js');
+const cheerio = require('cheerio');
 
 // Load environment variables
 require('dotenv').config({ path: '.env.local' });
@@ -27,42 +30,70 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Configuration
+const BASE_URL = 'https://lafd.org';
+const ALERTS_URL = 'https://lafd.org/alerts';
 const TARGET_ZIPS = ['90068', '90046', '90069'];
-const FIRE_KEYWORDS = ['BRUSH', 'SMOKE', 'STRUCTURE', 'RESCUE', 'VEGETATION', 'FIRE', 'WILDFIRE'];
-const PRIORITY_1_KEYWORDS = ['BRUSH FIRE', 'STRUCTURE FIRE', 'WILDFIRE', 'BRUSH'];
-const PRIORITY_2_KEYWORDS = ['SMOKE', 'VEGETATION'];
-
-// LA City Fire Incident Dataset (Socrata) - LAFD Response Metrics
-const LAFD_API_URL = 'https://data.lacity.org/resource/n44u-wxe4.json';
+const DISTRICT_KEYWORDS = ['District 4', 'Council District 4', 'CD4', 'CD 4'];
+const PRIORITY_1_KEYWORDS = ['BRUSH FIRE', 'STRUCTURE FIRE', 'WILDFIRE', 'BRUSH', 'HIKER'];
+const PRIORITY_2_KEYWORDS = ['SMOKE', 'VEGETATION', 'RESCUE', 'COLLISION'];
 
 // Google Air Quality API (optional)
 const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 const AQI_API_URL = 'https://airquality.googleapis.com/v1/currentConditions:lookup';
-
-// Hollywood Hills approximate coordinates for AQI lookup
 const HOLLYWOOD_HILLS_COORDS = { lat: 34.1164, lng: -118.3205 };
 
 /**
- * Determine incident priority based on keywords
+ * Fetch and parse a webpage
  */
-function getPriority(incidentType) {
-    const upper = (incidentType || '').toUpperCase();
+async function fetchPage(url) {
+    const response = await fetch(url, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
+    });
 
-    if (PRIORITY_1_KEYWORDS.some(kw => upper.includes(kw))) {
-        return 1; // Critical - Red banner
+    if (!response.ok) {
+        throw new Error(`Failed to fetch ${url}: ${response.status}`);
     }
-    if (PRIORITY_2_KEYWORDS.some(kw => upper.includes(kw))) {
-        return 2; // High - Orange
-    }
-    return 3; // Medium - Yellow
+
+    return await response.text();
 }
 
 /**
- * Check if incident is fire-related
+ * Check if text mentions District 4
  */
-function isFireRelated(incidentType) {
-    const upper = (incidentType || '').toUpperCase();
-    return FIRE_KEYWORDS.some(kw => upper.includes(kw));
+function isDistrict4(text) {
+    if (!text) return false;
+    const lowerText = text.toLowerCase();
+    return DISTRICT_KEYWORDS.some(kw => lowerText.includes(kw.toLowerCase()));
+}
+
+/**
+ * Scrape individual alert detail page
+ */
+async function scrapeAlertDetail(url) {
+    try {
+        const html = await fetchPage(url);
+        const $ = cheerio.load(html);
+        const content = $('article').text() || $('.region-content').text() || $('body').text();
+        return {
+            isDistrict4: isDistrict4(content),
+            fullText: content.trim()
+        };
+    } catch (error) {
+        console.error(`Error scraping detail ${url}:`, error.message);
+        return { isDistrict4: false, fullText: '' };
+    }
+}
+
+/**
+ * Determine incident priority
+ */
+function getPriority(title) {
+    const upper = title.toUpperCase();
+    if (PRIORITY_1_KEYWORDS.some(kw => upper.includes(kw))) return 1;
+    if (PRIORITY_2_KEYWORDS.some(kw => upper.includes(kw))) return 2;
+    return 3;
 }
 
 /**
@@ -70,7 +101,7 @@ function isFireRelated(incidentType) {
  */
 async function fetchAQI() {
     if (!GOOGLE_API_KEY) {
-        console.log('⚠️ No GOOGLE_MAPS_API_KEY - skipping AQI check');
+        // console.log('⚠️ No GOOGLE_MAPS_API_KEY - skipping AQI check');
         return null;
     }
 
@@ -86,10 +117,7 @@ async function fetchAQI() {
             })
         });
 
-        if (!response.ok) {
-            console.error('AQI API error:', response.status);
-            return null;
-        }
+        if (!response.ok) return null;
 
         const data = await response.json();
         const aqi = data.indexes?.[0]?.aqi;
@@ -102,81 +130,105 @@ async function fetchAQI() {
 }
 
 /**
- * Fetch active incidents (API or simulation)
+ * Main scraper function
  */
-async function fetchActiveIncidents() {
-    console.log('📡 Fetching active incidents...');
+async function scrapeLiveIncidents() {
+    console.log(`📡 Fetching live alerts from ${ALERTS_URL}...`);
+    const html = await fetchPage(ALERTS_URL);
+    const $ = cheerio.load(html);
 
-    // Check for simulation mode via flag or env
-    const isSim = process.argv.includes('--sim') || process.env.SAFETY_DISPATCH_SIM === 'true';
+    const items = $('a[href^="/alert/"], a[href^="https://lafd.org/alert/"]');
+    const uniqueLinks = new Set();
+    const uniqueItems = [];
 
-    if (isSim) {
-        console.log('🧪 Running in SIMULATION mode');
-        return [
-            {
-                incident_number: 'SIM001',
-                incident_type: 'BRUSH FIRE',
-                address: '2800 N Beachwood Dr',
-                zip_code: '90068',
-                incident_date: new Date().toISOString(),
-            },
-            {
-                incident_number: 'SIM002',
-                incident_type: 'SMOKE INVESTIGATION',
-                address: '8000 Sunset Blvd',
-                zip_code: '90046',
-                incident_date: new Date().toISOString(),
-            },
-            {
-                incident_number: 'SIM003',
-                incident_type: 'VEGETATION FIRE',
-                address: '1500 Laurel Canyon Blvd',
-                zip_code: '90069',
-                incident_date: new Date().toISOString(),
-            },
-        ];
-    }
-
-    // TODO: Replace with real API when available
-    // Currently LAFD Socrata (n44u-wxe4) lacks incident_type and zip fields
-    // Options: PulsePoint, LAIT911, or LA GeoHub when configured
-    console.log('ℹ️ No live API configured - use --sim flag to test with sample data');
-    return [];
-}
-
-/**
- * Process and filter incidents
- */
-async function processIncidents(incidents) {
-    const safetyItems = [];
-    let fireCount = 0;
-
-    for (const incident of incidents) {
-        const incidentType = incident.incident_type || incident.inc_type_desc || '';
-
-        // Filter for fire-related keywords
-        if (!isFireRelated(incidentType)) {
-            continue;
+    items.each((i, el) => {
+        const $el = $(el);
+        const href = $el.attr('href');
+        if (href && !uniqueLinks.has(href)) {
+            uniqueLinks.add(href);
+            uniqueItems.push($el);
         }
+    });
 
-        fireCount++;
-        const priority = getPriority(incidentType);
-        const zip = incident.zip_code || 'Unknown';
-        const incidentId = `lafd-${incident.incident_number || incident.row_id}-${zip}`;
+    console.log(`📋 Found ${uniqueItems.length} unique alert links. Checking for District 4 matches...`);
 
-        safetyItems.push({
-            source_name: 'LAFD Dispatch',
-            title: incidentType,
-            description: `${incidentType} reported at ${incident.address || 'Unknown location'} in ${zip}`,
-            url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(incident.address + ' ' + zip)}`,
-            category: 'Safety',
-            priority: priority,
-            incident_id: incidentId,
-            published_at: incident.incident_date || new Date().toISOString(),
-        });
+    const safetyItems = [];
+    // Limit to first 8 to avoid timeout
+    const maxItems = 8;
+
+    for (let i = 0; i < Math.min(items.length, maxItems); i++) {
+        const $el = uniqueItems[i];
+        const title = $el.text().trim();
+        let link = $el.attr('href');
+
+        if (!title || !link) continue;
+        if (!link.startsWith('http')) link = BASE_URL + link;
+
+        // Small delay
+        await new Promise(r => setTimeout(r, 200));
+
+        const detail = await scrapeAlertDetail(link);
+
+        if (detail.isDistrict4) {
+            console.log(`   ✅ MATCH: "${title}"`);
+
+            // Extract date and time
+            // Formats: "01/28/2026", "01-28-2026", "6:19pm", "10:22am"
+            let publishedAt = new Date().toISOString(); // Default to now
+
+            try {
+                // Find Date: MM/DD/YYYY or MM-DD-YYYY
+                const dateMatch = title.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+                // Find Time: HH:MMam/pm or HH:MM
+                // Look in both title and body for time if possible, but title often has it or body starts with it.
+                // The snippet often contains the time right after the date.
+                const timeMatch = (title + " " + detail.fullText).match(/(\d{1,2}):(\d{2})\s*(am|pm|AM|PM)?/);
+
+                if (dateMatch) {
+                    const month = parseInt(dateMatch[1]);
+                    const day = parseInt(dateMatch[2]);
+                    const year = parseInt(dateMatch[3]);
+
+                    let hours = 12; // Default noon if no time
+                    let minutes = 0;
+
+                    if (timeMatch) {
+                        let h = parseInt(timeMatch[1]);
+                        const m = parseInt(timeMatch[2]);
+                        const meridiem = timeMatch[3]?.toLowerCase();
+
+                        if (meridiem === 'pm' && h < 12) h += 12;
+                        if (meridiem === 'am' && h === 12) h = 0;
+
+                        hours = h;
+                        minutes = m;
+                    }
+
+                    const dt = new Date(year, month - 1, day, hours, minutes, 0);
+                    if (!isNaN(dt.getTime())) {
+                        publishedAt = dt.toISOString();
+                        console.log(`   🕒 Parsed Time: ${publishedAt}`);
+                    }
+                }
+            } catch (e) {
+                console.log('   ⚠️ Date parsing error, using NOW:', e.message);
+            }
+
+            const priority = getPriority(title);
+
+            safetyItems.push({
+                source_name: 'LAFD Alert',
+                title: title,
+                description: detail.fullText.slice(0, 200).replace(/\s+/g, ' ').trim() + '...',
+                url: link,
+                category: 'Safety',
+                priority: priority,
+                published_at: publishedAt,
+                incident_id: link // Use URL as ID
+            });
+        }
     }
 
-    console.log(`🔥 Found ${fireCount} fire-related incidents`);
     return safetyItems;
 }
 
@@ -185,91 +237,46 @@ async function processIncidents(incidents) {
  */
 async function upsertSafetyItems(items) {
     if (items.length === 0) {
-        console.log('⚠️ No safety items to insert');
+        console.log('ℹ️ No new safety items found.');
         return;
     }
 
-    // Upsert with conflict resolution on incident_id
     const { data, error } = await supabase
         .from('neighborhood_intel')
         .upsert(items, {
-            onConflict: 'incident_id',
-            ignoreDuplicates: false,
+            onConflict: 'url',
+            ignoreDuplicates: false, // Update existing records with new timestamps
         })
         .select();
 
     if (error) {
-        // If incident_id column doesn't exist, fall back to url dedup
-        if (error.message.includes('incident_id') || error.message.includes('priority')) {
-            console.log('⚠️ Missing columns detected, using URL dedup with base fields');
-            const cleanItems = items.map(i => {
-                const { incident_id, priority, ...rest } = i;
-                return rest;
-            });
-            const { data: fallbackData, error: fallbackError } = await supabase
-                .from('neighborhood_intel')
-                .upsert(cleanItems, {
-                    onConflict: 'url',
-                    ignoreDuplicates: false,
-                })
-                .select();
-
-            if (fallbackError) {
-                console.error('❌ Supabase error:', fallbackError.message);
-                return;
-            }
-            console.log(`✅ Upserted ${fallbackData?.length || 0} safety items (URL dedup)`);
-            return fallbackData;
-        }
-
         console.error('❌ Supabase error:', error.message);
         return;
     }
 
     console.log(`✅ Upserted ${data?.length || 0} safety items`);
-    return data;
 }
 
 /**
  * Main executor
  */
 async function main() {
-    console.log('\n🚨 Safety Dispatch Worker Starting...\n');
-    console.log(`📍 Target Zips: ${TARGET_ZIPS.join(', ')}`);
-    console.log(`🔍 Keywords: ${FIRE_KEYWORDS.join(', ')}\n`);
+    console.log('\n🚨 Safety Dispatch Worker Starting (Live Scraper)...\n');
 
     try {
-        // 1. Fetch active incidents
-        const incidents = await fetchActiveIncidents();
+        // 1. Scrape Live Incidents
+        const safetyItems = await scrapeLiveIncidents();
 
-        if (incidents.length === 0) {
-            console.log('ℹ️ No recent incidents found in target area');
-            console.log('\n✨ Done!\n');
-            return;
-        }
-
-        // 2. Process and filter incidents
-        const safetyItems = await processIncidents(incidents);
-
-        // 3. Check AQI if fire incidents found
-        if (safetyItems.length > 0) {
+        // 2. Check AQI if we have high priority incidents
+        const hasHighPriority = safetyItems.some(i => i.priority === 1);
+        if (hasHighPriority) {
             const aqi = await fetchAQI();
             if (aqi && aqi > 100) {
-                console.log(`⚠️ AQI elevated (${aqi}) - air quality concern`);
+                console.log(`⚠️ AQI elevated (${aqi}) - High priority fire event correlated.`);
             }
         }
 
-        // 4. Preview items
-        if (safetyItems.length > 0) {
-            console.log('\n📊 Safety Items:');
-            safetyItems.forEach(item => {
-                const priorityLabel = item.priority === 1 ? '🔴 P1' : item.priority === 2 ? '🟠 P2' : '🟡 P3';
-                console.log(`   ${priorityLabel} ${item.title}`);
-            });
-            console.log('');
-        }
-
-        // 5. Upsert to database
+        // 3. Upsert
         await upsertSafetyItems(safetyItems);
 
         console.log('\n✨ Done!\n');

@@ -1,0 +1,32 @@
+name: News Feed Aggregation
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Every hour
+  workflow_dispatch:
+
+jobs:
+  update-news:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install deps
+        run: pip install feedparser
+        
+      - name: Run News Feed Scraper
+        run: python scripts/news-feed.py
+        
+      - name: Commit changes
+        run: |
+          git config --global user.name "Hills Bot"
+          git config --global user.email "bot@hillsledger.com"
+          git add data/news_feed.json
+          # Only commit if there are changes
+          git commit -m "Automated News Feed Update" || exit 0
+          git push

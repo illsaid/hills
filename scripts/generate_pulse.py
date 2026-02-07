@@ -3,17 +3,56 @@ from datetime import datetime
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
+import os, json
+import re
+from datetime import datetime
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+
+# Manually load env files since python-dotenv might not be available
+def load_env_file(filepath):
+    if not os.path.exists(filepath): return
+    with open(filepath, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'): continue
+            if '=' in line:
+                key, value = line.split('=', 1)
+                # Don't overwrite existing env vars
+                if key.strip() not in os.environ:
+                    os.environ[key.strip()] = value.strip()
+
+load_env_file('.env.local')
+load_env_file('.env')
+
 # Signal Guard Keywords
 LOCAL_FILTERS = ["West Bureau", "Hollywood Hills", "FS 41", "FS 82", "FS 76", "Runyon", "Nichols", "Canyon", "Mulholland"]
 
 def get_gmail_service():
-    creds_info = json.loads(os.environ['GMAIL_TOKEN'])
-    # Extract client_id and client_secret from GMAIL_CREDENTIALS
-    gmail_creds = json.loads(os.environ['GMAIL_CREDENTIALS'])
-    # Handle both 'installed' and 'web' credential types
-    cred_data = gmail_creds.get('installed') or gmail_creds.get('web') or gmail_creds
-    creds_info['client_id'] = cred_data['client_id']
-    creds_info['client_secret'] = cred_data['client_secret']
+    token_str = os.environ.get('GMAIL_TOKEN')
+    if not token_str:
+        raise ValueError("Missing GMAIL_TOKEN environment variable")
+        
+    # Handle potential single quotes from .env file
+    if token_str.startswith("'") and token_str.endswith("'"):
+        token_str = token_str[1:-1]
+        
+    creds_info = json.loads(token_str)
+    
+    # Extract client_id and client_secret
+    if 'GMAIL_CREDENTIALS' in os.environ:
+        gmail_creds = json.loads(os.environ['GMAIL_CREDENTIALS'])
+        cred_data = gmail_creds.get('installed') or gmail_creds.get('web') or gmail_creds
+        creds_info['client_id'] = cred_data['client_id']
+        creds_info['client_secret'] = cred_data['client_secret']
+    else:
+        # Fallback to direct env vars
+        creds_info['client_id'] = os.environ.get('GMAIL_CLIENT_ID')
+        creds_info['client_secret'] = os.environ.get('GMAIL_CLIENT_SECRET')
+        
+    if not creds_info['client_id'] or not creds_info['client_secret']:
+        raise ValueError("Missing GMAIL_CLIENT_ID or GMAIL_CLIENT_SECRET")
+
     creds = Credentials.from_authorized_user_info(creds_info)
     return build('gmail', 'v1', credentials=creds)
 
@@ -30,8 +69,13 @@ def fetch_lafd_alerts(service):
                 
                 # Check for matches
                 if any(k.lower() in snippet.lower() for k in LOCAL_FILTERS):
-                    # Clean up the snippet
-                    clean_text = snippet.replace('LAFD Alert', '').strip()
+                    # Clean up the snippet using regex
+                    # Remove "LAFD Alert" (case insensitive), "This is a message...", "Image did not load"
+                    clean_text = re.sub(r'(?i)(lafd alert\s*\.?|this is a message from.*?alert|image did not load)', '', snippet)
+                    # Remove dots/punctuation at the start
+                    clean_text = re.sub(r'^[\.\s:-]+', '', clean_text)
+                    # Collapse multiple spaces
+                    clean_text = " ".join(clean_text.split())
                     messages.append(clean_text)
             except Exception as e:
                 print(f"Error processing message {msg['id']}: {e}")

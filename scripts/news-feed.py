@@ -2,17 +2,14 @@
 import feedparser
 import json
 import os
+import urllib.parse
 from datetime import datetime
-import re
 from difflib import SequenceMatcher
+import re
 
 # Configuration
-FEEDS = [
-    {"source": "LA Times", "url": "https://www.latimes.com/california/rss2.0.xml"},
-    {"source": "KTLA", "url": "https://ktla.com/feed"},
-    {"source": "LA Mag", "url": "https://lamag.com/feed"},
-    {"source": "Canyon News", "url": "https://www.canyon-news.com/feed"}
-]
+RSS_BASE = "https://news.google.com/rss/search"
+BLOCKED_DOMAINS = ["msn.com", "yahoo.com", "aol.com", "marketwatch.com", "businessinsider.com"]
 
 # Keywords (Case-insensitive)
 KEYWORDS = [
@@ -33,85 +30,93 @@ def clean_html(raw_html):
     text = re.sub(cleaner, '', raw_html)
     return text.strip()
 
-def is_relevant(text):
-    if not text:
-        return False
-    # Check for keywords
-    text_lower = text.lower()
-    for kw in KEYWORDS:
-        if kw.lower() in text_lower:
-            return kw
-    return None
+def is_blocked(link):
+    for domain in BLOCKED_DOMAINS:
+        if domain in link:
+            return True
+    return False
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
 def fetch_and_filter():
-    print(f"Starting News Feed aggregation for {len(FEEDS)} sources...")
+    print("Starting News Feed aggregation via Google News RSS...")
     
-    all_articles = []
+    # Construct Query
+    # Group keywords with OR
+    query_terms = ' OR '.join([f'"{k}"' for k in KEYWORDS])
+    # Add time filter (last 7 days) and location intent
+    full_query = f"({query_terms}) when:7d"
     
-    for feed_cfg in FEEDS:
-        print(f"   Fetching {feed_cfg['source']}...")
-        try:
-            d = feedparser.parse(feed_cfg['url'], agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+    encoded_query = urllib.parse.quote(full_query)
+    rss_url = f"{RSS_BASE}?q={encoded_query}&hl=en-US&gl=US&ceid=US:en"
+    
+    print(f"   Querying: {rss_url[:100]}...")
+    
+    try:
+        d = feedparser.parse(rss_url)
+        all_articles = []
+        
+        for entry in d.entries:
+            title = entry.get('title', '')
+            link = entry.get('link', '')
+            description = entry.get('summary', '') or entry.get('description', '')
+            published = entry.get('published', '')
             
-            if d.bozo:
-                pass # warnings.warn(d.bozo_exception) usually fine
+            # Simple Domain Filter
+            if is_blocked(link):
+                continue
                 
-            for entry in d.entries:
-                # Extract basic fields
-                title = entry.get('title', '')
-                link = entry.get('link', '')
-                description = entry.get('summary', '') or entry.get('description', '')
-                
-                # Check relevance
-                hit_kw = is_relevant(title) or is_relevant(description)
-                
-                if hit_kw:
-                    # Parse date
-                    published = entry.get('published', '') or entry.get('updated', '')
-                    # Attempt to standardize date (feedparser usually does this in entry.published_parsed)
-                    pub_ts = None
-                    if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                        dt = datetime(*entry.published_parsed[:6])
-                        pub_ts = dt.isoformat()
-                    else:
-                        pub_ts = datetime.now().isoformat()
-                        
-                    article = {
-                        "headline": title.strip(),
-                        "source": feed_cfg['source'],
-                        "url": link,
-                        "published": pub_ts,
-                        "summary": clean_html(description)[:200] + "...",
-                        "keyword_match": hit_kw
-                    }
-                    all_articles.append(article)
-                    
-        except Exception as e:
-            print(f"      ❌ Failed: {e}")
+            # Parse Date
+            pub_ts = datetime.now().isoformat()
+            if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                dt = datetime(*entry.published_parsed[:6])
+                pub_ts = dt.isoformat()
+
+            source_name = "Google News"
+            if 'source' in entry:
+                source_name = entry.source.title if 'title' in entry.source else entry.source.get('content', 'Google News')
+
+            article = {
+                "headline": title,
+                "source": source_name,
+                "url": link,
+                "published": pub_ts,
+                "summary": clean_html(description),
+                "keyword_match": "Query Match" # Google did the matching
+            }
+            all_articles.append(article)
+            
+    except Exception as e:
+        print(f"      ❌ Failed to fetch RSS: {e}")
+        return
 
     # Deduplication
-    print(f"   Found {len(all_articles)} relevant articles. Deduplicating...")
+    print(f"   Fetched {len(all_articles)} articles. Deduplicating...")
     unique_articles = []
     seen_titles = []
     
-    # Sort by date desc first (newest first)
+    # Sort by date desc (newest first)
     all_articles.sort(key=lambda x: x['published'], reverse=True)
     
     for article in all_articles:
+        # Clean title (Google News often adds " - Source Name" at the end)
+        clean_title = article['headline'].rsplit(' - ', 1)[0]
+        
         is_dup = False
         for seen in seen_titles:
-            # Check title similarity > 0.8
-            if similar(article['headline'].lower(), seen.lower()) > 0.8:
+            if similar(clean_title.lower(), seen.lower()) > 0.8:
                 is_dup = True
                 break
         
         if not is_dup:
-            unique_articles.append(article)
-            seen_titles.append(article['headline'])
-            
+            # Check if title strictly contains at least ONE keyword to ensure high relevance
+            # (sometimes Google broad matches too much)
+            if any(k.lower() in clean_title.lower() for k in KEYWORDS) or \
+               any(k.lower() in article['summary'].lower() for k in KEYWORDS):
+                unique_articles.append(article)
+                seen_titles.append(clean_title)
+
     # Limit to top 20
     final_feed = unique_articles[:20]
     

@@ -1,5 +1,10 @@
 {
-  "last_updated": "2026-01-22T18:12:54.165197Z",
-  "status": "Clear",
-  "summary": "No active incidents in the Hills."
+  "last_updated": "2026-01-28T17:13:11.569837Z",
+  "status": "Active",
+  "summary": "Monitor Active: 3 recent incident(s). Latest: Hollywood Hills Hiker Rescue 01-27-2026 6:19pm 3000 N Lake Hollywood Dr MAP: https://bit.ly/49Jrd4b LAFD air and ground resources assisted in the",
+  "alerts": [
+    "Hollywood Hills Hiker Rescue 01-27-2026 6:19pm 3000 N Lake Hollywood Dr MAP: https://bit.ly/49Jrd4b LAFD air and ground resources assisted in the",
+    "Update KNOCKDOWN Hollywood Hills Structure Fire 01-24-2026 10:22am 3199 N Barham Bl MAP: https://bit.ly/3u7J54t A well coordinated roof and",
+    "Hollywood Hills Structure Fire 01-24-2026 10:22am 3199 N Barham Bl MAP: https://bit.ly/3u7J54t Small 1 story vacant commercial building,"
+  ]
 }

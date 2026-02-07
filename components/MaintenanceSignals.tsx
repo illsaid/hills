@@ -58,20 +58,26 @@ export function MaintenanceSignals() {
     const isDown = trend.includes("Down");
     const trendColor = isUp ? "text-orange-500" : isDown ? "text-emerald-500" : "text-slate-400";
 
+    // Widget Status Logic
+    const isElevated = data.status !== "OK"; // Assuming "OK" is the non-elevated status
+    const StatusIcon = isElevated ? AlertCircle : CheckCircle2;
+
     return (
-        <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
-            <div className="h-1 w-full bg-orange-500" />
-            <CardContent className="p-5">
+        <Card className="border-border bg-panel shadow-soft overflow-hidden">
+            <div className={`h-1 w-full ${isElevated ? 'bg-alert' : 'bg-safe'}`} />
+            <CardContent className="p-6">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <Cone className="w-5 h-5 text-orange-500" />
-                        <h3 className="font-semibold text-slate-800 dark:text-titanium-100">
-                            Neighborhood Signals
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${isElevated ? 'bg-alert/10' : 'bg-safe/10'}`}>
+                            <StatusIcon className={`w-5 h-5 ${isElevated ? 'text-alert' : 'text-safe'}`} />
+                        </div>
+                        <h3 className="font-medium text-ink">
+                            Security Brief
                         </h3>
                     </div>
-                    <Badge variant="outline" className="bg-slate-100 text-slate-600 border-slate-200">
-                        311 • {data.period}
+                    <Badge variant="outline" className={`text-xs px-2.5 py-0.5 font-medium border ${isElevated ? 'bg-alert/5 text-alert border-alert/20' : 'bg-safe/5 text-safe border-safe/20'}`}>
+                        {data.status}
                     </Badge>
                 </div>
 

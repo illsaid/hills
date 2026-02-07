@@ -92,8 +92,8 @@ export function NewsFeed() {
                 </div>
 
                 <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                    <div className="text-[10px] text-slate-400">
-                        Filtered: "Hollywood Hills", "Runyon", etc.
+                                        <div className="text-[10px] text-slate-400">
+                        Filtered: &ldquo;Hollywood Hills&rdquo;, &ldquo;Runyon&rdquo;, etc.
                     </div>
                 </div>
             </CardContent>

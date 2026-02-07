@@ -3,7 +3,7 @@ import { supabaseServer } from '@/lib/supabase/server';
 
 export interface UnifiedFeedItem {
     id: string;
-    type: 'safety' | 'event' | 'legislative' | 'intel';
+    type: 'safety' | 'event' | 'legislative' | 'intel' | 'enforcement' | 'business';
     title: string;
     description: string | null;
     url: string | null;
@@ -19,17 +19,22 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const limit = parseInt(searchParams.get('limit') || '20');
 
-        // Fetch from neighborhood_intel (Safety, Legislative, etc.)
-        const { data: intelData, error: intelError } = await supabaseServer
+        // Fetch Priority Intel (Safety, Legislative) - High Limit
+        const { data: priorityData, error: priorityError } = await supabaseServer
             .from('neighborhood_intel')
             .select('*')
-            .in('category', ['Safety', 'News', 'Legislative'])
+            .in('category', ['Safety', 'Legislative'])
             .order('published_at', { ascending: false, nullsFirst: false })
             .limit(limit);
 
-        if (intelError) {
-            console.error('Intel fetch error:', intelError);
-        }
+        if (priorityError) console.error('Priority Intel error:', priorityError);
+
+        // Fetch News - Restricted Limit to avoid flooding
+
+
+        const intelData = [...(priorityData || [])];
+
+
 
         // Fetch from events table
         const { data: eventsData, error: eventsError } = await supabaseServer
@@ -42,6 +47,18 @@ export async function GET(request: Request) {
         if (eventsError) {
             console.error('Events fetch error:', eventsError);
         }
+
+
+
+        // Fetch Code Enforcement
+        const { data: codeData, error: codeError } = await supabaseServer
+            .from('code_enforcement')
+            .select('*')
+            .eq('status', 'O') // Open cases only
+            .order('date_opened', { ascending: false })
+            .limit(limit);
+
+        if (codeError) console.error('Code Enforcement fetch error:', codeError);
 
         // Normalize and combine
         const items: UnifiedFeedItem[] = [];
@@ -62,12 +79,15 @@ export async function GET(request: Request) {
             });
         });
 
-        // Add events
+                // Add events
         (eventsData || []).forEach(event => {
+            // Exclude Community News from main feed (they belong in sidebar)
+            if (event.source?.name === 'Community News') return;
+
             items.push({
                 id: event.id,
                 type: 'event',
-                title: event.headline,
+                title: event.title,
                 description: event.summary,
                 url: event.source_url,
                 category: event.event_type || 'Event',
@@ -75,6 +95,24 @@ export async function GET(request: Request) {
                 priority: event.impact >= 4 ? 1 : event.impact >= 2 ? 2 : 3,
                 published_at: event.observed_at || event.created_at,
                 created_at: event.created_at,
+            });
+        });
+
+
+
+        // Add Code Enforcement
+        (codeData || []).forEach(item => {
+            items.push({
+                id: `code-${item.id}`,
+                type: 'enforcement',
+                title: `Code Violation: ${item.case_type}`,
+                description: `${item.address} • Case #${item.case_number}`,
+                url: null,
+                category: 'Code Enforcement',
+                source_name: 'LADBS',
+                priority: 2, // Slightly higher priority
+                published_at: item.date_opened,
+                created_at: item.updated_at || item.date_opened,
             });
         });
 

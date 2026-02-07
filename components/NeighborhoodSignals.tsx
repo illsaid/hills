@@ -26,16 +26,42 @@ export function NeighborhoodSignals() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch('/api/neighborhood-signals');
+        const res = await fetch('/api/maintenance-signals');
         const json = await res.json();
-        if (json.success) {
-          setIssues(json.issues || getDefaultIssues());
-          setClusters(json.clusters || getDefaultClusters());
+
+        // Map API response to component state
+        if (json.top_types && Array.isArray(json.top_types)) {
+          const adaptedIssues: Issue311[] = json.top_types.slice(0, 3).map((t: any) => {
+            let icon = Construction;
+            const lowerType = t.type.toLowerCase();
+            if (lowerType.includes('dumping')) icon = Trash2;
+            else if (lowerType.includes('homeless')) icon = Tent;
+
+            return {
+              name: t.type,
+              count: t.count,
+              trend: 'stable', // Data doesn't provide per-item trend yet
+              icon: icon
+            };
+          });
+          setIssues(adaptedIssues);
         } else {
           setIssues(getDefaultIssues());
+        }
+
+        if (json.hotspots && Array.isArray(json.hotspots)) {
+          const adaptedClusters: ActiveCluster[] = json.hotspots.slice(0, 3).map((h: any) => ({
+            location: h.location === 'Unknown' ? 'Multiple Locations' : h.location,
+            issueType: h.type,
+            reports: h.count,
+            status: h.status.toLowerCase().includes('resolved') ? 'resolved' : 'active'
+          }));
+          setClusters(adaptedClusters);
+        } else {
           setClusters(getDefaultClusters());
         }
       } catch (e) {
+        console.error('Failed to fetch neighborhood signals:', e);
         setIssues(getDefaultIssues());
         setClusters(getDefaultClusters());
       } finally {
