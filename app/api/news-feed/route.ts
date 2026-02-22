@@ -1,22 +1,57 @@
-
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export async function GET() {
-    try {
-        const filePath = path.join(process.cwd(), 'data', 'news_feed.json');
+  try {
+    const { data, error } = await supabase
+      .from('neighborhood_intel')
+      .select('title, description, url, published_at, snapshot, raw_json')
+      .eq('source_name', 'Google News')
+      .eq('category', 'News Feed')
+      .order('published_at', { ascending: false })
+      .limit(20);
 
-        if (!fs.existsSync(filePath)) {
-            return NextResponse.json({ items: [], updated_at: null });
-        }
-
-        const fileContents = fs.readFileSync(filePath, 'utf8');
-        const data = JSON.parse(fileContents);
-
-        return NextResponse.json(data);
-    } catch (error) {
-        console.error('Error reading news feed:', error);
-        return NextResponse.json({ error: 'Failed to load news feed' }, { status: 500 });
+    if (!error && data && data.length > 0) {
+      const anySnapshot = data.some(r => r.snapshot);
+      const items = data.map(r => ({
+        headline: r.title,
+        source: (r.raw_json as Record<string, unknown>)?.source ?? 'Google News',
+        url: r.url,
+        published: r.published_at,
+        summary: r.description,
+        keyword_match: 'Query Match',
+      }));
+      return NextResponse.json({
+        items,
+        updated_at: data[0].published_at,
+        snapshot: anySnapshot,
+        snapshot_updated_at: data[0].published_at ?? null,
+      });
     }
+
+    if (error) {
+      console.warn('[news-feed] Supabase query failed:', error.message);
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      const { default: fs } = await import('fs');
+      const { default: path } = await import('path');
+      const filePath = path.join(process.cwd(), 'data', 'news_feed.json');
+      if (fs.existsSync(filePath)) {
+        console.warn('[news-feed] DEV FALLBACK: serving from data/news_feed.json');
+        const fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        return NextResponse.json({ ...fileData, snapshot: true, snapshot_updated_at: fileData.updated_at });
+      }
+    }
+
+    return NextResponse.json({ items: [], updated_at: null, snapshot: false, snapshot_updated_at: null });
+  } catch (err) {
+    console.error('[news-feed] Unexpected error:', err);
+    return NextResponse.json({ error: 'Failed to load news feed' }, { status: 500 });
+  }
 }
