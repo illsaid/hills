@@ -155,9 +155,9 @@ async function fetchDashboardData() {
   const newsHeadlines = (newsData.items || []).slice(0, 5).map((n: any, i: number) => ({
     id: n.id || `news-${i}`,
     source: n.source || 'News',
-    title: n.title || '',
-    timestamp: n.published_at || n.pubDate || new Date().toISOString(),
-    href: n.link || n.url || '#',
+    title: n.headline || n.title || '',
+    timestamp: n.published || n.published_at || n.pubDate || new Date().toISOString(),
+    href: n.url || n.link || '#',
   }));
 
   // AQI data

@@ -52,11 +52,12 @@ export function LocalNews({ headlines, updatedAt }: LocalNewsProps) {
                         rel="noopener noreferrer"
                         className="block group"
                     >
-                        {/* Headline first (primary) */}
-                        <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
-                            {headline.title}
-                        </p>
-                        {/* Source + age (secondary) */}
+                        <div className="flex items-start gap-1.5">
+                            <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1 flex-1">
+                                {headline.title}
+                            </p>
+                            <ExternalLink className="w-3 h-3 text-slate-300 dark:text-slate-600 group-hover:text-blue-400 transition-colors mt-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100" />
+                        </div>
                         <div className="flex items-center gap-2 text-[10px] text-slate-400">
                             <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-white/10 rounded font-medium">
                                 {headline.source}

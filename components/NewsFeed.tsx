@@ -68,9 +68,15 @@ export function NewsFeed() {
 
                 <div className="space-y-4">
                     {data.items.map((item, i) => (
-                        <div key={i} className="group relative pl-4 border-l-2 border-slate-100 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
+                        <a
+                            key={i}
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group block relative pl-4 border-l-2 border-slate-100 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-colors cursor-pointer"
+                        >
                             <div className="flex justify-between items-start mb-1">
-                                <Badge variant="secondary" className="text-[10px] h-5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200">
+                                <Badge variant="secondary" className="text-[10px] h-5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                     {item.source}
                                 </Badge>
                                 <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">
@@ -78,16 +84,17 @@ export function NewsFeed() {
                                 </span>
                             </div>
 
-                            <a href={item.url} target="_blank" rel="noopener noreferrer" className="block group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                <h4 className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-tight mb-1">
+                            <div className="flex items-start gap-1.5">
+                                <h4 className="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-tight mb-1 transition-colors flex-1">
                                     {item.headline}
                                 </h4>
-                            </a>
+                                <ExternalLink className="w-3 h-3 text-slate-300 dark:text-slate-600 group-hover:text-blue-400 transition-colors mt-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100" />
+                            </div>
 
                             <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                                 {item.summary}
                             </p>
-                        </div>
+                        </a>
                     ))}
                 </div>
 
