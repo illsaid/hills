@@ -59,9 +59,8 @@ export function ActivityFeed({ items, onSelectItem, loading }: ActivityFeedProps
             <div className="sticky top-0 z-10 bg-stone-50 dark:bg-slate-900 pb-4">
                 <div className="flex items-center justify-between mb-3">
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Activity</h2>
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                        Live
+                    <span className="text-xs text-stone-400 font-medium px-2 py-0.5 bg-stone-100 rounded-full">
+                        Snapshot
                     </span>
                 </div>
 
@@ -108,8 +107,11 @@ export function ActivityFeed({ items, onSelectItem, loading }: ActivityFeedProps
                         <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
                     </div>
                 ) : sortedItems.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-                        No {category === 'all' ? '' : category.replace('_', ' ')} items
+                    <div className="text-center py-12 space-y-1">
+                        <p className="text-sm font-medium text-stone-500">Coming soon</p>
+                        <p className="text-xs text-stone-400">
+                            {category === 'all' ? 'No activity data yet' : `No ${category.replace('_', ' ')} data yet`}
+                        </p>
                     </div>
                 ) : (
                     sortedItems.map((item) => (

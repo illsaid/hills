@@ -145,7 +145,7 @@ async function fetchDashboardData() {
         icon: a.priority === 1 ? 'flame' : 'alert',
         title: a.title || 'Alert',
         age,
-        severity: a.priority === 1 ? 'critical' : 'warning',
+        severity: (a.priority === 1 ? 'critical' : 'warning') as 'critical' | 'warning' | 'info',
       };
     });
 
@@ -167,14 +167,37 @@ async function fetchDashboardData() {
     updatedAt: aqiData?.created_at || null,
   };
 
-  // Weather (static for now)
-  const weather = {
-    temp: 72,
-    condition: 'Clear',
-    high: 78,
-    low: 64,
-    wind: '8mph',
-  };
+  // Weather from NWS
+  let weather: { temp: number; condition: string; high: number; low: number; wind?: string } | undefined;
+  try {
+    const nwsRes = await fetch('https://api.weather.gov/gridpoints/LOX/152,48/forecast/hourly', {
+      headers: { 'User-Agent': '(hills-ledger-app, contact@example.com)' },
+      next: { revalidate: 1800 },
+    });
+    if (nwsRes.ok) {
+      const nwsJson = await nwsRes.json();
+      const periods = nwsJson.properties?.periods || [];
+      const now = new Date();
+      const current = periods.find((p: any) => {
+        const start = new Date(p.startTime);
+        const end = new Date(p.endTime);
+        return now >= start && now < end;
+      }) || periods[0];
+      if (current) {
+        const dayPeriods = periods.slice(0, 12);
+        const temps = dayPeriods.map((p: any) => p.temperature as number);
+        weather = {
+          temp: current.temperature,
+          condition: current.shortForecast,
+          high: Math.max(...temps),
+          low: Math.min(...temps),
+          wind: current.windSpeed,
+        };
+      }
+    }
+  } catch {
+    // Weather unavailable — KPIRow handles undefined gracefully
+  }
 
   // Quick stats
   const stats = [

@@ -4,12 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
-  AlertTriangle,
   Landmark,
   Shield,
   TrafficCone,
-  Users,
-  BarChart3,
   FileText,
   Building2,
   Home,
@@ -17,14 +14,11 @@ import {
 
 const NAV_ITEMS = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Top Alerts', href: '/alerts', icon: AlertTriangle },
   { name: 'Real Estate', href: '/real-estate', icon: Home },
   { name: 'Businesses', href: '/businesses', icon: Building2 },
   { name: 'Government Affairs', href: '/council', icon: Landmark },
   { name: 'Public Safety & Civic', href: '/safety', icon: Shield },
   { name: 'Street Work', href: '/infrastructure', icon: TrafficCone },
-  { name: 'Community Events', href: '/events', icon: Users },
-  { name: 'Civic Insights', href: '/insights', icon: BarChart3 },
   { name: 'Permits', href: '/permits', icon: FileText },
 ];
 

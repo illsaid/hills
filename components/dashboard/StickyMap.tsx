@@ -1,119 +1,190 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, MapPin, AlertTriangle, FileText, Construction, Shield } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Layers } from 'lucide-react';
 import type { FeedItem } from './types';
 
-interface StickyMapProps {
-    items?: FeedItem[];
-    selectedItemId?: string;
-    onPinClick?: (item: FeedItem) => void;
-}
+const HILLS_CENTER: [number, number] = [34.113, -118.345];
+const HILLS_ZOOM = 12;
 
-const LAYER_OPTIONS = [
-    { id: 'alerts', label: 'Alerts', icon: AlertTriangle },
-    { id: 'permits', label: 'Permits', icon: FileText },
-    { id: 'street_work', label: 'Street Work', icon: Construction },
-    { id: 'crime', label: 'Crime', icon: Shield },
+const HILLS_BOUNDARY: [number, number][] = [
+  [34.152, -118.392],
+  [34.152, -118.298],
+  [34.077, -118.298],
+  [34.077, -118.392],
 ];
 
+interface StickyMapProps {
+  items?: FeedItem[];
+  selectedItemId?: string;
+  onPinClick?: (item: FeedItem) => void;
+}
+
 export function StickyMap({ items = [], selectedItemId, onPinClick }: StickyMapProps) {
-    const [activeLayers, setActiveLayers] = useState<string[]>(['alerts']);
-    const [searchQuery, setSearchQuery] = useState('');
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const [showLayers, setShowLayers] = useState(false);
+  const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set(['permits', 'safety']));
 
-    const toggleLayer = (layerId: string) => {
-        setActiveLayers((prev) =>
-            prev.includes(layerId) ? prev.filter((l) => l !== layerId) : [...prev, layerId]
-        );
-    };
+  useEffect(() => {
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    // Filter items that have geo and match active layers
-    const visibleItems = items.filter((item) => {
-        if (!item.geo) return false;
-        if (activeLayers.includes('alerts') && (item.type === 'safety' || item.severity >= 2)) return true;
-        if (activeLayers.includes('permits') && item.type === 'permit') return true;
-        if (activeLayers.includes('street_work') && item.type === 'street_work') return true;
-        if (activeLayers.includes('crime') && item.type === 'code') return true;
-        return false;
+    import('leaflet').then((L) => {
+      if (!mapContainerRef.current || mapInstanceRef.current) return;
+
+      if (!document.querySelector('link[href*="leaflet.css"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+      }
+
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      });
+
+      const map = L.map(mapContainerRef.current, {
+        zoomControl: true,
+        scrollWheelZoom: false,
+        attributionControl: false,
+      }).setView(HILLS_CENTER, HILLS_ZOOM);
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+      }).addTo(map);
+
+      L.polygon(HILLS_BOUNDARY, {
+        color: '#1c1917',
+        weight: 2,
+        fillColor: '#1c1917',
+        fillOpacity: 0.04,
+        dashArray: '6 4',
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
     });
 
-    const selectedItem = selectedItemId ? items.find((i) => i.id === selectedItemId) : null;
-    const hasGeo = selectedItem?.geo != null;
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
 
-    return (
-        // Fills the parent container (which has explicit height)
-        <div className="absolute inset-0">
-            {/* Map background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800" />
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
 
-            {/* Grid overlay */}
-            <div
-                className="absolute inset-0 opacity-30 pointer-events-none"
-                style={{
-                    backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-                    backgroundSize: '40px 40px'
-                }}
-            />
+    import('leaflet').then((L) => {
+      const map = mapInstanceRef.current;
+      if (!map) return;
 
-            {/* Sample pins for items with geo */}
-            {visibleItems.slice(0, 5).map((item, i) => (
-                <div
-                    key={item.id}
-                    onClick={() => onPinClick?.(item)}
-                    className={`absolute cursor-pointer transition-transform hover:scale-110 ${selectedItemId === item.id ? 'scale-125' : ''
-                        }`}
-                    style={{
-                        top: `${25 + (i * 12)}%`,
-                        left: `${20 + (i * 15)}%`
-                    }}
-                >
-                    <div className={`w-4 h-4 rounded-full border-2 border-white shadow-lg ${item.severity >= 2 ? 'bg-red-500' : item.severity === 1 ? 'bg-amber-500' : 'bg-blue-500'
-                        } ${item.severity >= 2 ? 'animate-pulse' : ''}`} />
-                </div>
+      markersRef.current.forEach((m) => map.removeLayer(m));
+      markersRef.current = [];
+
+      const geoItems = items.filter(
+        (item) =>
+          item.geo &&
+          ((activeLayers.has('permits') && item.type === 'permit') ||
+            (activeLayers.has('safety') && (item.type === 'safety' || item.type === 'code')))
+      );
+
+      geoItems.forEach((item) => {
+        if (!item.geo) return;
+
+        const color =
+          item.severity >= 3
+            ? '#ef4444'
+            : item.severity === 2
+            ? '#f59e0b'
+            : item.type === 'permit'
+            ? '#3b82f6'
+            : '#6b7280';
+
+        const isSelected = item.id === selectedItemId;
+
+        const icon = L.divIcon({
+          className: '',
+          html: `<div style="
+            width:${isSelected ? '16px' : '12px'};
+            height:${isSelected ? '16px' : '12px'};
+            border-radius:50%;
+            background:${color};
+            border:2px solid white;
+            box-shadow:0 1px 4px rgba(0,0,0,0.3);
+            transition:all 0.15s;
+          "></div>`,
+          iconSize: [isSelected ? 16 : 12, isSelected ? 16 : 12],
+          iconAnchor: [isSelected ? 8 : 6, isSelected ? 8 : 6],
+        });
+
+        const marker = L.marker([item.geo.lat, item.geo.lng], { icon })
+          .addTo(map)
+          .bindTooltip(item.title, { direction: 'top', offset: [0, -8] });
+
+        marker.on('click', () => onPinClick?.(item));
+        markersRef.current.push(marker);
+      });
+    });
+  }, [items, activeLayers, selectedItemId, onPinClick]);
+
+  const toggleLayer = (layer: string) => {
+    setActiveLayers((prev) => {
+      const next = new Set(prev);
+      if (next.has(layer)) {
+        next.delete(layer);
+      } else {
+        next.add(layer);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <div className="absolute inset-0">
+      <div ref={mapContainerRef} className="absolute inset-0 z-0" />
+
+      <div className="absolute top-3 right-3 z-10">
+        <button
+          onClick={() => setShowLayers((v) => !v)}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow text-xs font-medium text-stone-700 hover:bg-white transition-colors"
+        >
+          <Layers className="w-3.5 h-3.5" />
+          Layers
+        </button>
+        {showLayers && (
+          <div className="mt-1.5 bg-white rounded-xl shadow-lg border border-stone-200 p-2 space-y-1 min-w-[130px]">
+            {[
+              { id: 'permits', label: 'Permits', color: '#3b82f6' },
+              { id: 'safety', label: 'Alerts', color: '#ef4444' },
+            ].map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => toggleLayer(layer.id)}
+                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  activeLayers.has(layer.id)
+                    ? 'bg-stone-100 text-stone-900'
+                    : 'text-stone-400'
+                }`}
+              >
+                <span
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  style={{ background: activeLayers.has(layer.id) ? layer.color : '#d1d5db' }}
+                />
+                {layer.label}
+              </button>
             ))}
+          </div>
+        )}
+      </div>
 
-            {/* No geo indicator */}
-            {selectedItem && !hasGeo && (
-                <div className="absolute bottom-16 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-slate-800/80 text-white text-xs rounded-lg flex items-center gap-2">
-                    <MapPin className="w-3 h-3" />
-                    Location unavailable
-                </div>
-            )}
-
-            {/* Layer toggles - top */}
-            <div className="absolute top-3 left-3 right-3 flex gap-1.5 overflow-x-auto scrollbar-hide">
-                {LAYER_OPTIONS.map((layer) => {
-                    const Icon = layer.icon;
-                    const isActive = activeLayers.includes(layer.id);
-                    return (
-                        <button
-                            key={layer.id}
-                            onClick={() => toggleLayer(layer.id)}
-                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${isActive
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-white/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
-                                }`}
-                        >
-                            <Icon className="w-3.5 h-3.5" />
-                            {layer.label}
-                        </button>
-                    );
-                })}
-            </div>
-
-            {/* Search bar - bottom */}
-            <div className="absolute bottom-3 left-3 right-3">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Search location..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg text-sm text-slate-700 dark:text-slate-300 placeholder:text-slate-400 border border-slate-200 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
-            </div>
-        </div>
-    );
+      <div className="absolute bottom-3 left-3 z-10 px-2 py-1 bg-white/80 backdrop-blur-sm rounded-lg text-xs text-stone-500">
+        Hollywood Hills
+      </div>
+    </div>
+  );
 }

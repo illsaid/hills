@@ -1,8 +1,6 @@
 'use client';
 
 import { AlertTriangle, Flame, Shield } from 'lucide-react';
-import Link from 'next/link';
-import { formatAge } from './utils';
 import type { AlertChip } from './types';
 
 interface AlertStripProps {
@@ -53,10 +51,9 @@ export function AlertStrip({ alerts, totalCount }: AlertStripProps) {
             {/* Alert chips */}
             <div className="flex-1 flex items-center gap-2 overflow-x-auto scrollbar-hide">
                 {visibleAlerts.map((alert) => (
-                    <Link
+                    <div
                         key={alert.id}
-                        href={alert.href || `/alerts/${alert.id}`}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium whitespace-nowrap transition-colors hover:opacity-80 ${getChipStyle(alert.severity)}`}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium whitespace-nowrap ${getChipStyle(alert.severity)}`}
                     >
                         {getIcon(alert.severity)}
                         <span className="max-w-[140px] truncate">{alert.title}</span>
@@ -64,24 +61,16 @@ export function AlertStrip({ alerts, totalCount }: AlertStripProps) {
                         {alert.distance && (
                             <span className="text-xs opacity-70">• {alert.distance}</span>
                         )}
-                    </Link>
+                    </div>
                 ))}
             </div>
 
-            {/* Count + View All */}
-            <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                {total > visibleAlerts.length && (
-                    <span className="text-slate-400 dark:text-slate-500">
-                        {visibleAlerts.length} of {total}
-                    </span>
-                )}
-                <Link
-                    href="/alerts"
-                    className="font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                >
-                    View all
-                </Link>
-            </div>
+            {/* Count */}
+            {total > visibleAlerts.length && (
+                <span className="text-sm text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                    {visibleAlerts.length} of {total}
+                </span>
+            )}
         </div>
     );
 }

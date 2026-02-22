@@ -88,7 +88,7 @@ export function KPIRow({ aqi, weather, openCases }: KPIRowProps) {
                     <div className="text-slate-400 dark:text-slate-500 text-sm">Weather data unavailable</div>
                 )}
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                    {weather ? '—' : ''} {/* Static indicator */}
+                    {weather ? 'NWS — National Weather Service' : ''}
                 </p>
             </div>
 
