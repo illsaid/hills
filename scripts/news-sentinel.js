@@ -46,7 +46,7 @@ const HILLS_KEYWORDS = [
     // Zip codes
     '90068', '90046', '90069',
     // Broader but relevant
-    'east hollywood', 'west hollywood', 'los feliz',
+    'east hollywood', 'los feliz',
     'silverlake', 'silver lake', 'echo park',
     // Landmarks
     'griffith observatory', 'hollywood bowl', 'universal studios'
@@ -85,8 +85,7 @@ async function fetchNewsFromNewsData() {
         '"Hollywood Hills"',
         '"Laurel Canyon"',
         '"Griffith Park"',
-        '"East Hollywood" fire',
-        '"West Hollywood"'
+        '"East Hollywood" fire'
     ];
 
     for (const query of searchQueries) {
