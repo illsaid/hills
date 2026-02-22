@@ -10,8 +10,7 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from('neighborhood_intel')
-      .select('title, description, url, published_at, snapshot, raw_json')
-      .eq('source_name', 'Google News')
+      .select('title, description, url, published_at, snapshot, raw_json, source_name')
       .eq('category', 'News Feed')
       .order('published_at', { ascending: false })
       .limit(20);
@@ -20,7 +19,7 @@ export async function GET() {
       const anySnapshot = data.some(r => r.snapshot);
       const items = data.map(r => ({
         headline: r.title,
-        source: (r.raw_json as Record<string, unknown>)?.source ?? 'Google News',
+        source: (r.raw_json as Record<string, unknown>)?.source ?? r.source_name ?? 'Local News',
         url: r.url,
         published: r.published_at,
         summary: r.description,
