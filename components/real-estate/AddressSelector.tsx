@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, Plus, Navigation, Search, Loader2, X } from 'lucide-react';
+import { MapPin, Plus, Navigation, Search, Loader2, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAddressContext } from '@/hooks/useAddressContext';
 
 interface Prediction {
@@ -18,7 +18,7 @@ interface AddressSelectorProps {
 }
 
 export function AddressSelector({ className = '' }: AddressSelectorProps) {
-    const { address, addresses, setAddress, useDemoAddress, addAddress } = useAddressContext();
+    const { address, addresses, setAddress, useDemoAddress, addAddress, verificationStatus } = useAddressContext();
     const [showModal, setShowModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [predictions, setPredictions] = useState<Prediction[]>([]);
@@ -122,7 +122,7 @@ export function AddressSelector({ className = '' }: AddressSelectorProps) {
                 <select
                     value={address?.id || ''}
                     onChange={handleSelectAddress}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-400 appearance-none cursor-pointer"
                 >
                     <option value="">Select an address...</option>
                     {addresses.map(addr => (
@@ -132,6 +132,20 @@ export function AddressSelector({ className = '' }: AddressSelectorProps) {
                     ))}
                 </select>
             </div>
+
+            {/* Verification status badge */}
+            {address && verificationStatus === 'verified' && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-xs font-medium text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Hills verified
+                </div>
+            )}
+            {address && verificationStatus === 'unverified' && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-xs font-medium text-amber-700 dark:text-amber-400 whitespace-nowrap">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    Outside Hills
+                </div>
+            )}
 
             {/* Demo Address Button */}
             <button
