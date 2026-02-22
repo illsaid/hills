@@ -4,3 +4,4 @@ export { RadiusWindowControls, BUILDWATCH_RADIUS_OPTIONS, BUILDWATCH_WINDOW_OPTI
 export { IntelCards } from './IntelCards';
 export { ModuleTile } from './ModuleTile';
 export { ModuleDrawer } from './ModuleDrawer';
+export { VerifiedGate } from './VerifiedGate';

@@ -1,6 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { isInHillsBoundary } from '@/lib/geo/hillsBoundary';
+
+export type VerificationStatus = 'none' | 'unverified' | 'verified';
 
 interface WatchAddress {
     id: string;
@@ -11,19 +14,13 @@ interface WatchAddress {
 }
 
 interface AddressContextValue {
-    // Current address
     address: WatchAddress | null;
     lat: number | null;
     lon: number | null;
-
-    // Query params
     radius_m: number;
     window_days: number;
-
-    // Saved addresses
     addresses: WatchAddress[];
-
-    // Actions
+    verificationStatus: VerificationStatus;
     setAddress: (address: WatchAddress | null) => void;
     setRadius: (radius: number) => void;
     setWindowDays: (days: number) => void;
@@ -34,7 +31,6 @@ interface AddressContextValue {
 
 const AddressContext = createContext<AddressContextValue | undefined>(undefined);
 
-// Demo address for Hollywood Hills
 const DEMO_ADDRESS: WatchAddress = {
     id: 'demo',
     label: 'Demo: Hollywood Hills',
@@ -50,8 +46,18 @@ interface AddressProviderProps {
 export function AddressProvider({ children }: AddressProviderProps) {
     const [address, setAddressState] = useState<WatchAddress | null>(null);
     const [addresses, setAddresses] = useState<WatchAddress[]>([DEMO_ADDRESS]);
-    const [radius_m, setRadiusState] = useState(500);  // Default: 500m
-    const [window_days, setWindowDaysState] = useState(90);  // Default: 90 days
+    const [radius_m, setRadiusState] = useState(500);
+    const [window_days, setWindowDaysState] = useState(90);
+    const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('none');
+
+    useEffect(() => {
+        if (!address) {
+            setVerificationStatus('none');
+            return;
+        }
+        const inBounds = isInHillsBoundary(address.lat, address.lon);
+        setVerificationStatus(inBounds ? 'verified' : 'unverified');
+    }, [address]);
 
     const setAddress = useCallback((addr: WatchAddress | null) => {
         setAddressState(addr);
@@ -89,6 +95,7 @@ export function AddressProvider({ children }: AddressProviderProps) {
                 radius_m,
                 window_days,
                 addresses,
+                verificationStatus,
                 setAddress,
                 setRadius,
                 setWindowDays,

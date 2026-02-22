@@ -5,24 +5,21 @@ import { MapPin, Navigation, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { AddressProvider, useAddressContext } from '@/hooks/useAddressContext';
 import { MarketIntelligence } from '@/components/MarketIntelligence';
-import { AddressSelector, RadiusWindowControls, IntelCards, ModuleTile, ModuleDrawer } from '@/components/real-estate';
+import { AddressSelector, RadiusWindowControls, IntelCards, ModuleTile, ModuleDrawer, VerifiedGate } from '@/components/real-estate';
 
-// Module configurations
 const MODULES = [
-    { id: 'permits', title: 'Building Permits', icon: 'file-text' },
-    // BuildWatch removed from UI as requested (code remains intact)
-    { id: 'distress', title: 'Distress Signals', icon: 'alert-triangle' },
-    { id: 'firescore', title: 'FireScore', icon: 'shield' },
+    { id: 'permits', title: 'Building Permits', icon: 'file-text', requiresVerification: true },
+    { id: 'distress', title: 'Distress Signals', icon: 'alert-triangle', requiresVerification: false },
+    { id: 'firescore', title: 'FireScore', icon: 'shield', requiresVerification: false },
 ];
 
 function RealEstateContent() {
-    const { address, lat, lon, radius_m, window_days, useDemoAddress } = useAddressContext();
+    const { address, lat, lon, radius_m, window_days, useDemoAddress, verificationStatus } = useAddressContext();
     const [summaries, setSummaries] = useState<Record<string, { newCount: number; headlineMetric: string; topTag?: string }>>({});
     const [loading, setLoading] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const [activeModule, setActiveModule] = useState<{ id: string; title: string } | null>(null);
+    const [activeModule, setActiveModule] = useState<{ id: string; title: string; requiresVerification: boolean } | null>(null);
 
-    // Fetch summaries when address changes
     useEffect(() => {
         if (!lat || !lon) {
             setSummaries({});
@@ -39,7 +36,6 @@ function RealEstateContent() {
                     window_days: window_days.toString(),
                 });
 
-                // Fetch from available module APIs
                 const [permitsRes, firescoreRes] = await Promise.all([
                     fetch(`/api/real-estate/permits?${params}`),
                     fetch(`/api/real-estate/firescore?${params}`),
@@ -71,7 +67,7 @@ function RealEstateContent() {
         fetchSummaries();
     }, [lat, lon, radius_m, window_days]);
 
-    const handleTileClick = (module: { id: string; title: string }) => {
+    const handleTileClick = (module: typeof MODULES[number]) => {
         if (!address) return;
         if (summaries[module.id]?.headlineMetric === 'Coming soon') return;
         setActiveModule(module);
@@ -80,7 +76,6 @@ function RealEstateContent() {
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header */}
             <div>
                 <h1 className="text-3xl font-light text-stone-900 mb-2">
                     Real Estate Intelligence
@@ -90,19 +85,17 @@ function RealEstateContent() {
                 </p>
             </div>
 
-            {/* ULA Revenue Teaser - Always visible */}
             <MarketIntelligence />
 
-            {/* Address Controls OR Hero */}
             {address ? (
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4 p-4 bg-white dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/10">
                     <AddressSelector className="flex-1" />
                     <RadiusWindowControls />
                 </div>
             ) : (
-                <div className="p-8 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-500/10 dark:to-purple-500/10 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 text-center">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-500/20 mb-4">
-                        <MapPin className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                <div className="p-8 bg-gradient-to-br from-stone-50 to-slate-50 dark:from-white/5 dark:to-white/[0.02] rounded-2xl border border-stone-200 dark:border-white/10 text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-stone-100 dark:bg-white/10 mb-4">
+                        <MapPin className="w-8 h-8 text-stone-500 dark:text-stone-400" />
                     </div>
                     <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
                         Add an address to get started
@@ -112,7 +105,7 @@ function RealEstateContent() {
                     </p>
                     <button
                         onClick={useDemoAddress}
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium hover:bg-slate-700 dark:hover:bg-stone-100 transition-colors"
                     >
                         <Navigation className="w-5 h-5" />
                         Try Demo Address
@@ -120,12 +113,8 @@ function RealEstateContent() {
                 </div>
             )}
 
-            {/* Today's Intel */}
-            {address && (
-                <IntelCards />
-            )}
+            {address && <IntelCards />}
 
-            {/* Module Tiles Grid */}
             <div>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                     Intelligence Modules
@@ -133,6 +122,7 @@ function RealEstateContent() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {MODULES.map(module => {
                         const summary = summaries[module.id] || { newCount: 0, headlineMetric: address ? 'Loading...' : 'Add an address to compute' };
+                        const gated = module.requiresVerification && verificationStatus !== 'verified';
                         return (
                             <ModuleTile
                                 key={module.id}
@@ -143,6 +133,7 @@ function RealEstateContent() {
                                 newCount={summary.newCount}
                                 topTag={summary.topTag}
                                 loading={loading && module.id === 'permits'}
+                                gated={gated}
                                 onClick={() => handleTileClick(module)}
                             />
                         );
@@ -150,7 +141,6 @@ function RealEstateContent() {
                 </div>
             </div>
 
-            {/* Back link */}
             <div className="flex justify-end pt-8 border-t border-stone-200">
                 <Link
                     href="/"
@@ -160,13 +150,13 @@ function RealEstateContent() {
                 </Link>
             </div>
 
-            {/* Module Drawer */}
             {activeModule && (
                 <ModuleDrawer
                     moduleId={activeModule.id}
                     moduleTitle={activeModule.title}
                     isOpen={drawerOpen}
                     onClose={() => setDrawerOpen(false)}
+                    requiresVerification={activeModule.requiresVerification}
                 />
             )}
         </div>

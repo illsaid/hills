@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { permitsAdapter } from '@/lib/real-estate/permitsAdapter';
+import { isInHillsBoundary } from '@/lib/geo/hillsBoundary';
 import type { AddressParams } from '@/lib/real-estate/types';
 
 // Simple in-memory cache (60 seconds)
@@ -26,11 +27,17 @@ export async function GET(request: NextRequest) {
         const radius_m = parseInt(searchParams.get('radius_m') || '500', 10);
         const window_days = parseInt(searchParams.get('window_days') || '30', 10);
 
-        // Validate required params
         if (isNaN(lat) || isNaN(lon)) {
             return NextResponse.json(
                 { error: 'Missing required params: lat, lon' },
                 { status: 400 }
+            );
+        }
+
+        if (!isInHillsBoundary(lat, lon)) {
+            return NextResponse.json(
+                { error: 'Address is outside the Hollywood Hills service area' },
+                { status: 403 }
             );
         }
 
