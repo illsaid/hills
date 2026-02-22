@@ -1,120 +1,90 @@
-/**
- * Geocoding API Route
- * 
- * Server-side route for Google Places (New) Autocomplete and Geocoding.
- * Keeps Google API key server-side for security.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
 
-const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 
-// Google Places (New) API endpoints
-const AUTOCOMPLETE_URL = 'https://places.googleapis.com/v1/places:autocomplete';
-const DETAILS_URL = 'https://places.googleapis.com/v1/places';
-
-interface AutocompleteResult {
-    placePrediction?: {
-        placeId: string;
-        text: { text: string };
-        structuredFormat?: {
-            mainText: { text: string };
-            secondaryText?: { text: string };
-        };
-    };
-}
-
-// Autocomplete endpoint - returns address suggestions
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
-        const input = searchParams.get('input');
         const action = searchParams.get('action') || 'autocomplete';
 
-        if (!GOOGLE_API_KEY) {
-            return NextResponse.json(
-                { error: 'Google Maps API key not configured' },
-                { status: 500 }
-            );
-        }
-
         if (action === 'autocomplete') {
+            const input = searchParams.get('input');
             if (!input || input.length < 3) {
                 return NextResponse.json({ predictions: [] });
             }
 
-            // Use Google Places (New) Autocomplete API
-            const response = await fetch(AUTOCOMPLETE_URL, {
-                method: 'POST',
+            const url = new URL(NOMINATIM_URL);
+            url.searchParams.set('q', input);
+            url.searchParams.set('format', 'jsonv2');
+            url.searchParams.set('addressdetails', '1');
+            url.searchParams.set('limit', '5');
+            url.searchParams.set('countrycodes', 'us');
+            url.searchParams.set('viewbox', '-118.55,34.0,-118.15,34.2');
+            url.searchParams.set('bounded', '0');
+
+            const response = await fetch(url.toString(), {
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Goog-Api-Key': GOOGLE_API_KEY,
+                    'User-Agent': 'HillsLedger/1.0',
                 },
-                body: JSON.stringify({
-                    input,
-                    includedPrimaryTypes: ['street_address', 'premise', 'subpremise'],
-                    includedRegionCodes: ['us'],
-                    locationBias: {
-                        circle: {
-                            center: { latitude: 34.1, longitude: -118.34 }, // Hollywood Hills center
-                            radius: 20000.0, // 20km radius bias
-                        },
-                    },
-                }),
             });
 
-            const data = await response.json();
-
-            if (data.error) {
-                console.error('[geocode] Google API error:', data.error);
+            if (!response.ok) {
                 return NextResponse.json(
-                    { error: `Google API error: ${data.error.message || data.error.status}` },
-                    { status: 500 }
+                    { error: 'Geocoding service unavailable' },
+                    { status: 502 }
                 );
             }
 
-            const predictions = (data.suggestions || []).map((s: AutocompleteResult) => {
-                const place = s.placePrediction;
-                if (!place) return null;
-                return {
-                    placeId: place.placeId,
-                    description: place.text?.text || '',
-                    mainText: place.structuredFormat?.mainText?.text || place.text?.text || '',
-                    secondaryText: place.structuredFormat?.secondaryText?.text || '',
+            const results = await response.json();
+
+            const predictions = results.map((r: {
+                place_id: number;
+                display_name: string;
+                lat: string;
+                lon: string;
+                address?: {
+                    house_number?: string;
+                    road?: string;
+                    city?: string;
+                    state?: string;
                 };
-            }).filter(Boolean);
+            }) => {
+                const addr = r.address;
+                const mainText = addr
+                    ? [addr.house_number, addr.road].filter(Boolean).join(' ') || r.display_name.split(',')[0]
+                    : r.display_name.split(',')[0];
+                const secondaryText = addr
+                    ? [addr.city, addr.state].filter(Boolean).join(', ')
+                    : r.display_name.split(',').slice(1).join(',').trim();
+
+                return {
+                    placeId: String(r.place_id),
+                    description: r.display_name,
+                    mainText,
+                    secondaryText,
+                    lat: parseFloat(r.lat),
+                    lon: parseFloat(r.lon),
+                };
+            });
 
             return NextResponse.json({ predictions });
         }
 
         if (action === 'details') {
             const placeId = searchParams.get('placeId');
+            const lat = searchParams.get('lat');
+            const lon = searchParams.get('lon');
+            const addr = searchParams.get('address');
+
             if (!placeId) {
                 return NextResponse.json({ error: 'placeId required' }, { status: 400 });
             }
 
-            // Get place details including geometry using Places (New) API
-            const response = await fetch(`${DETAILS_URL}/${placeId}?fields=formattedAddress,location`, {
-                headers: {
-                    'X-Goog-Api-Key': GOOGLE_API_KEY,
-                },
-            });
-
-            const data = await response.json();
-
-            if (data.error) {
-                console.error('[geocode] Details error:', data.error);
-                return NextResponse.json(
-                    { error: `Google API error: ${data.error.message || data.error.status}` },
-                    { status: 500 }
-                );
-            }
-
             return NextResponse.json({
-                address: data.formattedAddress || '',
+                address: addr || '',
                 placeId,
-                lat: data.location?.latitude,
-                lon: data.location?.longitude,
+                lat: lat ? parseFloat(lat) : null,
+                lon: lon ? parseFloat(lon) : null,
             });
         }
 
@@ -127,5 +97,3 @@ export async function GET(request: NextRequest) {
         );
     }
 }
-
-
