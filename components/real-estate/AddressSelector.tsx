@@ -26,12 +26,13 @@ export function AddressSelector({ className = '' }: AddressSelectorProps) {
     const [showDropdown, setShowDropdown] = useState(false);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
     const debounceRef = useRef<NodeJS.Timeout>();
 
-    // Close dropdown when clicking outside
+    // Close dropdown when clicking outside the modal card
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+            if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
                 setShowDropdown(false);
             }
         };
@@ -168,7 +169,7 @@ export function AddressSelector({ className = '' }: AddressSelectorProps) {
             {/* Add Address Modal with Google Places Search */}
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-lg shadow-xl">
+                    <div ref={modalRef} className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-lg shadow-xl">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold">Add Address</h3>
                             <button
