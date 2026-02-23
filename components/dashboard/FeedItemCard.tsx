@@ -4,6 +4,17 @@ import { ChevronRight, MapPin, ExternalLink, Shield, FileText, Construction, Lan
 import { formatFeedAge } from './utils';
 import type { FeedItem } from './types';
 
+const TYPE_ROUTE: Record<string, string> = {
+    safety: '/safety',
+    permit: '/permits',
+    code: '/permits',
+    street_work: '/infrastructure',
+    gov: '/council',
+    real_estate: '/real-estate',
+    event: '/council',
+    news: '/council',
+};
+
 interface FeedItemCardProps {
     item: FeedItem;
     onSelect?: (item: FeedItem) => void;
@@ -92,15 +103,28 @@ export function FeedItemCard({ item, onSelect }: FeedItemCardProps) {
 
     const badge = displayBadge(item);
     const title = displayTitle(item);
+    const isExternal = !!item.sourceUrl && item.sourceUrl.startsWith('http');
+    const href = isExternal ? item.sourceUrl! : (TYPE_ROUTE[item.type] || '/');
+
+    const handleClick = () => {
+        onSelect?.(item);
+        if (isExternal) {
+            window.open(href, '_blank', 'noopener,noreferrer');
+        } else {
+            window.location.href = href;
+        }
+    };
 
     return (
         <div
-            onClick={() => onSelect?.(item)}
+            role="link"
+            tabIndex={0}
+            onClick={handleClick}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); }}
             className={`group p-4 rounded-xl border-l-4 border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 cursor-pointer transition-all hover:shadow-md ${getSeverityBorder(item.severity)}`}
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                    {/* Badge • Category • Age */}
                     <div className="flex items-center gap-2 mb-1.5 text-xs">
                         <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${badge.style}`}>
                             {badge.text}
@@ -109,21 +133,18 @@ export function FeedItemCard({ item, onSelect }: FeedItemCardProps) {
                             {getTypeIcon(item.type)}
                             {getTypeLabel(item.type)}
                         </span>
-                        <span className="text-slate-400">•</span>
+                        <span className="text-slate-400">&bull;</span>
                         <span className="text-slate-400 tabular-nums">{formatFeedAge(item.timestamp)}</span>
                     </div>
 
-                    {/* Title */}
-                    <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 line-clamp-1">
+                    <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 line-clamp-1 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
                         {title}
                     </h4>
 
-                    {/* Summary - 2 line clamp */}
                     <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-2">
                         {item.summary}
                     </p>
 
-                    {/* Source + Location */}
                     <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                         <span className="flex items-center gap-1">
                             <ExternalLink className="w-3 h-3" />
@@ -138,8 +159,7 @@ export function FeedItemCard({ item, onSelect }: FeedItemCardProps) {
                     </div>
                 </div>
 
-                {/* Chevron */}
-                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-500 dark:text-slate-600 dark:group-hover:text-slate-400 flex-shrink-0 mt-1" />
+                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-500 dark:text-slate-600 dark:group-hover:text-slate-400 flex-shrink-0 mt-1 transition-colors" />
             </div>
         </div>
     );

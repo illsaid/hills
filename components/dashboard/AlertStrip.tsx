@@ -51,17 +51,20 @@ export function AlertStrip({ alerts, totalCount }: AlertStripProps) {
             {/* Alert chips */}
             <div className="flex-1 flex items-center gap-2 overflow-x-auto scrollbar-hide">
                 {visibleAlerts.map((alert) => (
-                    <div
+                    <a
                         key={alert.id}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium whitespace-nowrap ${getChipStyle(alert.severity)}`}
+                        href={alert.href || '/safety'}
+                        target={alert.href?.startsWith('http') ? '_blank' : undefined}
+                        rel={alert.href?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium whitespace-nowrap cursor-pointer hover:shadow-sm transition-shadow ${getChipStyle(alert.severity)}`}
                     >
                         {getIcon(alert.severity)}
                         <span className="max-w-[140px] truncate">{alert.title}</span>
                         <span className="text-xs opacity-70">{alert.age}</span>
                         {alert.distance && (
-                            <span className="text-xs opacity-70">• {alert.distance}</span>
+                            <span className="text-xs opacity-70">&bull; {alert.distance}</span>
                         )}
-                    </div>
+                    </a>
                 ))}
             </div>
 

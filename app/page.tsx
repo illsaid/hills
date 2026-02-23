@@ -75,7 +75,7 @@ async function fetchDashboardData() {
       locationText: item.location || null,
       geo: item.latitude && item.longitude ? { lat: item.latitude, lng: item.longitude } : null,
       sourceName: item.source_name || 'LAFD',
-      sourceUrl: item.source_url,
+      sourceUrl: item.source_url || (item.url?.startsWith('http') ? item.url : undefined),
       dedupeKey: key,
     });
   }
@@ -96,6 +96,7 @@ async function fetchDashboardData() {
       locationText: item.address || null,
       geo: item.latitude && item.longitude ? { lat: item.latitude, lng: item.longitude } : null,
       sourceName: 'LA Building & Safety',
+      sourceUrl: item.url?.startsWith('http') ? item.url : undefined,
       dedupeKey: key,
     });
   }
@@ -116,6 +117,7 @@ async function fetchDashboardData() {
       locationText: item.region || null,
       geo: null,
       sourceName: 'Community',
+      sourceUrl: item.url?.startsWith('http') ? item.url : undefined,
       dedupeKey: key,
     });
   }
