@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-03-05T14:49:45.853572",
+  "updated_at": "2026-03-05T15:44:32.904626",
   "items": [
+    {
+      "headline": "Stretch of Hollywood Blvd. closed for Oscars - FOX 11 Los Angeles",
+      "source": "FOX 11 Los Angeles",
+      "url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTFBEazBncGtxeEJhSnZndnVGN2ZMRy1EakxTalg2ZV9YemJ1ODNTTzlaWEprRlBtekxQdEF1VEsxalktbFYtNFNpRG9mcUpOVGxyNUVobnZRdEpURjZZ0gFiQVVfeXFMTmdPb1YxTXVreUFCYWtHQ3AydmtJc1ZWdzd3UlY0dkcxbzRCQ0RXX0t2cDdsWWx2Q0xHa3BOQlVKSVhwSFppRWVMUEJqZkQ0OHNFQndhcDVwdHBndjI4d0VGSmc?oc=5",
+      "published": "2026-03-05T14:46:00",
+      "summary": "Stretch of Hollywood Blvd. closed for Oscars&nbsp;&nbsp;FOX 11 Los Angeles",
+      "keyword_match": "Query Match"
+    },
     {
       "headline": "Ty Dolla $ign, YG and Chris Brown Turned a Hollywood Hills Valentine\u2019s Party Into a Full-Blown House Party Moment - InTouch Weekly",
       "source": "InTouch Weekly",
@@ -82,14 +90,6 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "Collin Mulholland with the and-1 bucket - ESPN",
-      "source": "ESPN",
-      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE1LOGtGVDJEX01fcmkxSjUtRmM3WWgxZVpicXpHMkd0c2JUMDRTclFiMW9sTF9aNUw0alZ6Ym9UOTFyZS1vMjMtMWdXa0MzQnB2SWhfN1dn?oc=5",
-      "published": "2026-02-28T20:28:32",
-      "summary": "Collin Mulholland with the and-1 bucket&nbsp;&nbsp;ESPN",
-      "keyword_match": "Query Match"
-    },
-    {
       "headline": "Demi Lovato\u2019s Former Villa Above the Sunset Strip Lists for $11 Million - Robb Report",
       "source": "Robb Report",
       "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxNOFhvbFlyb3RWcGZmaTBZY1lYcTFHNVBYcFVKMGctbnM0RVpYTkl0RjJacXN0VEtYRVY2WDVsdEVtZ0ZUOHE5cE40M3ViTmZGbkdfcERSUm5Ja19OeW1KSk9ia0FWU3IxbGJlMnl5Vzg4b296cVdwR0pnZnBpVlJacFRES3EtUXhHSnhxSzN1TkJXOWxBczVzdkdpcUwxY1Z1?oc=5",
@@ -138,19 +138,19 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "Nearly $1M restroom installed at Runyon Canyon Park sparks backlash from hikers - FOX 11 Los Angeles",
-      "source": "FOX 11 Los Angeles",
-      "url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxOUUpGcGxPQ0pMV0ZkRXFGTEhnR3ZpeEN5c01iRTFOZTBTYi00VFVuNkpDVy1wQ3BEVUlYTXJWMG1zazFLV3VpVTZaX3RXTXVaOUl0SjVtRnBERGExcVNacHRSakQ1Tm5aNnFwNWVDOW81QXBaMUNnNjlqWEFnYk9CbzRqeU1UMXNtejlPSXZzNXJRVkNTanptLWI3dkFLemVFcnRGX9IBqgFBVV95cUxQQ0RmeFBKc2hBQlZWT1NEcjZkQ3JDb08zRTNaOGtrTTVhLU16XzUxOWhKN0huMWUxWTd3YzJBcThKc21YZFVmOFA3aWJGX3FZbGVtRU9xR0ZXZHRGTDhFVjVxYXNkUmQ0YldfbUhWdlBVQnk5VW1RVlh5c3I0SEZOWEM3NHFzZzlDclY4cm1TOXFhbXNyb0d5UXdoQTkwN3NNWHFxZDktZ19SUQ?oc=5",
-      "published": "2026-02-12T08:00:00",
-      "summary": "Nearly $1M restroom installed at Runyon Canyon Park sparks backlash from hikers&nbsp;&nbsp;FOX 11 Los Angeles",
-      "keyword_match": "Query Match"
-    },
-    {
       "headline": "Runyon Canyon new bathroom being installed, trails impacted Thursday - CBS News",
       "source": "CBS News",
       "url": "https://news.google.com/rss/articles/CBMirAFBVV95cUxPc0M0dDFIVzZfRVNqR1VyaG9TMFJkN25vWWtBVnlyMWNzNVk5NkFPbVh5dGowellqV3lwUU5LdjVXM3g4OVhjM0FKWFhKZ0lPR2RHOWMwWURwWVFsN0MydTJYOElyakhsdDdydGZYRWNEeEdpLUNtNFBnVGxicTZmbWNiT2lwWC1wbVVTOEczcndPc2FxNDk1MDA2ZGhwRUtMUExxNmFtcDg3ZUlG?oc=5",
       "published": "2026-02-12T08:00:00",
       "summary": "Runyon Canyon new bathroom being installed, trails impacted Thursday&nbsp;&nbsp;CBS News",
+      "keyword_match": "Query Match"
+    },
+    {
+      "headline": "Nearly $1M restroom installed at Runyon Canyon Park sparks backlash from hikers - FOX 11 Los Angeles",
+      "source": "FOX 11 Los Angeles",
+      "url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxOUUpGcGxPQ0pMV0ZkRXFGTEhnR3ZpeEN5c01iRTFOZTBTYi00VFVuNkpDVy1wQ3BEVUlYTXJWMG1zazFLV3VpVTZaX3RXTXVaOUl0SjVtRnBERGExcVNacHRSakQ1Tm5aNnFwNWVDOW81QXBaMUNnNjlqWEFnYk9CbzRqeU1UMXNtejlPSXZzNXJRVkNTanptLWI3dkFLemVFcnRGX9IBqgFBVV95cUxQQ0RmeFBKc2hBQlZWT1NEcjZkQ3JDb08zRTNaOGtrTTVhLU16XzUxOWhKN0huMWUxWTd3YzJBcThKc21YZFVmOFA3aWJGX3FZbGVtRU9xR0ZXZHRGTDhFVjVxYXNkUmQ0YldfbUhWdlBVQnk5VW1RVlh5c3I0SEZOWEM3NHFzZzlDclY4cm1TOXFhbXNyb0d5UXdoQTkwN3NNWHFxZDktZ19SUQ?oc=5",
+      "published": "2026-02-12T08:00:00",
+      "summary": "Nearly $1M restroom installed at Runyon Canyon Park sparks backlash from hikers&nbsp;&nbsp;FOX 11 Los Angeles",
       "keyword_match": "Query Match"
     },
     {
