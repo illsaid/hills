@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Shield, TrendingDown, TrendingUp, TriangleAlert as AlertTriangle, Calendar } from 'lucide-react';
+import { Shield, TrendingDown, TrendingUp, TriangleAlert as AlertTriangle, Calendar, CircleAlert } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -17,12 +17,19 @@ interface SecurityData {
     brief_text: string;
     updated_at: string;
     analysis_week?: string;
+    data_as_of?: string;
     stats: SecurityStats;
     breakdown?: {
         vehicle?: number;
         residential?: number;
         other?: number;
     };
+}
+
+function isStale(updatedAt: string, thresholdDays = 21): boolean {
+    const updated = new Date(updatedAt);
+    const now = new Date();
+    return now.getTime() - updated.getTime() > thresholdDays * 24 * 60 * 60 * 1000;
 }
 
 export function SecurityBrief() {
@@ -50,11 +57,13 @@ export function SecurityBrief() {
     if (!data) return null;
 
     const isElevated = data.status === 'ELEVATED';
+    const stale = isStale(data.updated_at);
+    const noIncidents = data.stats.total === 0;
 
     const paragraphs = (data.brief_text || '')
         .split('\n')
         .filter(p => p.trim().length > 0)
-        .filter(p => !p.startsWith('**SECURITY BRIEF'));
+        .filter(p => !p.startsWith('**SECURITY BRIEF') && !p.startsWith('**CRIME BRIEF'));
 
     return (
         <Card className="border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 shadow-sm overflow-hidden h-full">
@@ -80,18 +89,30 @@ export function SecurityBrief() {
                     </Badge>
                 </div>
 
+                {stale && (
+                    <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                        <CircleAlert className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span className="text-xs text-amber-700 dark:text-amber-400">
+                            Data reflects week of {data.analysis_week ?? new Date(data.updated_at).toLocaleDateString()} — awaiting fresh ingest
+                        </span>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-3 gap-2 mb-5">
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 text-center">
                         <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Incidents</div>
-                        <div className="font-bold text-lg text-slate-900 dark:text-white">{data.stats.total}</div>
+                        {noIncidents
+                            ? <div className="font-medium text-sm text-emerald-600 dark:text-emerald-400 mt-0.5">None reported</div>
+                            : <div className="font-bold text-lg text-slate-900 dark:text-white">{data.stats.total}</div>
+                        }
                     </div>
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 text-center">
                         <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Vs Last Week</div>
-                        <TrendIndicator value={data.stats.wow_change} />
+                        <TrendIndicator value={noIncidents ? 0 : data.stats.wow_change} />
                     </div>
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 text-center">
                         <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Vs Last Year</div>
-                        <TrendIndicator value={data.stats.yoy_change} />
+                        <TrendIndicator value={noIncidents ? 0 : data.stats.yoy_change} />
                     </div>
                 </div>
 
@@ -115,7 +136,7 @@ export function SecurityBrief() {
                         <span>Updated {new Date(data.updated_at).toLocaleDateString()}</span>
                     </div>
                     {data.analysis_week && (
-                        <span>Week of {data.analysis_week}</span>
+                        <span className="text-right">{data.analysis_week}</span>
                     )}
                 </div>
             </CardContent>
