@@ -3,12 +3,45 @@ import { DashboardClient } from './DashboardClient';
 
 export const dynamic = 'force-dynamic';
 
-// Utility to generate dedupe key
 function generateDedupeKey(title: string, date: string): string {
   const parsed = new Date(date);
   const dateStr = isNaN(parsed.getTime()) ? date.replace(/[^a-z0-9]/gi, '').slice(0, 10) : parsed.toISOString().split('T')[0];
   const titleHash = title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
   return `${titleHash}_${dateStr}`;
+}
+
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  if (!address) return null;
+  try {
+    const query = address.includes('Los Angeles') ? address : `${address}, Los Angeles, CA`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=jsonv2&limit=1&countrycodes=us`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'HillsLedger/1.0' },
+      next: { revalidate: 86400 },
+    });
+    if (!res.ok) return null;
+    const results = await res.json();
+    if (!results.length) return null;
+    return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
+  } catch {
+    return null;
+  }
+}
+
+async function batchGeocode(addresses: string[]): Promise<Map<string, { lat: number; lng: number } | null>> {
+  const seen = new Set<string>();
+  const unique = addresses.filter(a => { if (seen.has(a)) return false; seen.add(a); return true; });
+  const results = new Map<string, { lat: number; lng: number } | null>();
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < unique.length; i += BATCH_SIZE) {
+    const batch = unique.slice(i, i + BATCH_SIZE);
+    const resolved = await Promise.all(batch.map(geocodeAddress));
+    batch.forEach((addr, idx) => results.set(addr, resolved[idx]));
+    if (i + BATCH_SIZE < unique.length) {
+      await new Promise(r => setTimeout(r, 200));
+    }
+  }
+  return results;
 }
 
 async function fetchDashboardData() {
@@ -73,6 +106,15 @@ async function fetchDashboardData() {
   const roadwork = (roadworkRes.friction || []).slice(0, 10);
   const legislative = (legislativeRes.updates || []).slice(0, 8);
 
+  // Geocode addresses for permits and code enforcement (cached 24h by Next.js fetch)
+  const addressesToGeocode = [
+    ...codeEnforcement.filter((i: any) => i.address && !i.latitude).map((i: any) => i.address as string),
+    ...permits.filter((p: any) => p.address).map((p: any) => p.address as string),
+  ];
+  const geoCache = addressesToGeocode.length > 0
+    ? await batchGeocode(addressesToGeocode.slice(0, 20))
+    : new Map<string, { lat: number; lng: number } | null>();
+
   // Build normalized feed items
   const feedItems: any[] = [];
   const seenKeys = new Set<string>();
@@ -104,6 +146,11 @@ async function fetchDashboardData() {
     if (seenKeys.has(key)) continue;
     seenKeys.add(key);
 
+    const existingGeo = item.latitude && item.longitude
+      ? { lat: item.latitude, lng: item.longitude }
+      : null;
+    const geocodedGeo = !existingGeo && item.address ? (geoCache.get(item.address) ?? null) : null;
+
     feedItems.push({
       id: item.id,
       type: 'code',
@@ -112,7 +159,7 @@ async function fetchDashboardData() {
       summary: `${item.case_type || 'Code Violation'} • ${item.address || 'Unknown location'}`,
       timestamp: item.date_opened || item.created_at,
       locationText: item.address || null,
-      geo: item.latitude && item.longitude ? { lat: item.latitude, lng: item.longitude } : null,
+      geo: existingGeo ?? geocodedGeo,
       sourceName: 'LA Building & Safety',
       sourceUrl: item.url?.startsWith('http') ? item.url : undefined,
       dedupeKey: key,
@@ -147,6 +194,7 @@ async function fetchDashboardData() {
     seenKeys.add(key);
 
     const valStr = item.valuation ? ` • $${Number(item.valuation).toLocaleString()}` : '';
+    const permitGeo = item.address ? (geoCache.get(item.address) ?? null) : null;
     feedItems.push({
       id: `permit-${item.permit_number}`,
       type: 'permit',
@@ -155,7 +203,7 @@ async function fetchDashboardData() {
       summary: `${item.address}${valStr} — ${item.description || item.status || ''}`.trim(),
       timestamp: item.issue_date || new Date().toISOString(),
       locationText: item.address || null,
-      geo: null,
+      geo: permitGeo,
       sourceName: 'LA Building & Safety',
       sourceUrl: item.zimas_url?.startsWith('http') ? item.zimas_url : undefined,
       dedupeKey: key,

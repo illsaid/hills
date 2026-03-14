@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, List, Map as MapIcon, Loader as Loader2 } from 'lucide-react';
 import { FeedItemCard } from './FeedItemCard';
 import { ActivityFeedMap } from './ActivityFeedMap';
@@ -10,6 +10,7 @@ interface ActivityFeedProps {
     items: FeedItem[];
     onSelectItem?: (item: FeedItem) => void;
     loading?: boolean;
+    selectedItemId?: string;
 }
 
 const CATEGORY_FILTERS: { value: FeedCategory; label: string }[] = [
@@ -28,10 +29,19 @@ const SORT_OPTIONS: { value: FeedSort; label: string }[] = [
     { value: 'near_me', label: 'Near me' },
 ];
 
-export function ActivityFeed({ items, onSelectItem, loading }: ActivityFeedProps) {
+export function ActivityFeed({ items, onSelectItem, loading, selectedItemId }: ActivityFeedProps) {
     const [category, setCategory] = useState<FeedCategory>('all');
     const [sort, setSort] = useState<FeedSort>('recent');
     const [view, setView] = useState<'list' | 'map'>('list');
+    const listRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!selectedItemId || view !== 'list') return;
+        const el = listRef.current?.querySelector(`[data-feed-item-id="${selectedItemId}"]`);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }, [selectedItemId, view]);
 
     const filteredItems = items.filter((item) => {
         if (category === 'all') return true;
@@ -134,9 +144,14 @@ export function ActivityFeed({ items, onSelectItem, loading }: ActivityFeedProps
                     </p>
                 </div>
             ) : (
-                <div className="space-y-3 flex-1">
+                <div ref={listRef} className="space-y-3 flex-1">
                     {sortedItems.map((item) => (
-                        <FeedItemCard key={item.id} item={item} onSelect={onSelectItem} />
+                        <FeedItemCard
+                            key={item.id}
+                            item={item}
+                            onSelect={onSelectItem}
+                            isHighlighted={item.id === selectedItemId}
+                        />
                     ))}
                 </div>
             )}

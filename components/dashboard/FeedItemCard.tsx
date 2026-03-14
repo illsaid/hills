@@ -29,6 +29,7 @@ const TYPE_ROUTE: Record<string, string> = {
 interface FeedItemCardProps {
     item: FeedItem;
     onSelect?: (item: FeedItem) => void;
+    isHighlighted?: boolean;
 }
 
 // Display badge based on type and severity
@@ -76,7 +77,7 @@ function displayTitle(item: FeedItem): string {
     return 'Update';
 }
 
-function FeedItemCardInner({ item, onSelect }: FeedItemCardProps) {
+function FeedItemCardInner({ item, onSelect, isHighlighted }: FeedItemCardProps) {
     const getTypeIcon = (type: FeedItem['type']) => {
         switch (type) {
             case 'safety': return <Shield className="w-3.5 h-3.5" />;
@@ -130,9 +131,14 @@ function FeedItemCardInner({ item, onSelect }: FeedItemCardProps) {
         <div
             role="link"
             tabIndex={0}
+            data-feed-item-id={item.id}
             onClick={handleClick}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); }}
-            className={`group p-4 rounded-xl border-l-4 border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 cursor-pointer transition-all hover:shadow-md ${getSeverityBorder(item.severity)}`}
+            className={`group p-4 rounded-xl border-l-4 border cursor-pointer transition-all hover:shadow-md ${getSeverityBorder(item.severity)} ${
+                isHighlighted
+                    ? 'border-slate-300 dark:border-white/20 bg-sky-50 dark:bg-sky-500/10 shadow-md ring-1 ring-sky-300 dark:ring-sky-500/40'
+                    : 'border-slate-200 dark:border-white/10 bg-white dark:bg-white/5'
+            }`}
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">

@@ -58,6 +58,7 @@ export function DashboardClient({
                     <ActivityFeed
                         items={feedItems}
                         onSelectItem={handleSelectItem}
+                        selectedItemId={selectedItemId}
                     />
                 </div>
 
