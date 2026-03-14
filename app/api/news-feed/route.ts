@@ -6,18 +6,17 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from('neighborhood_intel')
-      .select('title, description, url, published_at, snapshot, raw_json, source_name, category')
-      .in('category', ['News Feed', 'News', 'Housing'])
+      .select('title, description, url, published_at, source_name, category')
+      .eq('category', 'News Feed')
       .not('title', 'is', null)
       .or(`published_at.gte.${cutoffDate(DATA_CUTOFFS.NEWS)},published_at.is.null`)
       .order('published_at', { ascending: false, nullsFirst: false })
       .limit(30);
 
     if (!error && data && data.length > 0) {
-      const anySnapshot = data.some(r => r.snapshot);
       const items = data.map(r => ({
         headline: r.title,
-        source: (r.raw_json as Record<string, unknown>)?.source ?? r.source_name ?? 'Local News',
+        source: r.source_name ?? 'Google News',
         url: r.url,
         published: r.published_at,
         summary: r.description,
@@ -26,7 +25,7 @@ export async function GET() {
       return NextResponse.json({
         items,
         updated_at: data[0].published_at,
-        snapshot: anySnapshot,
+        snapshot: false,
         snapshot_updated_at: data[0].published_at ?? null,
       });
     }
