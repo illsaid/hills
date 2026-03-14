@@ -26,11 +26,11 @@ function TopNavInner() {
     <>
       <nav className="fixed top-0 left-0 right-0 h-16 glass-strong border-b border-stone-200/50 z-40 flex items-center justify-between px-4 lg:px-6">
         {/* Logo */}
-        <div className="flex items-center gap-3 pl-12 lg:pl-0">
-          <div className="w-8 h-8 bg-stone-900 rounded-lg flex items-center justify-center">
+        <div className="flex items-center gap-3 pl-10 sm:pl-12 lg:pl-0">
+          <div className="w-8 h-8 bg-stone-900 rounded-lg flex items-center justify-center flex-shrink-0">
             <Mountain className="w-4 h-4 text-white" />
           </div>
-          <span className="font-semibold text-lg tracking-tight text-stone-900">
+          <span className="font-semibold text-base sm:text-lg tracking-tight text-stone-900 truncate">
             Hollywood Hills
           </span>
           <span className="hidden sm:block text-stone-400 font-light">|</span>
@@ -41,7 +41,7 @@ function TopNavInner() {
           {/* Search trigger */}
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-full text-sm text-stone-500 transition-colors group"
+            className="flex items-center gap-2 px-3 py-2 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-full text-sm text-stone-500 transition-colors group"
             aria-label="Search"
           >
             <Search className="w-4 h-4" />
@@ -52,7 +52,7 @@ function TopNavInner() {
           {/* Watchlist trigger */}
           <button
             onClick={() => setWatchlistOpen(true)}
-            className="relative p-2 rounded-full hover:bg-stone-100 transition-colors text-stone-500"
+            className="relative p-2.5 rounded-full hover:bg-stone-100 transition-colors text-stone-500"
             aria-label="Watchlist"
           >
             <Bookmark className="w-4 h-4" />

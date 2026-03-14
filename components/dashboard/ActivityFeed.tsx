@@ -67,7 +67,7 @@ export function ActivityFeed({ items, onSelectItem, loading, selectedItemId }: A
             {/* Sticky Header */}
             <div className="sticky top-0 z-10 bg-stone-50 dark:bg-slate-900 pb-4">
                 <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Activity</h2>
+                    <h2 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white">Activity</h2>
                     <div className="flex items-center gap-2">
                         <span className="text-xs text-stone-400 font-medium px-2 py-0.5 bg-stone-100 rounded-full">
                             Snapshot
@@ -98,7 +98,7 @@ export function ActivityFeed({ items, onSelectItem, loading, selectedItemId }: A
                         <button
                             key={filter.value}
                             onClick={() => setCategory(filter.value)}
-                            className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${category === filter.value
+                            className={`px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${category === filter.value
                                     ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
                                     : 'bg-white dark:bg-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/20 border border-slate-200 dark:border-white/10'
                                 }`}

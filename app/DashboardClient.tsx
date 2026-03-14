@@ -50,7 +50,7 @@ export function DashboardClient({
     return (
         <div className="p-4 md:p-6 max-w-[1440px] mx-auto">
             {/* Dashboard Grid — single column on small/medium, two-column on xl+ */}
-            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
                 {/* Main Column */}
                 <div className="space-y-6 min-w-0">
                     <AlertStrip alerts={alertChips} totalCount={totalAlertCount} />
@@ -63,7 +63,7 @@ export function DashboardClient({
                 </div>
 
                 {/* Right Rail — hidden on mobile, shown on xl+ */}
-                <div className="hidden xl:block min-w-0 self-stretch">
+                <div className="hidden lg:block min-w-0 self-stretch">
                     <RightRail
                         feedItems={feedItems}
                         selectedItemId={selectedItemId}

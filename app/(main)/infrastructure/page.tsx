@@ -10,10 +10,10 @@ export default function InfrastructurePage() {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-light text-stone-900 mb-2">
+                <h1 className="text-2xl md:text-3xl font-light text-stone-900 mb-2">
                     Street Work & Infrastructure
                 </h1>
-                <p className="text-lg text-stone-500 max-w-2xl">
+                <p className="text-base md:text-lg text-stone-500 max-w-2xl">
                     Road closures, construction, and public works affecting Hollywood Hills.
                 </p>
             </div>

@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="h-screen overflow-hidden bg-stone-50">
+        <div className="h-dvh overflow-hidden bg-stone-50">
           <TopNav />
           <div className="pt-16 h-full flex">
             <Sidebar />

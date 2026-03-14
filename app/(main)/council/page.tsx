@@ -10,10 +10,10 @@ export default function CouncilPage() {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-light text-slate-900 dark:text-titanium-50 mb-2">
+                <h1 className="text-2xl md:text-3xl font-light text-slate-900 dark:text-titanium-50 mb-2">
                     Civic & Community
                 </h1>
-                <p className="text-lg text-slate-500 dark:text-titanium-400 max-w-2xl">
+                <p className="text-base md:text-lg text-slate-500 dark:text-titanium-400 max-w-2xl">
                     City Hall updates, legislative tracking, and local news coverage.
                 </p>
             </div>

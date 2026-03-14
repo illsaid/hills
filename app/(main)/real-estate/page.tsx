@@ -96,10 +96,10 @@ function RealEstateContent() {
     return (
         <div className="p-4 md:p-6 max-w-5xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
-                <h1 className="text-3xl font-light text-stone-900 mb-2">
+                <h1 className="text-2xl md:text-3xl font-light text-stone-900 mb-2">
                     Real Estate Intelligence
                 </h1>
-                <p className="text-lg text-stone-500 max-w-2xl">
+                <p className="text-base md:text-lg text-stone-500 max-w-2xl">
                     Address-driven market intel, permits, and property insights for Hollywood Hills.
                 </p>
             </div>
@@ -143,7 +143,7 @@ function RealEstateContent() {
                         <span className="text-xs text-red-600 dark:text-red-400">{summaryError}</span>
                     )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {MODULES.map(module => {
                         const summary = summaries[module.id] || { newCount: 0, headlineMetric: address ? 'Loading...' : 'Add an address to compute' };
                         const gated = module.requiresVerification && verificationStatus !== 'verified';

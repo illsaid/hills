@@ -79,10 +79,10 @@ export default async function SafetyPage() {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-light text-slate-900 dark:text-titanium-50 mb-2">
+                <h1 className="text-2xl md:text-3xl font-light text-slate-900 dark:text-titanium-50 mb-2">
                     Public Safety and Civic Reports
                 </h1>
-                <p className="text-lg text-slate-500 dark:text-titanium-400 max-w-2xl">
+                <p className="text-base md:text-lg text-slate-500 dark:text-titanium-400 max-w-2xl">
                     Real-time monitoring of community safety, crime trends, and environmental hazards.
                 </p>
             </div>
@@ -121,7 +121,7 @@ export default async function SafetyPage() {
                                     key={alert.id}
                                     className={`p-4 rounded-2xl border ${style.border} ${style.bg}`}
                                 >
-                                    <div className="flex items-start justify-between gap-4">
+                                    <div className="flex items-start justify-between gap-2 md:gap-4">
                                         <div className="flex items-start gap-3 min-w-0">
                                             <div className={`mt-0.5 shrink-0 ${style.icon}`}>
                                                 {(alert.priority ?? 3) === 1 ? (
@@ -164,7 +164,7 @@ export default async function SafetyPage() {
                                                 href={url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-white/10 transition-colors"
+                                                className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-white/10 transition-colors"
                                             >
                                                 <ExternalLink className="w-4 h-4" />
                                             </a>

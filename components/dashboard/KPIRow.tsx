@@ -1,6 +1,6 @@
 'use client';
 
-import { Wind, Thermometer, AlertTriangle } from 'lucide-react';
+import { Wind, Thermometer, TriangleAlert as AlertTriangle } from 'lucide-react';
 
 interface KPIRowProps {
     aqi: {
@@ -39,7 +39,7 @@ export function KPIRow({ aqi, weather, openCases }: KPIRowProps) {
     };
 
     return (
-        <div className="grid grid-cols-2 2xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
             {/* Air Quality */}
             <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
@@ -52,7 +52,7 @@ export function KPIRow({ aqi, weather, openCases }: KPIRowProps) {
                     </span>
                 </div>
                 <div className="flex items-end gap-2 mb-2">
-                    <span className="text-3xl font-bold text-slate-900 dark:text-white tabular-nums">{aqi.value}</span>
+                    <span className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tabular-nums">{aqi.value}</span>
                     <span className="text-sm text-slate-500 mb-1">AQI</span>
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mb-2">
@@ -75,7 +75,7 @@ export function KPIRow({ aqi, weather, openCases }: KPIRowProps) {
                 {weather ? (
                     <>
                         <div className="flex items-end gap-2 mb-2">
-                            <span className="text-3xl font-bold text-slate-900 dark:text-white tabular-nums">{weather.temp}°</span>
+                            <span className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tabular-nums">{weather.temp}°</span>
                             <span className="text-sm text-slate-500 mb-1">{weather.condition}</span>
                         </div>
                         <div className="flex gap-3 text-xs text-slate-500 dark:text-slate-400">
@@ -102,7 +102,7 @@ export function KPIRow({ aqi, weather, openCases }: KPIRowProps) {
                         </div>
                     </div>
                     <div className="flex items-end gap-2 mb-2">
-                        <span className="text-3xl font-bold text-slate-900 dark:text-white tabular-nums">{openCases}</span>
+                        <span className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tabular-nums">{openCases}</span>
                         <span className="text-sm text-slate-500 mb-1">active</span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">Code enforcement, permits</p>

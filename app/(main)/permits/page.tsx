@@ -110,14 +110,14 @@ export default function PermitsPage() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-light text-stone-900 mb-2">Building Permits</h1>
-        <p className="text-lg text-stone-500 max-w-2xl">
+        <h1 className="text-2xl md:text-3xl font-light text-stone-900 mb-2">Building Permits</h1>
+        <p className="text-base md:text-lg text-stone-500 max-w-2xl">
           ZIMA permits for Hollywood Hills (90068, 90046, 90069). Track new construction, renovations, and development activity.
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="glass rounded-xl p-4 shadow-premium">
           <div className="text-2xl font-bold text-stone-900">{stats.total}</div>
           <div className="text-xs text-stone-500 uppercase tracking-wide">Matching</div>
@@ -260,7 +260,7 @@ export default function PermitsPage() {
                 <h3 className="font-semibold text-stone-900 mb-1">{permit.address}</h3>
                 <p className="text-sm text-stone-600 mb-3">{permit.description}</p>
 
-                <div className="flex items-center gap-4 text-xs text-stone-500">
+                <div className="flex items-center gap-2 md:gap-4 text-xs text-stone-500">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
                     {new Date(permit.issue_date).toLocaleDateString()}
@@ -278,7 +278,7 @@ export default function PermitsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 ml-4 flex-shrink-0">
+              <div className="flex items-center gap-1 ml-2 md:ml-4 flex-shrink-0">
                 <WatchmarkButton
                   term={permit.address}
                   type="permit"
