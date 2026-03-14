@@ -22,16 +22,17 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
         const isActive = pathname === item.href;
         const Icon = item.icon;
         return (
-          <Link key={item.href} href={item.href} onClick={onNavigate}>
-            <button
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${isActive
-                ? 'bg-stone-900 text-white'
-                : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
-                }`}
-            >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {item.name}
-            </button>
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${isActive
+              ? 'bg-stone-900 text-white'
+              : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
+              }`}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            {item.name}
           </Link>
         );
       })}
