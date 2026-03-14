@@ -11,6 +11,8 @@ function generateDedupeKey(title: string, date: string): string {
 }
 
 async function fetchDashboardData() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
   // Parallel fetch all data sources
   const [
     safetyRes,
@@ -18,6 +20,9 @@ async function fetchDashboardData() {
     aqiRes,
     codeRes,
     newsRes,
+    permitsRes,
+    roadworkRes,
+    legislativeRes,
   ] = await Promise.all([
     supabaseServer
       .from('neighborhood_intel')
@@ -44,9 +49,18 @@ async function fetchDashboardData() {
       .eq('status', 'O')
       .order('date_opened', { ascending: false })
       .limit(10),
-    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/news-feed`, { cache: 'no-store' })
+    fetch(`${baseUrl}/api/news-feed`, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : { items: [], updated_at: null })
       .catch(() => ({ items: [], updated_at: null })),
+    fetch(`${baseUrl}/api/permits`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : { permits: [] })
+      .catch(() => ({ permits: [] })),
+    fetch(`${baseUrl}/api/roadwork`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : { friction: [] })
+      .catch(() => ({ friction: [] })),
+    fetch(`${baseUrl}/api/legislative`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : { updates: [] })
+      .catch(() => ({ updates: [] })),
   ]);
 
   const safetyAlerts = safetyRes.data || [];
@@ -54,6 +68,9 @@ async function fetchDashboardData() {
   const aqiData = aqiRes.data;
   const codeEnforcement = codeRes.data || [];
   const newsData = newsRes;
+  const permits = (permitsRes.permits || []).slice(0, 15);
+  const roadwork = (roadworkRes.friction || []).slice(0, 10);
+  const legislative = (legislativeRes.updates || []).slice(0, 8);
 
   // Build normalized feed items
   const feedItems: any[] = [];
@@ -118,6 +135,70 @@ async function fetchDashboardData() {
       geo: null,
       sourceName: 'Community',
       sourceUrl: item.url?.startsWith('http') ? item.url : undefined,
+      dedupeKey: key,
+    });
+  }
+
+  // Permits
+  for (const item of permits) {
+    const key = generateDedupeKey(item.permit_number || item.address || '', item.issue_date || new Date().toISOString());
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
+
+    const valStr = item.valuation ? ` • $${Number(item.valuation).toLocaleString()}` : '';
+    feedItems.push({
+      id: `permit-${item.permit_number}`,
+      type: 'permit',
+      severity: 0,
+      title: item.permit_type || 'Building Permit',
+      summary: `${item.address}${valStr} — ${item.description || item.status || ''}`.trim(),
+      timestamp: item.issue_date || new Date().toISOString(),
+      locationText: item.address || null,
+      geo: null,
+      sourceName: 'LA Building & Safety',
+      sourceUrl: item.zimas_url?.startsWith('http') ? item.zimas_url : undefined,
+      dedupeKey: key,
+    });
+  }
+
+  // Road work
+  for (const item of roadwork) {
+    const key = generateDedupeKey(item.project_name || '', item.date || new Date().toISOString());
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
+
+    feedItems.push({
+      id: item.id,
+      type: 'street_work',
+      severity: item.is_traffic_delay ? 2 : 1,
+      title: item.project_name || 'Street Work',
+      summary: `${item.street_name} — ${item.work_type}${item.status ? ` • ${item.status}` : ''}`,
+      timestamp: new Date().toISOString(),
+      locationText: item.street_name || null,
+      geo: null,
+      sourceName: item.source || 'StreetsLA',
+      sourceUrl: undefined,
+      dedupeKey: key,
+    });
+  }
+
+  // Legislative / Government
+  for (const item of legislative) {
+    const key = generateDedupeKey(item.title || '', item.date || new Date().toISOString());
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
+
+    feedItems.push({
+      id: item.id,
+      type: 'gov',
+      severity: 1,
+      title: item.title || 'Legislative Update',
+      summary: item.summary || '',
+      timestamp: new Date().toISOString(),
+      locationText: null,
+      geo: null,
+      sourceName: item.source_name || 'CD4',
+      sourceUrl: item.source_url?.startsWith('http') ? item.source_url : undefined,
       dedupeKey: key,
     });
   }
