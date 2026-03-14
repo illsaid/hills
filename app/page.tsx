@@ -182,7 +182,7 @@ async function fetchDashboardData() {
       locationText: item.region || null,
       geo: null,
       sourceName: 'Community',
-      sourceUrl: item.url?.startsWith('http') ? item.url : undefined,
+      sourceUrl: item.source_url?.startsWith('http') ? item.source_url : undefined,
       dedupeKey: key,
     });
   }
