@@ -1,6 +1,6 @@
 export const DATA_CUTOFFS = {
   SAFETY: 7,
-  NEWS: 365,
+  NEWS: 7,
   ROADWORK: 14,
   MAINTENANCE: 60,
   SECURITY: 45,

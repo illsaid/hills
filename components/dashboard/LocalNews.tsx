@@ -25,7 +25,7 @@ export function LocalNews({ headlines, updatedAt }: LocalNewsProps) {
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Local News</h3>
                 </div>
                 <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-6">
-                    Local news feed not configured yet
+                    No recent local news coverage available
                 </p>
             </div>
         );

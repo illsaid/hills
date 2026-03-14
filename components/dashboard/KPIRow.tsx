@@ -4,7 +4,7 @@ import { Wind, Thermometer, TriangleAlert as AlertTriangle } from 'lucide-react'
 
 interface KPIRowProps {
     aqi: {
-        value: number;
+        value: number | null;
         status: string;
         updatedAt?: string; // ISO timestamp
     };
@@ -19,7 +19,8 @@ interface KPIRowProps {
 }
 
 export function KPIRow({ aqi, weather, openCases }: KPIRowProps) {
-    const getAqiColor = (value: number) => {
+    const getAqiColor = (value: number | null) => {
+        if (value === null) return { bg: 'bg-slate-100 dark:bg-slate-500/20', text: 'text-slate-500 dark:text-slate-400', bar: 'bg-slate-300' };
         if (value <= 50) return { bg: 'bg-emerald-100 dark:bg-emerald-500/20', text: 'text-emerald-700 dark:text-emerald-400', bar: 'bg-emerald-500' };
         if (value <= 100) return { bg: 'bg-amber-100 dark:bg-amber-500/20', text: 'text-amber-700 dark:text-amber-400', bar: 'bg-amber-500' };
         return { bg: 'bg-red-100 dark:bg-red-500/20', text: 'text-red-700 dark:text-red-400', bar: 'bg-red-500' };
@@ -52,11 +53,13 @@ export function KPIRow({ aqi, weather, openCases }: KPIRowProps) {
                     </span>
                 </div>
                 <div className="flex items-end gap-2 mb-2">
-                    <span className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tabular-nums">{aqi.value}</span>
-                    <span className="text-sm text-slate-500 mb-1">AQI</span>
+                    <span className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                        {aqi.value ?? '—'}
+                    </span>
+                    <span className="text-sm text-slate-500 mb-1">{aqi.value !== null ? 'AQI' : ''}</span>
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mb-2">
-                    <div className={`${aqiColors.bar} h-1.5 rounded-full transition-all`} style={{ width: `${Math.min((aqi.value / 200) * 100, 100)}%` }} />
+                    <div className={`${aqiColors.bar} h-1.5 rounded-full transition-all`} style={{ width: aqi.value !== null ? `${Math.min((aqi.value / 200) * 100, 100)}%` : '0%' }} />
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                     Updated {formatUpdatedTime(aqi.updatedAt)}

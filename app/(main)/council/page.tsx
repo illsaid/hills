@@ -22,7 +22,7 @@ export default function CouncilPage() {
                 {/* Legislative - Priority */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center gap-2 mb-2">
-                        <Landmark className="w-5 h-5 text-indigo-500" />
+                        <Landmark className="w-5 h-5 text-slate-500" />
                         <h2 className="text-lg font-medium text-slate-900 dark:text-titanium-50">
                             Legislative Sentinel (CD4)
                         </h2>
@@ -45,7 +45,7 @@ export default function CouncilPage() {
 
             <div className="flex justify-end pt-8 border-t border-slate-200 dark:border-white/5">
                 <Link
-                    href="/dashboard"
+                    href="/"
                     className="text-sm text-slate-500 dark:text-titanium-500 hover:text-slate-900 dark:hover:text-titanium-300 transition-colors"
                 >
                     Back to Executive Briefing

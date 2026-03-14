@@ -293,9 +293,10 @@ async function fetchDashboardData() {
   }));
 
   // AQI data
+  const rawAqi = aqiData?.metadata?.avg_aqi ?? null;
   const aqi = {
-    value: aqiData?.metadata?.avg_aqi || 78,
-    status: (aqiData?.metadata?.avg_aqi || 78) <= 50 ? 'Good' : (aqiData?.metadata?.avg_aqi || 78) <= 100 ? 'Moderate' : 'Unhealthy',
+    value: rawAqi,
+    status: rawAqi === null ? 'N/A' : rawAqi <= 50 ? 'Good' : rawAqi <= 100 ? 'Moderate' : 'Unhealthy',
     updatedAt: aqiData?.created_at || null,
   };
 
