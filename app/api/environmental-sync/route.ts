@@ -119,51 +119,23 @@ export async function POST() {
             }
         }
 
-        // 3. Upsert to database
-        const { error } = await supabaseServer
-            .from('neighborhood_intel')
-            .upsert({
-                source_name: 'Google AQI',
-                title: alertTitle,
-                description: `Current AQI: ${avgAQI} (${results[0].category}). Dominant: ${dominantPollutant}.`,
-                url: 'https://airquality.googleapis.com', // Static source URL
-                category: spikeDetected ? 'Safety' : 'Weather',
-                priority: priority,
-                published_at: new Date().toISOString(),
-                metadata: {
-                    avg_aqi: avgAQI,
-                    locations: results,
-                    spike_detected: spikeDetected
-                }
-            }, {
-                onConflict: 'source_name' // Keep only one latest entry per source if we want single-source-of-truth style, 
-                // OR logic needs 'url' to be unique. 
-                // For tracking history, we might want unique URLs per hour, but user said "upsert".
-                // Let's use a dynamic URL to allow history or static to overwrite.
-                // User implies "Sentinel" which usually means current state.
-                // Let's stick to updating a single record or daily record.
-                // To keep history, we'd need unique URLs. Let's append date.
-                // url: `https://google.com/aqi/${new Date().toISOString()}` 
-            });
-
-        // Actually, to make "Smoke Spike" logic work on "previous hour", we need history. 
-        // But checking `neighborhood_intel` for *last inserted* is fine.
-        // I will make the URL unique by timestamp to allow history log.
-
-        await supabaseServer.from('neighborhood_intel').insert({
+        // 3. Insert timestamped AQI record (history kept for spike detection)
+        const { error } = await supabaseServer.from('neighborhood_intel').insert({
             source_name: 'Google AQI',
             title: alertTitle,
             description: `Current AQI: ${avgAQI} (${results[0].category}). Dominant: ${dominantPollutant}.`,
-            url: `https://google.com/aqi/${Date.now()}`,
+            url: `https://airquality.googleapis.com/aqi/${Date.now()}`,
             category: spikeDetected ? 'Safety' : 'Weather',
             priority: priority,
             published_at: new Date().toISOString(),
             metadata: {
                 avg_aqi: avgAQI,
                 locations: results,
-                spike_detected: spikeDetected
-            }
+                spike_detected: spikeDetected,
+            },
         });
+
+        if (error) console.error('[environmental-sync POST] insert error:', error);
 
         return NextResponse.json({
             success: true,

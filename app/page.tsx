@@ -1,5 +1,6 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { DashboardClient } from './DashboardClient';
+import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,9 +46,7 @@ async function batchGeocode(addresses: string[]): Promise<Map<string, { lat: num
 }
 
 async function fetchDashboardData() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-
-  // Parallel fetch all data sources
+  // Parallel fetch all data sources — all direct DB/external calls, no internal HTTP
   const [
     safetyRes,
     eventsRes,
@@ -62,6 +61,7 @@ async function fetchDashboardData() {
       .from('neighborhood_intel')
       .select('*')
       .eq('category', 'Safety')
+      .gte('published_at', cutoffDate(DATA_CUTOFFS.SAFETY))
       .order('published_at', { ascending: false })
       .limit(10),
     supabaseServer
@@ -83,18 +83,65 @@ async function fetchDashboardData() {
       .eq('status', 'O')
       .order('date_opened', { ascending: false })
       .limit(10),
-    fetch(`${baseUrl}/api/news-feed`, { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : { items: [], updated_at: null })
-      .catch(() => ({ items: [], updated_at: null })),
-    fetch(`${baseUrl}/api/permits`, { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : { permits: [] })
-      .catch(() => ({ permits: [] })),
-    fetch(`${baseUrl}/api/roadwork`, { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : { friction: [] })
+    (async () => {
+      try {
+        const { data } = await supabaseServer
+          .from('neighborhood_intel')
+          .select('title, description, url, published_at, source_name, category')
+          .eq('category', 'News Feed')
+          .not('title', 'is', null)
+          .or(`published_at.gte.${cutoffDate(DATA_CUTOFFS.NEWS)},published_at.is.null`)
+          .order('published_at', { ascending: false, nullsFirst: false })
+          .limit(30);
+        return {
+          items: (data || []).map(r => ({
+            headline: r.title,
+            source: r.source_name ?? 'Google News',
+            url: r.url,
+            published: r.published_at,
+            summary: r.description,
+          })),
+          updated_at: data?.[0]?.published_at ?? null,
+        };
+      } catch { return { items: [], updated_at: null }; }
+    })(),
+    (async () => {
+      try {
+        const { data } = await supabaseServer
+          .from('recent_permits')
+          .select('*')
+          .in('zip_code', ['90068', '90046', '90069'])
+          .gte('issue_date', cutoffDate(DATA_CUTOFFS.PERMITS))
+          .order('issue_date', { ascending: false })
+          .limit(50);
+        return { permits: data || [] };
+      } catch { return { permits: [] }; }
+    })(),
+    fetch('https://services5.arcgis.com/7nsPwEMP38bSkCjy/arcgis/rest/services/StreetsLA_PPP_2025_to_2026_SUBJECT_TO_CHANGE/FeatureServer/0/query?where=CD%3D%274%27+OR+CD%3D%2713%27&outFields=ST_NAME,PROJECT,WORKTYPE,STATUS,SCHEDULED,CD&returnGeometry=false&resultRecordCount=50&f=json', {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: 1800 },
+    })
+      .then(r => r.ok ? r.json() : { features: [] })
+      .then(d => ({
+        friction: (d.features || []).map((f: any) => ({
+          id: `SLA-${(f.attributes?.PROJECT || f.attributes?.ST_NAME || '').substring(0, 20).replace(/\s/g, '-')}`,
+          project_name: f.attributes?.PROJECT || `${f.attributes?.ST_NAME} Work`,
+          street_name: f.attributes?.ST_NAME || 'Unknown',
+          work_type: f.attributes?.WORKTYPE || 'Pavement Work',
+          status: f.attributes?.STATUS || f.attributes?.SCHEDULED || 'Scheduled',
+          source: 'StreetsLA PPP',
+          is_traffic_delay: ['LADWP','TRENCHING','EXCAVATION','DWP','WATER','GAS','SEWER','TRENCH'].some((kw: string) =>
+            `${f.attributes?.PROJECT} ${f.attributes?.WORKTYPE}`.toUpperCase().includes(kw)),
+        })),
+      }))
       .catch(() => ({ friction: [] })),
-    fetch(`${baseUrl}/api/legislative`, { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : { updates: [] })
-      .catch(() => ({ updates: [] })),
+    Promise.resolve({
+      updates: [
+        { id: 'cd4-rso-2025', title: 'Council Moves to Update the Rent Stabilization Ordinance', category: 'Housing', date: 'Oct 2025', summary: 'Major RSO updates including new tenant protections for Hollywood Hills rental properties.', source_name: 'CD4 Press Release', source_url: 'https://cd4.lacity.gov/press-releases/council-moves-to-update-rso/' },
+        { id: 'cd4-single-stair-2025', title: 'Council Permits Single-Stairway Buildings to Spur Housing Growth', category: 'Planning', date: 'Aug 2025', summary: 'New zoning ordinance allows single-stairway residential buildings, affecting hillside development.', source_name: 'CD4 Press Release', source_url: 'https://cd4.lacity.gov/press-releases/council-moves-to-permit-single-stairway-buildings/' },
+        { id: 'cd4-tour-bus-2025', title: 'Tour Bus Regulations on Mulholland Drive and Hollywood Hills', category: 'Tourism', date: 'Ongoing', summary: 'LADOT traffic control measures for tour buses on Mulholland Dr.', source_name: 'Hollywood Hills Tourism', source_url: 'https://cd4.lacity.gov/hollywood-hills-tourism' },
+      ],
+    }),
   ]);
 
   const safetyAlerts = safetyRes.data || [];
@@ -293,7 +340,7 @@ async function fetchDashboardData() {
   }));
 
   // AQI data
-  const rawAqi = aqiData?.metadata?.avg_aqi ?? null;
+  const rawAqi = (aqiData?.avg_aqi ?? aqiData?.metadata?.avg_aqi) ?? null;
   const aqi = {
     value: rawAqi,
     status: rawAqi === null ? 'N/A' : rawAqi <= 50 ? 'Good' : rawAqi <= 100 ? 'Moderate' : 'Unhealthy',

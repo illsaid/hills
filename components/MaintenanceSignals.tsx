@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlertCircle, Clock, MapPin, CheckCircle2, Cone } from 'lucide-react';
+import { CircleAlert as AlertCircle, Clock, MapPin, CircleCheck as CheckCircle2, Cone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -50,7 +50,7 @@ export function MaintenanceSignals() {
     if (loading || !data) return null;
 
     const hasData = data.total_requests > 0;
-    const isError = !hasData && data.status?.includes("Unavailable");
+    const isError = !hasData && (data.status?.includes('Unavailable') || data.status?.includes('Pending'));
 
     // Trend Logic
     const trend = data.trend || "Stable";
@@ -58,8 +58,8 @@ export function MaintenanceSignals() {
     const isDown = trend.includes("Down");
     const trendColor = isUp ? "text-orange-500" : isDown ? "text-emerald-500" : "text-slate-400";
 
-    // Widget Status Logic
-    const isElevated = data.status !== "OK"; // Assuming "OK" is the non-elevated status
+    // Widget Status Logic — elevated when trend is rising or data unavailable
+    const isElevated = isUp || (!!data.status?.includes('Unavailable'));
     const StatusIcon = isElevated ? AlertCircle : CheckCircle2;
 
     return (
@@ -73,11 +73,11 @@ export function MaintenanceSignals() {
                             <StatusIcon className={`w-5 h-5 ${isElevated ? 'text-alert' : 'text-safe'}`} />
                         </div>
                         <h3 className="font-medium text-ink">
-                            Security Brief
+                            Maintenance Signals
                         </h3>
                     </div>
                     <Badge variant="outline" className={`text-xs px-2.5 py-0.5 font-medium border ${isElevated ? 'bg-alert/5 text-alert border-alert/20' : 'bg-safe/5 text-safe border-safe/20'}`}>
-                        {data.status}
+                        {trend}
                     </Badge>
                 </div>
 

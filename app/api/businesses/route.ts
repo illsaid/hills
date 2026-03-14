@@ -32,7 +32,7 @@ export async function GET(request: Request) {
             street_address: item.street_address || '',
             city: item.city || '',
             zip_code: item.zip_code || '',
-            expiration_date: item.expiration_date || '',
+            expiration_date: item.expiration_date || item.expiry_date || '',
             filing_number: item.filing_number || '',
         }));
 

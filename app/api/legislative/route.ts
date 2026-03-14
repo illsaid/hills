@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { supabaseServer } from '@/lib/supabase/server';
+import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
 // CD4 Press Release and Tourism URLs
 const CD4_SOURCES = {
@@ -91,13 +93,37 @@ function getCD4Updates(): LegislativeUpdate[] {
 
 export async function GET() {
     try {
-        const updates = getCD4Updates();
+        const staticUpdates = getCD4Updates();
+
+        // Try to fetch live legislative data from neighborhood_intel
+        const { data: liveData } = await supabaseServer
+            .from('neighborhood_intel')
+            .select('id, title, description, url, source_url, source_name, published_at, category')
+            .eq('category', 'Legislative')
+            .gte('published_at', cutoffDate(DATA_CUTOFFS.LEGISLATIVE))
+            .order('published_at', { ascending: false })
+            .limit(20);
+
+        const liveUpdates: LegislativeUpdate[] = (liveData || []).map(item => ({
+            id: item.id,
+            title: item.title,
+            category: item.category,
+            date: item.published_at ? new Date(item.published_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Recent',
+            summary: item.description || '',
+            impact_label: null,
+            source_url: item.source_url || item.url || '',
+            source_name: item.source_name,
+        }));
+
+        // Merge: live first, then static (dedupe by id)
+        const seenIds = new Set(liveUpdates.map(u => u.id));
+        const merged = [...liveUpdates, ...staticUpdates.filter(u => !seenIds.has(u.id))];
 
         return NextResponse.json({
             success: true,
-            count: updates.length,
+            count: merged.length,
             sources: CD4_SOURCES,
-            updates,
+            updates: merged,
         });
     } catch (error: any) {
         console.error('Legislative Sentinel API Error:', error);
