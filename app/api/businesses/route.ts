@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/server';
+import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
 export async function GET(request: Request) {
     try {
@@ -10,6 +11,7 @@ export async function GET(request: Request) {
         const { data: fbnData, error: fbnError } = await supabaseServer
             .from('raw_fbns')
             .select('*')
+            .gte('filing_date', cutoffDate(DATA_CUTOFFS.BUSINESSES))
             .order('filing_date', { ascending: false })
             .limit(limit);
 

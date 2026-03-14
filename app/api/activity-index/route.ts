@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,6 +19,7 @@ export async function GET() {
         .select('raw_json, published_at, snapshot, source_name')
         .eq('source_name', sourceName)
         .in('category', ['Safety', 'Activity'])
+        .gte('published_at', cutoffDate(DATA_CUTOFFS.ACTIVITY))
         .order('published_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -42,6 +44,7 @@ export async function GET() {
       .select('raw_json, published_at, snapshot, source_name')
       .in('category', ['Safety', 'Activity'])
       .not('raw_json', 'is', null)
+      .gte('published_at', cutoffDate(DATA_CUTOFFS.ACTIVITY))
       .order('published_at', { ascending: false })
       .limit(1)
       .maybeSingle();

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,6 +14,7 @@ export async function GET() {
       .select('raw_json, published_at, snapshot')
       .eq('source_name', 'LAFD Alerts')
       .eq('category', 'Safety')
+      .gte('published_at', cutoffDate(DATA_CUTOFFS.PULSE))
       .order('published_at', { ascending: false })
       .limit(1)
       .maybeSingle();

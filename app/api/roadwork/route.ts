@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
 // StreetsLA Pavement Preservation Program 2025-2026 (live feed)
 const STREETLA_2526_URL = 'https://services5.arcgis.com/7nsPwEMP38bSkCjy/arcgis/rest/services/StreetsLA_PPP_2025_to_2026_SUBJECT_TO_CHANGE/FeatureServer/0/query';
@@ -123,7 +124,8 @@ async function fetchBOEExcavations(): Promise<FrictionResponse[]> {
     // Query BOE permits issued after July 2025 for excavation work
     const url = new URL(BOE_PERMITS_URL);
     url.searchParams.set('$limit', '100');
-    url.searchParams.set('$where', "permitissuedate > '2025-07-01' AND (permitname like '%Excavation%' OR permitname like '%Class (A)%')");
+    const boeCutoff = cutoffDate(DATA_CUTOFFS.ROADWORK).split('T')[0];
+    url.searchParams.set('$where', `permitissuedate > '${boeCutoff}' AND (permitname like '%Excavation%' OR permitname like '%Class (A)%')`);
     url.searchParams.set('$order', 'permitissuedate DESC');
     url.searchParams.set('$select', 'id,permitname,location,permitissuedate');
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/server';
+import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
 export interface NeighborhoodIntelItem {
     id: string;
@@ -25,16 +26,23 @@ export async function GET(request: Request) {
             .order('created_at', { ascending: false })
             .limit(limit);
 
-        // Optional category filter
+        const CATEGORY_CUTOFFS: Record<string, number> = {
+            'News Feed': DATA_CUTOFFS.NEWS,
+            'Safety': DATA_CUTOFFS.SAFETY,
+            'Maintenance': DATA_CUTOFFS.MAINTENANCE,
+            'Housing': DATA_CUTOFFS.MARKET,
+            'Legislative': DATA_CUTOFFS.LEGISLATIVE,
+            'Activity': DATA_CUTOFFS.ACTIVITY,
+        };
+
+        const defaultCutoffDays = 30;
+
         if (category) {
             query = query.eq('category', category);
-
-            // For News Feed, only show posts from the last 48 hours
-            if (category === 'News Feed') {
-                const cutoff = new Date();
-                cutoff.setHours(cutoff.getHours() - 48);
-                query = query.gte('published_at', cutoff.toISOString());
-            }
+            const days = CATEGORY_CUTOFFS[category] ?? defaultCutoffDays;
+            query = query.gte('published_at', cutoffDate(days));
+        } else {
+            query = query.gte('published_at', cutoffDate(defaultCutoffDays));
         }
 
         const { data, error } = await query;

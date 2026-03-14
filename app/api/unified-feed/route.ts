@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/server';
+import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
 export interface UnifiedFeedItem {
     id: string;
@@ -24,6 +25,7 @@ export async function GET(request: Request) {
             .from('neighborhood_intel')
             .select('*')
             .in('category', ['Safety', 'Legislative'])
+            .gte('published_at', cutoffDate(Math.max(DATA_CUTOFFS.SAFETY, DATA_CUTOFFS.LEGISLATIVE)))
             .order('published_at', { ascending: false, nullsFirst: false })
             .limit(limit);
 
@@ -41,6 +43,7 @@ export async function GET(request: Request) {
             .from('events')
             .select('*, source:sources(*)')
             .eq('is_seed', false)
+            .gte('observed_at', cutoffDate(DATA_CUTOFFS.SAFETY))
             .order('observed_at', { ascending: false })
             .limit(limit);
 
@@ -55,6 +58,7 @@ export async function GET(request: Request) {
             .from('code_enforcement')
             .select('*')
             .eq('status', 'O') // Open cases only
+            .gte('date_opened', cutoffDate(DATA_CUTOFFS.CODE_ENFORCEMENT))
             .order('date_opened', { ascending: false })
             .limit(limit);
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-
 import { createClient } from '@supabase/supabase-js';
+import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
 // Initialize Supabase Client (Server-Side)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -29,6 +29,7 @@ export async function GET() {
             .from('recent_permits')
             .select('*')
             .in('zip_code', TARGET_ZIP_CODES)
+            .gte('issue_date', cutoffDate(DATA_CUTOFFS.PERMITS))
             .order('issue_date', { ascending: false })
             .limit(50);
 

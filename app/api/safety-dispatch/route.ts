@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/server';
+import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
 export interface SafetyIncident {
     id: string;
@@ -19,6 +20,7 @@ export async function GET() {
             .from('neighborhood_intel')
             .select('*')
             .eq('category', 'Safety')
+            .gte('published_at', cutoffDate(DATA_CUTOFFS.SAFETY))
             .order('published_at', { ascending: false })
             .limit(10);
 
@@ -32,6 +34,7 @@ export async function GET() {
                     .from('neighborhood_intel')
                     .select('*')
                     .eq('category', 'Safety')
+                    .gte('published_at', cutoffDate(DATA_CUTOFFS.SAFETY))
                     .order('published_at', { ascending: false })
                     .limit(10);
 

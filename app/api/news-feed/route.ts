@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,7 @@ export async function GET() {
       .from('neighborhood_intel')
       .select('title, description, url, published_at, snapshot, raw_json, source_name')
       .eq('category', 'News Feed')
+      .gte('published_at', cutoffDate(DATA_CUTOFFS.NEWS))
       .order('published_at', { ascending: false })
       .limit(20);
 
