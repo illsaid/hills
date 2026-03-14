@@ -7,21 +7,43 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const PRIORITY_SOURCES = ["latimes", "ktla", "laist", "la times", "los angeles times"];
-const HIGH_PRIORITY_KEYWORDS = ["fire", "smoke", "emergency", "evacuation", "wildfire", "brush fire", "lapd", "lafd"];
+const PRIORITY_SOURCES = ["latimes", "ktla", "laist", "la times", "los angeles times", "kcrw", "abc7", "nbc4", "cbsla"];
+const HIGH_PRIORITY_KEYWORDS = ["fire", "smoke", "emergency", "evacuation", "wildfire", "brush fire", "lapd", "lafd", "earthquake", "mudslide", "flood"];
+
 const HILLS_KEYWORDS = [
-  "hollywood hills", "beachwood canyon", "laurel canyon",
-  "runyon canyon", "sunset plaza", "bird streets",
-  "hollywood dell", "outpost estates", "nichols canyon",
-  "lake hollywood", "cahuenga pass", "griffith park",
-  "mulholland", "hollywood sign",
-  "90068", "90046", "90069",
-  "east hollywood", "los feliz",
-  "silverlake", "silver lake", "echo park",
-  "griffith observatory", "hollywood bowl", "universal studios",
+  "hollywood hills",
+  "beachwood canyon",
+  "laurel canyon",
+  "runyon canyon",
+  "sunset plaza",
+  "bird streets",
+  "hollywood dell",
+  "outpost estates",
+  "nichols canyon",
+  "lake hollywood",
+  "cahuenga pass",
+  "mulholland drive",
+  "mulholland highway",
+  "hollywood sign",
+  "griffith park",
+  "griffith observatory",
+  "hollywood bowl",
+  "90068",
+  "90046",
+  "90069",
 ];
+
+const SEARCH_QUERIES = [
+  '"Hollywood Hills"',
+  '"Laurel Canyon" Los Angeles',
+  '"Beachwood Canyon"',
+  '"Griffith Park" fire OR emergency OR crime',
+  '"Runyon Canyon"',
+  '"Hollywood Hills" fire OR emergency OR evacuation',
+  '"Mulholland Drive" OR "Mulholland Highway" Los Angeles',
+];
+
 const MAX_AGE_HOURS = 48;
-const SEARCH_QUERIES = ['"Hollywood Hills"', '"Laurel Canyon"', '"Griffith Park"', '"East Hollywood" fire'];
 
 function containsHillsKeyword(text: string): boolean {
   if (!text) return false;
@@ -29,10 +51,50 @@ function containsHillsKeyword(text: string): boolean {
   return HILLS_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
-function isPrioritySource(sourceName: string): boolean {
-  if (!sourceName) return false;
-  const lower = sourceName.toLowerCase();
-  return PRIORITY_SOURCES.some((ps) => lower.includes(ps));
+function isPrioritySource(url: string, title: string): boolean {
+  const combined = `${url} ${title}`.toLowerCase();
+  return PRIORITY_SOURCES.some((ps) => combined.includes(ps));
+}
+
+function parseRssPubDate(dateStr: string): Date | null {
+  try {
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  } catch {
+    return null;
+  }
+}
+
+function extractTextContent(xml: string, tag: string): string {
+  const cdataMatch = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${tag}>`, "i").exec(xml);
+  if (cdataMatch) return cdataMatch[1].trim();
+  const plainMatch = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i").exec(xml);
+  return plainMatch ? plainMatch[1].replace(/<[^>]+>/g, "").trim() : "";
+}
+
+function parseRssItems(xml: string): Array<{ title: string; link: string; description: string; pubDate: string; source: string }> {
+  const items: Array<{ title: string; link: string; description: string; pubDate: string; source: string }> = [];
+  const itemMatches = xml.matchAll(/<item>([\s\S]*?)<\/item>/gi);
+
+  for (const match of itemMatches) {
+    const itemXml = match[1];
+    const title = extractTextContent(itemXml, "title");
+    const description = extractTextContent(itemXml, "description");
+    const pubDate = extractTextContent(itemXml, "pubDate");
+
+    const linkCdata = /<link[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\/link>/i.exec(itemXml);
+    const linkPlain = /<link[^>]*>([^<]+)<\/link>/i.exec(itemXml);
+    const link = linkCdata?.[1]?.trim() ?? linkPlain?.[1]?.trim() ?? "";
+
+    const sourceMatch = /<source[^>]+url="([^"]+)"[^>]*>([^<]+)<\/source>/i.exec(itemXml);
+    const source = sourceMatch?.[2]?.trim() ?? "";
+
+    if (title && link) {
+      items.push({ title, link, description, pubDate, source });
+    }
+  }
+
+  return items;
 }
 
 Deno.serve(async (req: Request) => {
@@ -46,16 +108,8 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SERVICE_ROLE_KEY")!
     );
 
-    const newsDataApiKey = Deno.env.get("NEWSDATA_API_KEY");
-    if (!newsDataApiKey) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Missing NEWSDATA_API_KEY" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Purge old news articles
     const cutoff = new Date(Date.now() - MAX_AGE_HOURS * 60 * 60 * 1000);
+
     await supabase
       .from("neighborhood_intel")
       .delete()
@@ -69,55 +123,52 @@ Deno.serve(async (req: Request) => {
 
     for (const query of SEARCH_QUERIES) {
       try {
-        const url = new URL("https://newsdata.io/api/1/news");
-        url.searchParams.append("apikey", newsDataApiKey);
-        url.searchParams.append("q", query);
-        url.searchParams.append("language", "en");
-        url.searchParams.append("country", "us");
+        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+        const res = await fetch(rssUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (compatible; HillsLedger/1.0)",
+            "Accept": "application/rss+xml, application/xml, text/xml",
+          },
+        });
 
-        const res = await fetch(url.toString());
         if (!res.ok) continue;
 
-        const data = await res.json();
-        if (data.status !== "success" || !data.results) continue;
+        const xml = await res.text();
+        const items = parseRssItems(xml);
 
-        for (const article of data.results as Record<string, unknown>[]) {
-          const articleDate = article.pubDate ? new Date(article.pubDate as string) : null;
+        for (const item of items) {
+          const articleDate = parseRssPubDate(item.pubDate);
           if (articleDate && articleDate < cutoff) continue;
 
-          const fullText = `${article.title ?? ""} ${article.description ?? ""} ${article.content ?? ""}`;
+          const fullText = `${item.title} ${item.description}`;
           if (!containsHillsKeyword(fullText)) continue;
 
-          const link = article.link as string;
+          const link = item.link;
           if (!link || seenUrls.has(link)) continue;
           seenUrls.add(link);
 
           const isHighPriority = HIGH_PRIORITY_KEYWORDS.some((kw) => fullText.toLowerCase().includes(kw));
-          const sourceName = (article.source_name ?? article.source_id ?? "NewsData") as string;
-          const isPriority = isPrioritySource(sourceName);
+          const isPriority = isPrioritySource(link, item.source);
 
           results.push({
-            source_name: `NewsData (${sourceName})`,
-            title: article.title ?? "Untitled",
-            description: article.description ?? (article.content as string)?.slice(0, 300) ?? "",
+            source_name: item.source || "Google News",
+            title: item.title,
+            description: item.description.slice(0, 400),
             url: link,
             category: "News Feed",
             priority: isHighPriority ? 1 : isPriority ? 2 : 3,
             published_at: (articleDate ?? now).toISOString(),
             metadata: {
-              source_id: article.source_id,
-              source_name: sourceName,
               source_type: "news",
-              image_url: article.image_url,
-              keywords: article.keywords,
               is_priority_source: isPriority,
               scraped_at: now.toISOString(),
+              query,
             },
           });
         }
 
-        await new Promise((r) => setTimeout(r, 500));
-      } catch (_e) {
+        await new Promise((r) => setTimeout(r, 300));
+      } catch {
         // skip query errors
       }
     }
