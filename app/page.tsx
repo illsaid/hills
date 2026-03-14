@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 
 // Utility to generate dedupe key
 function generateDedupeKey(title: string, date: string): string {
-  const dateStr = new Date(date).toISOString().split('T')[0];
+  const parsed = new Date(date);
+  const dateStr = isNaN(parsed.getTime()) ? date.replace(/[^a-z0-9]/gi, '').slice(0, 10) : parsed.toISOString().split('T')[0];
   const titleHash = title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
   return `${titleHash}_${dateStr}`;
 }
