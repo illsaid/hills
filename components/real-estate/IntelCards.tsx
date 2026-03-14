@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlertTriangle, FileText, Loader2, MapPin } from 'lucide-react';
+import { TriangleAlert as AlertTriangle, FileText, Loader as Loader2, MapPin } from 'lucide-react';
 import { useAddressContext } from '@/hooks/useAddressContext';
 import type { IntelEvent } from '@/lib/real-estate/types';
 
@@ -67,7 +67,7 @@ export function IntelCards({ className = '', maxCards = 5 }: IntelCardsProps) {
         <div className={className}>
             <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                    Today's Intel
+                    Today&apos;s Intel
                 </h3>
                 {loading && <Loader2 className="w-4 h-4 text-slate-400 animate-spin" />}
             </div>

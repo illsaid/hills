@@ -27,7 +27,7 @@ export async function runProvider(
     .from('areas')
     .select('*')
     .eq('slug', areaSlug)
-    .single();
+    .maybeSingle();
 
   if (!area.data) {
     return {
@@ -42,7 +42,7 @@ export async function runProvider(
     .select('*')
     .eq('area_id', area.data.id)
     .eq('provider_key', providerName)
-    .single();
+    .maybeSingle();
 
   if (source.error || !source.data) {
     return {

@@ -74,7 +74,7 @@ export async function GET(request: Request) {
                 type: item.category === 'Safety' ? 'safety' : item.category === 'Legislative' ? 'legislative' : 'intel',
                 title: item.title,
                 description: item.description,
-                url: item.url,
+                url: item.source_url || item.url || null,
                 category: item.category,
                 source_name: item.source_name,
                 priority: item.priority,

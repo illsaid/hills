@@ -38,6 +38,35 @@ async function fetchAQI(lat: number, lng: number): Promise<any> {
     return await response.json();
 }
 
+
+export async function GET() {
+    try {
+        const { data, error } = await supabaseServer
+            .from('neighborhood_intel')
+            .select('metadata, created_at')
+            .eq('source_name', 'Google AQI')
+            .not('metadata', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (error || !data) {
+            return NextResponse.json({ avg_aqi: 78, category: 'Moderate', updated_at: null });
+        }
+
+        const meta = data.metadata as Record<string, unknown>;
+        return NextResponse.json({
+            avg_aqi: meta?.avg_aqi ?? 78,
+            locations: meta?.locations ?? [],
+            spike_detected: meta?.spike_detected ?? false,
+            updated_at: data.created_at,
+        });
+    } catch (err) {
+        console.error('[environmental-sync GET]', err);
+        return NextResponse.json({ avg_aqi: 78, updated_at: null });
+    }
+}
+
 export async function POST() {
     try {
         if (!GOOGLE_API_KEY) {

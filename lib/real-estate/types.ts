@@ -11,7 +11,7 @@
  */
 export interface IntelEvent {
     /** Source adapter identifier */
-    source: 'permits' | 'buildwatch' | 'distress' | 'insuretrack' | string;
+    source: 'permits' | 'buildwatch' | 'distress' | 'firescore' | string;
 
     /** Human-readable event title */
     title: string;

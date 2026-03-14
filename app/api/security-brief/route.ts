@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer as supabase } from '@/lib/supabase/server';
 import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 const SECURITY_SOURCE_NAMES = ['LAPD NIBRS', 'Security Brief', 'LAPD Activity', 'LAPD Calls for Service'];
 
@@ -56,16 +51,6 @@ export async function GET() {
         snapshot_updated_at: fallbackData.published_at ?? null,
         data_source: fallbackData.source_name,
       });
-    }
-
-    if (process.env.NODE_ENV !== 'production') {
-      const { default: fs } = await import('fs');
-      const { default: path } = await import('path');
-      const filePath = path.join(process.cwd(), 'data', 'security_brief.json');
-      if (fs.existsSync(filePath)) {
-        const fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        return NextResponse.json({ ...fileData, snapshot: true, snapshot_updated_at: fileData.updated_at });
-      }
     }
 
     return NextResponse.json({

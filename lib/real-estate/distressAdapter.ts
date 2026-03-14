@@ -50,11 +50,11 @@ export const distressAdapter: ModuleAdapter = {
 
         const { data, error } = await supabase
             .from('code_enforcement')
-            .select('case_number, address, case_type, date_opened, status, latitude, longitude')
+            .select('case_number, address, case_type, date_opened, status, lat, lon')
             .eq('status', 'O')
-            .gte('date_opened', startDate.toISOString())
-            .not('latitude', 'is', null)
-            .not('longitude', 'is', null)
+            .gte('date_opened', startDate.toISOString().split('T')[0])
+            .not('lat', 'is', null)
+            .not('lon', 'is', null)
             .order('date_opened', { ascending: false })
             .limit(300);
 
@@ -63,8 +63,8 @@ export const distressAdapter: ModuleAdapter = {
         const results: IntelEvent[] = [];
 
         for (const record of data) {
-            const recLat = typeof record.latitude === 'number' ? record.latitude : parseFloat(record.latitude);
-            const recLon = typeof record.longitude === 'number' ? record.longitude : parseFloat(record.longitude);
+            const recLat = typeof record.lat === 'number' ? record.lat : parseFloat(record.lat as string);
+            const recLon = typeof record.lon === 'number' ? record.lon : parseFloat(record.lon as string);
 
             if (isNaN(recLat) || isNaN(recLon)) continue;
 

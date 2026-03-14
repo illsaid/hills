@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       .from('areas')
       .select('*')
       .eq('slug', areaSlug)
-      .single();
+      .maybeSingle();
 
     if (!area.data) {
       return NextResponse.json({ error: `Area not found: ${areaSlug}` }, { status: 404 });
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       .select('*')
       .eq('area_id', area.data.id)
       .eq('provider_key', providerName)
-      .single();
+      .maybeSingle();
 
     if (source.error || !source.data) {
       return NextResponse.json({

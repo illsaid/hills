@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer as supabase } from '@/lib/supabase/server';
 import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export async function GET() {
   try {
@@ -29,17 +24,6 @@ export async function GET() {
 
     if (error) {
       console.warn('[maintenance-signals] Supabase query failed:', error.message);
-    }
-
-    if (process.env.NODE_ENV !== 'production') {
-      const { default: fs } = await import('fs');
-      const { default: path } = await import('path');
-      const filePath = path.join(process.cwd(), 'data', 'maintenance_signals.json');
-      if (fs.existsSync(filePath)) {
-        console.warn('[maintenance-signals] DEV FALLBACK: serving from data/maintenance_signals.json');
-        const fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        return NextResponse.json({ ...fileData, snapshot: true, snapshot_updated_at: fileData.updated_at });
-      }
     }
 
     return NextResponse.json({

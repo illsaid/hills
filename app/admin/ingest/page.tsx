@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { Home, RefreshCw, Bug } from 'lucide-react';
+import { Chrome as Home, RefreshCw, Bug } from 'lucide-react';
 
 interface IngestRun {
   id: string;
@@ -59,7 +59,7 @@ export default function AdminIngestPage() {
       const response = await fetch(`/api/ingest/run?provider=${provider}&area=hollywood-hills`, {
         method: 'POST',
         headers: {
-          'x-ingest-key': 'hills-ledger-ingest-key-2024',
+          'x-ingest-key': process.env.NEXT_PUBLIC_INGEST_KEY || '',
         },
       });
       const data = await response.json();

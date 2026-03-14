@@ -1,27 +1,33 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer as supabase } from '@/lib/supabase/server';
 import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export async function GET() {
   try {
     const { data, error } = await supabase
       .from('neighborhood_intel')
-      .select('raw_json, published_at, snapshot')
-      .eq('source_name', 'LAFD Alerts')
+      .select('raw_json, title, description, published_at, snapshot')
+      .in('source_name', ['LAFD Alerts', 'LAFD Alert'])
       .eq('category', 'Safety')
       .gte('published_at', cutoffDate(DATA_CUTOFFS.PULSE))
       .order('published_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (!error && data?.raw_json) {
+    if (!error && data) {
+      if (data.raw_json) {
+        return NextResponse.json({
+          ...(data.raw_json as Record<string, unknown>),
+          snapshot: data.snapshot ?? false,
+          snapshot_updated_at: data.published_at ?? null,
+        });
+      }
+      // raw_json is null — build response from title/description fields
       return NextResponse.json({
-        ...(data.raw_json as Record<string, unknown>),
+        status: 'Active',
+        summary: data.description || data.title || 'Active alert detected.',
+        last_updated: data.published_at,
+        alerts: data.title ? [{ title: data.title, description: data.description }] : [],
         snapshot: data.snapshot ?? false,
         snapshot_updated_at: data.published_at ?? null,
       });
@@ -29,17 +35,6 @@ export async function GET() {
 
     if (error) {
       console.warn('[pulse] Supabase query failed:', error.message);
-    }
-
-    if (process.env.NODE_ENV !== 'production') {
-      const { default: fs } = await import('fs');
-      const { default: path } = await import('path');
-      const filePath = path.join(process.cwd(), 'data', 'intelligence_pulse.json');
-      if (fs.existsSync(filePath)) {
-        console.warn('[pulse] DEV FALLBACK: serving from data/intelligence_pulse.json');
-        const fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        return NextResponse.json({ ...fileData, snapshot: true, snapshot_updated_at: fileData.last_updated });
-      }
     }
 
     return NextResponse.json({

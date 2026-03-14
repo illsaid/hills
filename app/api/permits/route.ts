@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer as supabase } from '@/lib/supabase/server';
 import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
-
-// Initialize Supabase Client (Server-Side)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; // Anon key is fine for reads if RLS allows, or use Service Key if needed
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const TARGET_ZIP_CODES = ['90068', '90046', '90069'];
 

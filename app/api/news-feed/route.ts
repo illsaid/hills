@@ -1,21 +1,17 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer as supabase } from '@/lib/supabase/server';
 import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export async function GET() {
   try {
     const { data, error } = await supabase
       .from('neighborhood_intel')
-      .select('title, description, url, published_at, snapshot, raw_json, source_name')
-      .eq('category', 'News Feed')
-      .gte('published_at', cutoffDate(DATA_CUTOFFS.NEWS))
-      .order('published_at', { ascending: false })
-      .limit(20);
+      .select('title, description, url, published_at, snapshot, raw_json, source_name, category')
+      .in('category', ['News Feed', 'News', 'Housing'])
+      .not('title', 'is', null)
+      .or(`published_at.gte.${cutoffDate(DATA_CUTOFFS.NEWS)},published_at.is.null`)
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .limit(30);
 
     if (!error && data && data.length > 0) {
       const anySnapshot = data.some(r => r.snapshot);
@@ -37,17 +33,6 @@ export async function GET() {
 
     if (error) {
       console.warn('[news-feed] Supabase query failed:', error.message);
-    }
-
-    if (process.env.NODE_ENV !== 'production') {
-      const { default: fs } = await import('fs');
-      const { default: path } = await import('path');
-      const filePath = path.join(process.cwd(), 'data', 'news_feed.json');
-      if (fs.existsSync(filePath)) {
-        console.warn('[news-feed] DEV FALLBACK: serving from data/news_feed.json');
-        const fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        return NextResponse.json({ ...fileData, snapshot: true, snapshot_updated_at: fileData.updated_at });
-      }
     }
 
     return NextResponse.json({ items: [], updated_at: null, snapshot: false, snapshot_updated_at: null });

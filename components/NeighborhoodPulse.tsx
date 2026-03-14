@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Shield, CheckCircle, AlertTriangle, Activity, Phone, Wind } from 'lucide-react';
+import { Shield, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle, Activity, Phone, Wind } from 'lucide-react';
 
 interface PulseData {
     crimeStatus: 'normal' | 'elevated';
@@ -18,10 +18,11 @@ export function NeighborhoodPulse() {
     useEffect(() => {
         async function fetchAll() {
             try {
-                const [securityRes, activityRes, maintenanceRes] = await Promise.all([
+                const [securityRes, activityRes, maintenanceRes, aqiRes] = await Promise.all([
                     fetch('/api/security-brief').then(r => r.ok ? r.json() : null),
                     fetch('/api/activity-index').then(r => r.ok ? r.json() : null),
                     fetch('/api/maintenance-signals').then(r => r.ok ? r.json() : null),
+                    fetch('/api/environmental-sync').then(r => r.ok ? r.json() : null),
                 ]);
 
                 setData({
@@ -29,7 +30,7 @@ export function NeighborhoodPulse() {
                     crimeChange: securityRes?.stats?.wow_change || 0,
                     noiseLevel: activityRes?.activity_status || 'NORMAL',
                     openTickets: maintenanceRes?.open_count || maintenanceRes?.total_requests || 0,
-                    aqiValue: 78, // Would come from AQI API, hardcoded for now
+                    aqiValue: aqiRes?.avg_aqi ?? 78,
                 });
             } catch (e) {
                 console.error('Failed to fetch pulse data', e);

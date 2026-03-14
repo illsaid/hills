@@ -64,6 +64,7 @@ export function ModuleDrawer({ moduleId, moduleTitle, isOpen, onClose, requiresV
         if (!isOpen || !lat || !lon || isGated) return;
         fetchItems();
         return () => { abortRef.current?.abort(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, lat, lon, radius_m, window_days, moduleId, isGated]);
 
     if (!isOpen) return null;

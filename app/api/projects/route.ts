@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       .from('areas')
       .select('id')
       .eq('slug', areaSlug)
-      .single();
+      .maybeSingle();
 
     if (!area.data) {
       return NextResponse.json({ error: 'Area not found' }, { status: 404 });

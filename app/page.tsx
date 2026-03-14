@@ -133,7 +133,7 @@ async function fetchDashboardData() {
       summary: item.description || '',
       timestamp: item.published_at || item.created_at,
       locationText: item.location || null,
-      geo: item.latitude && item.longitude ? { lat: item.latitude, lng: item.longitude } : null,
+      geo: null,
       sourceName: item.source_name || 'LAFD',
       sourceUrl: item.source_url || (item.url?.startsWith('http') ? item.url : undefined),
       dedupeKey: key,
@@ -146,8 +146,8 @@ async function fetchDashboardData() {
     if (seenKeys.has(key)) continue;
     seenKeys.add(key);
 
-    const existingGeo = item.latitude && item.longitude
-      ? { lat: item.latitude, lng: item.longitude }
+    const existingGeo = (item.lat != null) && (item.lon != null)
+      ? { lat: item.lat as number, lng: item.lon as number }
       : null;
     const geocodedGeo = !existingGeo && item.address ? (geoCache.get(item.address) ?? null) : null;
 
