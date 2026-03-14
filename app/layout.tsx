@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Sidebar } from '@/components/Sidebar';
 import { TopNav } from '@/components/TopNav';
+import { PageErrorBoundary } from '@/components/ErrorBoundary';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,17 +21,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <div className="h-screen overflow-hidden bg-stone-50">
-          {/* Top Navigation */}
           <TopNav />
-          
-          {/* Main Layout */}
           <div className="pt-16 h-full flex">
-            {/* Left Sidebar */}
             <Sidebar />
-            
-            {/* Main Content Area */}
             <main className="flex-1 h-full overflow-y-auto scrollbar-hide">
-              {children}
+              <PageErrorBoundary>
+                {children}
+              </PageErrorBoundary>
             </main>
           </div>
         </div>

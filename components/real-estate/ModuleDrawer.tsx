@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Loader2, MapPin, ExternalLink } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Loader as Loader2, MapPin, ExternalLink, TriangleAlert as AlertTriangle, RefreshCw } from 'lucide-react';
 import { useAddressContext } from '@/hooks/useAddressContext';
 import { VerifiedGate } from './VerifiedGate';
 import type { IntelEvent } from '@/lib/real-estate/types';
@@ -18,40 +18,51 @@ export function ModuleDrawer({ moduleId, moduleTitle, isOpen, onClose, requiresV
     const { lat, lon, radius_m, window_days, verificationStatus } = useAddressContext();
     const [items, setItems] = useState<IntelEvent[]>([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'items'>('overview');
+    const abortRef = useRef<AbortController | null>(null);
 
     const isGated = requiresVerification && verificationStatus !== 'verified';
 
+    const fetchItems = async () => {
+        if (!lat || !lon || isGated) return;
+
+        abortRef.current?.abort();
+        abortRef.current = new AbortController();
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const params = new URLSearchParams({
+                lat: lat.toString(),
+                lon: lon.toString(),
+                radius_m: radius_m.toString(),
+                window_days: window_days.toString(),
+            });
+
+            if (moduleId === 'permits' || moduleId === 'buildwatch') {
+                const res = await fetch(`/api/real-estate/${moduleId}?${params}`, {
+                    signal: abortRef.current.signal,
+                });
+                if (!res.ok) throw new Error(`Failed to load ${moduleTitle} data`);
+                const data = await res.json();
+                setItems(data.items || []);
+            } else {
+                setItems([]);
+            }
+        } catch (err: any) {
+            if (err.name === 'AbortError') return;
+            setError(err.message || 'Failed to load data');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (!isOpen || !lat || !lon || isGated) return;
-
-        const fetchItems = async () => {
-            setLoading(true);
-            try {
-                const params = new URLSearchParams({
-                    lat: lat.toString(),
-                    lon: lon.toString(),
-                    radius_m: radius_m.toString(),
-                    window_days: window_days.toString(),
-                });
-
-                if (moduleId === 'permits' || moduleId === 'buildwatch') {
-                    const res = await fetch(`/api/real-estate/${moduleId}?${params}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        setItems(data.items || []);
-                    }
-                } else {
-                    setItems([]);
-                }
-            } catch (error) {
-                console.error('Failed to fetch module items:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchItems();
+        return () => { abortRef.current?.abort(); };
     }, [isOpen, lat, lon, radius_m, window_days, moduleId, isGated]);
 
     if (!isOpen) return null;
@@ -76,7 +87,7 @@ export function ModuleDrawer({ moduleId, moduleTitle, isOpen, onClose, requiresV
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10"
+                        className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
                     >
                         <X className="w-5 h-5 text-slate-500" />
                     </button>
@@ -111,8 +122,23 @@ export function ModuleDrawer({ moduleId, moduleTitle, isOpen, onClose, requiresV
 
                         <div className="flex-1 overflow-y-auto p-4">
                             {loading ? (
-                                <div className="flex items-center justify-center h-32">
+                                <div className="flex flex-col items-center justify-center h-32 gap-3">
                                     <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                                    <p className="text-xs text-slate-400">Loading {moduleTitle.toLowerCase()}...</p>
+                                </div>
+                            ) : error ? (
+                                <div className="flex flex-col items-center justify-center py-10 text-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
+                                        <AlertTriangle className="w-4 h-4 text-red-500" />
+                                    </div>
+                                    <p className="text-sm text-slate-600 dark:text-slate-400">{error}</p>
+                                    <button
+                                        onClick={fetchItems}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-lg transition-colors"
+                                    >
+                                        <RefreshCw className="w-3.5 h-3.5" />
+                                        Retry
+                                    </button>
                                 </div>
                             ) : activeTab === 'overview' ? (
                                 <div className="space-y-4">
@@ -145,9 +171,14 @@ export function ModuleDrawer({ moduleId, moduleTitle, isOpen, onClose, requiresV
                             ) : (
                                 <div className="space-y-3">
                                     {items.length === 0 ? (
-                                        <p className="text-sm text-slate-500 text-center py-8">
-                                            {moduleId === 'permits' ? 'No permits found in this area' : 'Coming soon'}
-                                        </p>
+                                        <div className="text-center py-8">
+                                            <p className="text-sm text-slate-500">
+                                                {moduleId === 'permits' ? 'No permits found in this area' : 'No data available yet'}
+                                            </p>
+                                            <p className="text-xs text-slate-400 mt-1">
+                                                Try expanding the radius or time window
+                                            </p>
+                                        </div>
                                     ) : (
                                         items.map((item, idx) => (
                                             <div

@@ -48,38 +48,21 @@ export function DashboardClient({
     };
 
     return (
-        <div className="p-6 max-w-[1440px] mx-auto">
-            {/* CSS variable for header offset */}
-            <style jsx>{`
-        :root {
-          --app-header-offset: 64px;
-        }
-      `}</style>
-
-            {/* Dashboard Grid */}
-            <div
-                className="grid gap-6"
-                style={{
-                    gridTemplateColumns: 'minmax(680px, 1fr) minmax(340px, 380px)',
-                }}
-            >
+        <div className="p-4 md:p-6 max-w-[1440px] mx-auto">
+            {/* Dashboard Grid — single column on small/medium, two-column on xl+ */}
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
                 {/* Main Column */}
                 <div className="space-y-6 min-w-0">
-                    {/* Alert Strip */}
                     <AlertStrip alerts={alertChips} totalCount={totalAlertCount} />
-
-                    {/* KPI Row */}
                     <KPIRow aqi={aqi} weather={weather} openCases={openCases} />
-
-                    {/* Activity Feed */}
                     <ActivityFeed
                         items={feedItems}
                         onSelectItem={handleSelectItem}
                     />
                 </div>
 
-                {/* Right Rail */}
-                <div className="min-w-0">
+                {/* Right Rail — hidden on mobile, shown on xl+ */}
+                <div className="hidden xl:block min-w-0">
                     <RightRail
                         feedItems={feedItems}
                         selectedItemId={selectedItemId}
@@ -90,20 +73,6 @@ export function DashboardClient({
                     />
                 </div>
             </div>
-
-            {/* Responsive: Stack on smaller screens */}
-            <style jsx>{`
-        @media (max-width: 1279px) {
-          div[style*="grid-template-columns"] {
-            grid-template-columns: 1fr !important;
-          }
-        }
-        @media (max-width: 768px) {
-          div[style*="grid-template-columns"] {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
         </div>
     );
 }

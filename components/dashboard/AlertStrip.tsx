@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, Flame, Shield } from 'lucide-react';
+import { TriangleAlert as AlertTriangle, Flame, Shield } from 'lucide-react';
 import type { AlertChip } from './types';
 
 interface AlertStripProps {
@@ -15,7 +15,7 @@ export function AlertStrip({ alerts, totalCount }: AlertStripProps) {
 
     if (!hasAlerts) {
         return (
-            <div className="hidden md:flex items-center justify-center h-8 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl text-sm text-emerald-700 dark:text-emerald-400">
+            <div className="flex items-center justify-center h-10 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl text-sm text-emerald-700 dark:text-emerald-400">
                 <Shield className="w-4 h-4 mr-2" />
                 All clear — no active alerts
             </div>

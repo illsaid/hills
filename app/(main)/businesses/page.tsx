@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { Search, Map as MapIcon, List, BarChart3, X, Building2 } from 'lucide-react';
+import { Search, Map as MapIcon, List, ChartBar as BarChart3, X, Building2 } from 'lucide-react';
 
 interface Business {
   location_account: string;
@@ -23,25 +23,29 @@ interface Business {
 
 const ZIP_CODES = ['90046', '90068', '90069'];
 const API_URL = 'https://data.lacity.org/resource/r4uk-afju.json';
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+let businessCache: { data: Business[]; fetchedAt: number } | null = null;
 
 async function fetchBusinesses(limit: number = 5000): Promise<Business[]> {
+  if (businessCache && Date.now() - businessCache.fetchedAt < CACHE_TTL_MS) {
+    return businessCache.data;
+  }
+
   const zipQuery = ZIP_CODES.map(zip => `starts_with(zip_code, '${zip}')`).join(' OR ');
   const query = `?$where=(${zipQuery}) AND location IS NOT NULL&$limit=${limit}&$order=location_start_date DESC`;
 
-  try {
-    const response = await fetch(`${API_URL}${query}`);
-    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch business data:', error);
-    return [];
-  }
+  const response = await fetch(`${API_URL}${query}`);
+  if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+  const data: Business[] = await response.json();
+  businessCache = { data, fetchedAt: Date.now() };
+  return data;
 }
 
 export default function BusinessesPage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedZip, setSelectedZip] = useState('All');
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
@@ -49,10 +53,12 @@ export default function BusinessesPage() {
   const [showStats, setShowStats] = useState(false);
 
   useEffect(() => {
-    fetchBusinesses(5000).then(data => {
-      setBusinesses(data);
-      setLoading(false);
-    });
+    setLoading(true);
+    setLoadError(null);
+    fetchBusinesses(5000)
+      .then(data => { setBusinesses(data); })
+      .catch(err => { setLoadError('Failed to load business data. Please try refreshing.'); })
+      .finally(() => { setLoading(false); });
   }, []);
 
   const filtered = useMemo(() => {
@@ -84,8 +90,26 @@ export default function BusinessesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-stone-500">Loading business data...</div>
+      <div className="flex flex-col items-center justify-center h-full gap-3">
+        <div className="w-10 h-10 border-2 border-stone-200 border-t-stone-900 rounded-full animate-spin" />
+        <p className="text-sm text-stone-500">Loading business directory...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-6">
+        <div className="w-12 h-12 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
+          <X className="w-5 h-5 text-red-500" />
+        </div>
+        <p className="text-sm font-medium text-stone-800">{loadError}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-colors"
+        >
+          Retry
+        </button>
       </div>
     );
   }

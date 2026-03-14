@@ -17,6 +17,7 @@ function RealEstateContent() {
     const { address, lat, lon, radius_m, window_days, verificationStatus } = useAddressContext();
     const [summaries, setSummaries] = useState<Record<string, { newCount: number; headlineMetric: string; topTag?: string }>>({});
     const [loading, setLoading] = useState(false);
+    const [summaryError, setSummaryError] = useState<string | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [activeModule, setActiveModule] = useState<{ id: string; title: string; requiresVerification: boolean } | null>(null);
 
@@ -28,6 +29,7 @@ function RealEstateContent() {
 
         const fetchSummaries = async () => {
             setLoading(true);
+            setSummaryError(null);
             try {
                 const params = new URLSearchParams({
                     lat: lat.toString(),
@@ -36,7 +38,7 @@ function RealEstateContent() {
                     window_days: window_days.toString(),
                 });
 
-                const [permitsRes, firescoreRes] = await Promise.all([
+                const [permitsRes, firescoreRes] = await Promise.allSettled([
                     fetch(`/api/real-estate/permits?${params}`),
                     fetch(`/api/real-estate/firescore?${params}`),
                 ]);
@@ -46,19 +48,21 @@ function RealEstateContent() {
                     firescore: { newCount: 0, headlineMetric: 'Coming soon' },
                 };
 
-                if (permitsRes.ok) {
-                    const data = await permitsRes.json();
+                if (permitsRes.status === 'fulfilled' && permitsRes.value.ok) {
+                    const data = await permitsRes.value.json();
                     newSummaries.permits = data.summary;
+                } else {
+                    newSummaries.permits = { newCount: 0, headlineMetric: 'Unavailable' };
                 }
 
-                if (firescoreRes.ok) {
-                    const data = await firescoreRes.json();
+                if (firescoreRes.status === 'fulfilled' && firescoreRes.value.ok) {
+                    const data = await firescoreRes.value.json();
                     newSummaries.firescore = data.summary;
                 }
 
                 setSummaries(newSummaries);
             } catch (error) {
-                console.error('Failed to fetch summaries:', error);
+                setSummaryError('Could not load property intelligence. Please try again.');
             } finally {
                 setLoading(false);
             }
@@ -75,7 +79,7 @@ function RealEstateContent() {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="p-4 md:p-6 max-w-5xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
                 <h1 className="text-3xl font-light text-stone-900 mb-2">
                     Real Estate Intelligence
@@ -114,9 +118,14 @@ function RealEstateContent() {
             {address && <IntelCards />}
 
             <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                    Intelligence Modules
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                        Intelligence Modules
+                    </h2>
+                    {summaryError && (
+                        <span className="text-xs text-red-600 dark:text-red-400">{summaryError}</span>
+                    )}
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {MODULES.map(module => {
                         const summary = summaries[module.id] || { newCount: 0, headlineMetric: address ? 'Loading...' : 'Add an address to compute' };

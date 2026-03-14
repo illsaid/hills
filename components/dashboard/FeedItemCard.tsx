@@ -1,6 +1,7 @@
 'use client';
 
-import { ChevronRight, MapPin, ExternalLink, Shield, FileText, Construction, Landmark, Home, Users } from 'lucide-react';
+import { memo } from 'react';
+import { ChevronRight, MapPin, ExternalLink, Shield, FileText, Construction, Landmark, Chrome as Home, Users } from 'lucide-react';
 import { formatFeedAge } from './utils';
 import type { FeedItem } from './types';
 
@@ -26,10 +27,10 @@ function displayBadge(item: FeedItem): { text: string; style: string } {
         return { text: 'URGENT', style: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400' };
     }
     if (item.type === 'event') {
-        return { text: 'NOTICE', style: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400' };
+        return { text: 'NOTICE', style: 'bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-400' };
     }
     if (item.type === 'gov') {
-        return { text: 'UPDATE', style: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400' };
+        return { text: 'UPDATE', style: 'bg-slate-100 dark:bg-slate-500/20 text-slate-700 dark:text-slate-400' };
     }
     if (item.type === 'permit') {
         return { text: 'PERMIT', style: 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400' };
@@ -65,7 +66,7 @@ function displayTitle(item: FeedItem): string {
     return 'Update';
 }
 
-export function FeedItemCard({ item, onSelect }: FeedItemCardProps) {
+function FeedItemCardInner({ item, onSelect }: FeedItemCardProps) {
     const getTypeIcon = (type: FeedItem['type']) => {
         switch (type) {
             case 'safety': return <Shield className="w-3.5 h-3.5" />;
@@ -164,3 +165,5 @@ export function FeedItemCard({ item, onSelect }: FeedItemCardProps) {
         </div>
     );
 }
+
+export const FeedItemCard = memo(FeedItemCardInner);

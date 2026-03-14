@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, Search, Loader2, X, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react';
+import { MapPin, Search, Loader as Loader2, X, CircleCheck as CheckCircle2, CircleAlert as AlertCircle, ChevronDown } from 'lucide-react';
 import { useAddressContext } from '@/hooks/useAddressContext';
 
 interface Prediction {
@@ -24,11 +24,13 @@ export function AddressSelector({ className = '', autoFocus = false, variant = '
     const [searchQuery, setSearchQuery] = useState('');
     const [predictions, setPredictions] = useState<Prediction[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState<string | null>(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [showSaved, setShowSaved] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const debounceRef = useRef<NodeJS.Timeout>();
+    const abortRef = useRef<AbortController | null>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -49,30 +51,45 @@ export function AddressSelector({ className = '', autoFocus = false, variant = '
         if (searchQuery.length < 3) {
             setPredictions([]);
             setShowDropdown(false);
+            setSearchError(null);
             return;
         }
 
         setIsSearching(true);
+        setSearchError(null);
         debounceRef.current = setTimeout(async () => {
+            abortRef.current?.abort();
+            abortRef.current = new AbortController();
             try {
-                const res = await fetch(`/api/geocode?action=autocomplete&input=${encodeURIComponent(searchQuery)}`);
+                const res = await fetch(
+                    `/api/geocode?action=autocomplete&input=${encodeURIComponent(searchQuery)}`,
+                    { signal: abortRef.current.signal }
+                );
+                if (!res.ok) throw new Error('Address search failed');
                 const data = await res.json();
                 if (data.predictions) {
                     setPredictions(data.predictions);
                     setShowDropdown(true);
                     setShowSaved(false);
+                } else {
+                    setPredictions([]);
                 }
-            } catch (error) {
-                console.error('Autocomplete error:', error);
+            } catch (error: any) {
+                if (error.name === 'AbortError') return;
+                setSearchError('Could not search addresses. Please try again.');
+                setPredictions([]);
             } finally {
                 setIsSearching(false);
             }
         }, 350);
+
+        return () => { abortRef.current?.abort(); };
     }, [searchQuery]);
 
     const handleSelectPrediction = (prediction: Prediction) => {
         setShowDropdown(false);
         setSearchQuery('');
+        setSearchError(null);
 
         if (prediction.lat && prediction.lon) {
             addAddress({
@@ -81,6 +98,8 @@ export function AddressSelector({ className = '', autoFocus = false, variant = '
                 lat: prediction.lat,
                 lon: prediction.lon,
             });
+        } else {
+            setSearchError('Could not get coordinates for this address. Try a more specific address.');
         }
     };
 
@@ -140,9 +159,16 @@ export function AddressSelector({ className = '', autoFocus = false, variant = '
                 )}
             </div>
 
-            {isHero && (
+            {searchError && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1.5 ml-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                    {searchError}
+                </p>
+            )}
+
+            {isHero && !searchError && (
                 <p className="text-xs text-stone-400 mt-2 ml-1">
-                    Start typing to search -- results appear as you type
+                    Start typing to search — results appear as you type
                 </p>
             )}
 
@@ -166,7 +192,10 @@ export function AddressSelector({ className = '', autoFocus = false, variant = '
                         </div>
                     )}
                     {verificationStatus === 'unverified' && (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-xs font-medium text-amber-700 dark:text-amber-400">
+                        <div
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-xs font-medium text-amber-700 dark:text-amber-400 cursor-help"
+                            title="This address is outside the Hollywood Hills service area. Some features may show limited results."
+                        >
                             <AlertCircle className="w-3.5 h-3.5" />
                             Outside Hills
                         </div>
