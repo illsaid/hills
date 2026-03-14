@@ -1,6 +1,7 @@
 'use client';
 
 import { Wind, Thermometer, TriangleAlert as AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface KPIRowProps {
     aqi: {
@@ -19,6 +20,9 @@ interface KPIRowProps {
 }
 
 export function KPIRow({ aqi, weather, openCases }: KPIRowProps) {
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+
     const getAqiColor = (value: number | null) => {
         if (value === null) return { bg: 'bg-slate-100 dark:bg-slate-500/20', text: 'text-slate-500 dark:text-slate-400', bar: 'bg-slate-300' };
         if (value <= 50) return { bg: 'bg-emerald-100 dark:bg-emerald-500/20', text: 'text-emerald-700 dark:text-emerald-400', bar: 'bg-emerald-500' };
@@ -29,7 +33,7 @@ export function KPIRow({ aqi, weather, openCases }: KPIRowProps) {
     const aqiColors = getAqiColor(aqi.value);
 
     const formatUpdatedTime = (isoDate?: string) => {
-        if (!isoDate) return '—';
+        if (!isoDate || !mounted) return '—';
         const diff = Date.now() - new Date(isoDate).getTime();
         const mins = Math.floor(diff / 60000);
         if (mins < 1) return 'Just now';
