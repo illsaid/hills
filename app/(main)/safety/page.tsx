@@ -23,6 +23,8 @@ function formatAge(isoDate: string): string {
 }
 
 export default async function SafetyPage() {
+    const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+
     const [aqiData, alertsData] = await Promise.all([
         supabaseServer
             .from('neighborhood_intel')
@@ -35,8 +37,10 @@ export default async function SafetyPage() {
             .from('neighborhood_intel')
             .select('*')
             .eq('category', 'Safety')
+            .lte('priority', 2)
+            .gte('created_at', cutoff)
             .order('published_at', { ascending: false })
-            .limit(20),
+            .limit(10),
     ]);
 
     const aqiProps = aqiData.data ? {
@@ -48,8 +52,8 @@ export default async function SafetyPage() {
     } : null;
 
     const alerts = alertsData.data || [];
-    const criticalAlerts = alerts.filter((a) => (a.priority ?? 3) <= 2);
-    const otherAlerts = alerts.filter((a) => (a.priority ?? 3) > 2);
+    const criticalAlerts = alerts.filter((a) => (a.priority ?? 3) === 1);
+    const otherAlerts = alerts.filter((a) => (a.priority ?? 3) === 2);
 
     const getSeverityStyle = (priority: number) => {
         if (priority === 1) return {
@@ -94,6 +98,7 @@ export default async function SafetyPage() {
                     <h2 className="text-lg font-medium text-slate-900 dark:text-titanium-50">
                         Active Alerts
                     </h2>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">last 48 hours</span>
                     {alerts.length > 0 && (
                         <span className="ml-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-xs font-medium text-slate-600 dark:text-slate-400">
                             {alerts.length}
@@ -105,8 +110,8 @@ export default async function SafetyPage() {
                     <div className="flex items-center gap-3 p-5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-2xl text-emerald-700 dark:text-emerald-400">
                         <Shield className="w-5 h-5 shrink-0" />
                         <div>
-                            <div className="font-medium">All clear</div>
-                            <div className="text-sm opacity-75">No active safety alerts for the Hollywood Hills area.</div>
+                            <div className="font-medium">No active alerts</div>
+                            <div className="text-sm opacity-75">No critical or warning-level safety alerts in the last 48 hours.</div>
                         </div>
                     </div>
                 ) : (
