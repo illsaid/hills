@@ -23,14 +23,10 @@ export function RightRail({
     newsUpdatedAt,
 }: RightRailProps) {
     return (
-        <div
-            className="right-rail flex flex-col gap-4"
-            style={{ alignSelf: 'start' }}
-        >
-            {/* Sticky Map Wrapper - only sticky on xl+ screens */}
-            <div className="xl:sticky xl:top-[var(--app-header-offset,64px)]">
-                {/* Explicit height container with relative positioning for absolute children */}
-                <div className="relative h-[400px] rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800">
+        <div className="right-rail flex flex-col gap-4">
+            {/* Sticky Map — sticks to top of viewport as user scrolls */}
+            <div className="sticky top-[var(--app-header-offset,64px)] z-10">
+                <div className="relative h-[320px] rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-sm">
                     <StickyMap
                         items={feedItems}
                         selectedItemId={selectedItemId}
@@ -39,12 +35,8 @@ export function RightRail({
                 </div>
             </div>
 
-            {/* Quick Stats - normal flow, no z-index needed */}
-            <div className="relative">
-                <QuickStats stats={stats} />
-            </div>
+            <QuickStats stats={stats} />
 
-            {/* Local News - normal flow */}
             <LocalNews headlines={newsHeadlines} updatedAt={newsUpdatedAt} />
         </div>
     );

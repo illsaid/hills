@@ -62,7 +62,7 @@ export function DashboardClient({
                 </div>
 
                 {/* Right Rail — hidden on mobile, shown on xl+ */}
-                <div className="hidden xl:block min-w-0">
+                <div className="hidden xl:block min-w-0 self-stretch">
                     <RightRail
                         feedItems={feedItems}
                         selectedItemId={selectedItemId}
