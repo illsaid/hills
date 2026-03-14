@@ -6,27 +6,53 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+const SECURITY_SOURCE_NAMES = ['LAPD NIBRS', 'Security Brief', 'LAPD Activity', 'LAPD Calls for Service'];
+
 export async function GET() {
   try {
-    const { data, error } = await supabase
+    let result = null;
+
+    for (const sourceName of SECURITY_SOURCE_NAMES) {
+      const { data, error } = await supabase
+        .from('neighborhood_intel')
+        .select('raw_json, published_at, snapshot, source_name')
+        .eq('source_name', sourceName)
+        .eq('category', 'Safety')
+        .order('published_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data?.raw_json) {
+        result = data;
+        break;
+      }
+    }
+
+    if (result?.raw_json) {
+      return NextResponse.json({
+        ...(result.raw_json as Record<string, unknown>),
+        snapshot: result.snapshot ?? false,
+        snapshot_updated_at: result.published_at ?? null,
+        data_source: result.source_name,
+      });
+    }
+
+    const { data: fallbackData } = await supabase
       .from('neighborhood_intel')
-      .select('raw_json, published_at, snapshot')
-      .eq('source_name', 'LAPD NIBRS')
+      .select('raw_json, published_at, snapshot, source_name, title, description')
       .eq('category', 'Safety')
+      .not('raw_json', 'is', null)
       .order('published_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (!error && data?.raw_json) {
+    if (fallbackData?.raw_json) {
       return NextResponse.json({
-        ...(data.raw_json as Record<string, unknown>),
-        snapshot: data.snapshot ?? false,
-        snapshot_updated_at: data.published_at ?? null,
+        ...(fallbackData.raw_json as Record<string, unknown>),
+        snapshot: fallbackData.snapshot ?? true,
+        snapshot_updated_at: fallbackData.published_at ?? null,
+        data_source: fallbackData.source_name,
       });
-    }
-
-    if (error) {
-      console.warn('[security-brief] Supabase query failed:', error.message);
     }
 
     if (process.env.NODE_ENV !== 'production') {
@@ -34,7 +60,6 @@ export async function GET() {
       const { default: path } = await import('path');
       const filePath = path.join(process.cwd(), 'data', 'security_brief.json');
       if (fs.existsSync(filePath)) {
-        console.warn('[security-brief] DEV FALLBACK: serving from data/security_brief.json');
         const fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         return NextResponse.json({ ...fileData, snapshot: true, snapshot_updated_at: fileData.updated_at });
       }

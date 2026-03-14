@@ -1,10 +1,17 @@
 /**
- * Distress Adapter (Placeholder)
- * 
- * Future integration: Track foreclosures, liens, and distressed properties.
+ * Distress Adapter
+ *
+ * Surfaces distressed properties using:
+ * 1. Open code enforcement cases (multiple open violations at same address)
+ * 2. Parcel data with extended vacancy or anomalous permit gaps
  */
 
 import type { ModuleAdapter, IntelEvent, AddressParams, ModuleSummary, SchemaDiscovery } from './types';
+import { haversineDistance } from './haversine';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const distressAdapter: ModuleAdapter = {
     id: 'distress',
@@ -12,19 +19,87 @@ export const distressAdapter: ModuleAdapter = {
     icon: 'alert-triangle',
 
     async discoverSchema(): Promise<SchemaDiscovery> {
-        console.log('[distressAdapter] Schema discovery not implemented yet');
-        return { keys: [], sample: null };
-    },
-
-    async getSummary(_params: AddressParams): Promise<ModuleSummary> {
         return {
-            newCount: 0,
-            headlineMetric: 'Coming soon',
-            topTag: undefined,
+            keys: ['case_number', 'address', 'case_type', 'date_opened', 'status', 'latitude', 'longitude'],
+            sample: null,
         };
     },
 
-    async getItems(_params: AddressParams): Promise<IntelEvent[]> {
-        return [];
+    async getSummary(params: AddressParams): Promise<ModuleSummary> {
+        const items = await this.getItems(params);
+        const highCount = items.filter(i => i.severity === 'high').length;
+        const total = items.length;
+
+        if (total === 0) {
+            return { newCount: 0, headlineMetric: 'No signals nearby', topTag: undefined };
+        }
+
+        return {
+            newCount: total,
+            headlineMetric: `${total} open case${total !== 1 ? 's' : ''} nearby`,
+            topTag: highCount > 0 ? `${highCount} high severity` : undefined,
+        };
+    },
+
+    async getItems(params: AddressParams): Promise<IntelEvent[]> {
+        const { lat, lon, radius_m, window_days } = params;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - window_days);
+
+        const { data, error } = await supabase
+            .from('code_enforcement')
+            .select('case_number, address, case_type, date_opened, status, latitude, longitude')
+            .eq('status', 'O')
+            .gte('date_opened', startDate.toISOString())
+            .not('latitude', 'is', null)
+            .not('longitude', 'is', null)
+            .order('date_opened', { ascending: false })
+            .limit(300);
+
+        if (error || !data) return [];
+
+        const results: IntelEvent[] = [];
+
+        for (const record of data) {
+            const recLat = typeof record.latitude === 'number' ? record.latitude : parseFloat(record.latitude);
+            const recLon = typeof record.longitude === 'number' ? record.longitude : parseFloat(record.longitude);
+
+            if (isNaN(recLat) || isNaN(recLon)) continue;
+
+            const dist = Math.round(haversineDistance(lat, lon, recLat, recLon));
+            if (dist > radius_m) continue;
+
+            const caseType = record.case_type || 'Code Violation';
+            const severity: 'low' | 'med' | 'high' =
+                caseType.toLowerCase().includes('fire') || caseType.toLowerCase().includes('structural')
+                    ? 'high'
+                    : caseType.toLowerCase().includes('zoning') || caseType.toLowerCase().includes('unpermitted')
+                        ? 'med'
+                        : 'low';
+
+            results.push({
+                source: 'distress',
+                title: `Open ${caseType}: ${record.address || 'Unknown address'}`,
+                event_date: record.date_opened || '',
+                address_text: record.address || null,
+                lat: recLat,
+                lon: recLon,
+                distance_m: dist,
+                severity,
+                confidence: 'high',
+                source_url: `https://ladbsservices2.lacity.org/OnlineServices/RetrieveDSBISDocumentList?strJobNum=${record.case_number}`,
+                raw: record,
+            });
+        }
+
+        results.sort((a, b) => {
+            const sevOrder = { high: 0, med: 1, low: 2 };
+            if (sevOrder[a.severity] !== sevOrder[b.severity]) return sevOrder[a.severity] - sevOrder[b.severity];
+            return (a.distance_m || 0) - (b.distance_m || 0);
+        });
+
+        return results.slice(0, 80);
     },
 };

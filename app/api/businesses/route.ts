@@ -25,7 +25,13 @@ export async function GET(request: Request) {
             category: item.category || 'Business',
             filing_date: item.filing_date,
             created_at: item.created_at || item.filing_date,
-            is_renewal: item.is_renewal
+            is_renewal: item.is_renewal,
+            owner_name: item.owner_name || '',
+            street_address: item.street_address || '',
+            city: item.city || '',
+            zip_code: item.zip_code || '',
+            expiration_date: item.expiration_date || '',
+            filing_number: item.filing_number || '',
         }));
 
         return NextResponse.json({

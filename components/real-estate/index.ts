@@ -5,3 +5,4 @@ export { IntelCards } from './IntelCards';
 export { ModuleTile } from './ModuleTile';
 export { ModuleDrawer } from './ModuleDrawer';
 export { VerifiedGate } from './VerifiedGate';
+export { ParcelProfile } from './ParcelProfile';

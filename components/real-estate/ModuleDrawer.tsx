@@ -41,7 +41,8 @@ export function ModuleDrawer({ moduleId, moduleTitle, isOpen, onClose, requiresV
                 window_days: window_days.toString(),
             });
 
-            if (moduleId === 'permits' || moduleId === 'buildwatch') {
+            const supportedModules = ['permits', 'buildwatch', 'distress', 'firescore'];
+            if (supportedModules.includes(moduleId)) {
                 const res = await fetch(`/api/real-estate/${moduleId}?${params}`, {
                     signal: abortRef.current.signal,
                 });

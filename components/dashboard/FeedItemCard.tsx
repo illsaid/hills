@@ -4,6 +4,16 @@ import { memo } from 'react';
 import { ChevronRight, MapPin, ExternalLink, Shield, FileText, Construction, Landmark, Chrome as Home, Users } from 'lucide-react';
 import { formatFeedAge } from './utils';
 import type { FeedItem } from './types';
+import { WatchmarkButton } from '@/components/WatchmarkButton';
+import type { WatchlistItem } from '@/hooks/useWatchlist';
+
+function feedTypeToWatchType(type: FeedItem['type']): WatchlistItem['type'] {
+    switch (type) {
+        case 'permit': return 'permit';
+        case 'safety': return 'safety';
+        default: return 'keyword';
+    }
+}
 
 const TYPE_ROUTE: Record<string, string> = {
     safety: '/safety',
@@ -160,7 +170,14 @@ function FeedItemCardInner({ item, onSelect }: FeedItemCardProps) {
                     </div>
                 </div>
 
-                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-500 dark:text-slate-600 dark:group-hover:text-slate-400 flex-shrink-0 mt-1 transition-colors" />
+                <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                    <WatchmarkButton
+                        term={title}
+                        type={feedTypeToWatchType(item.type)}
+                        label={title}
+                    />
+                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-500 dark:text-slate-600 dark:group-hover:text-slate-400 transition-colors" />
+                </div>
             </div>
         </div>
     );

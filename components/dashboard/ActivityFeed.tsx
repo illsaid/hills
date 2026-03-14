@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, Loader2 } from 'lucide-react';
+import { ChevronDown, List, Map as MapIcon, Loader as Loader2 } from 'lucide-react';
 import { FeedItemCard } from './FeedItemCard';
+import { ActivityFeedMap } from './ActivityFeedMap';
 import type { FeedItem, FeedCategory, FeedSort } from './types';
 
 interface ActivityFeedProps {
@@ -30,8 +31,8 @@ const SORT_OPTIONS: { value: FeedSort; label: string }[] = [
 export function ActivityFeed({ items, onSelectItem, loading }: ActivityFeedProps) {
     const [category, setCategory] = useState<FeedCategory>('all');
     const [sort, setSort] = useState<FeedSort>('recent');
+    const [view, setView] = useState<'list' | 'map'>('list');
 
-    // Filter items by category
     const filteredItems = items.filter((item) => {
         if (category === 'all') return true;
         if (category === 'permits') return item.type === 'permit';
@@ -43,13 +44,11 @@ export function ActivityFeed({ items, onSelectItem, loading }: ActivityFeedProps
         return true;
     });
 
-    // Sort items
     const sortedItems = [...filteredItems].sort((a, b) => {
         if (sort === 'urgent') {
             if (b.severity !== a.severity) return b.severity - a.severity;
             return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
         }
-        // recent and near_me both fallback to timestamp
         return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     });
 
@@ -59,9 +58,28 @@ export function ActivityFeed({ items, onSelectItem, loading }: ActivityFeedProps
             <div className="sticky top-0 z-10 bg-stone-50 dark:bg-slate-900 pb-4">
                 <div className="flex items-center justify-between mb-3">
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Activity</h2>
-                    <span className="text-xs text-stone-400 font-medium px-2 py-0.5 bg-stone-100 rounded-full">
-                        Snapshot
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-stone-400 font-medium px-2 py-0.5 bg-stone-100 rounded-full">
+                            Snapshot
+                        </span>
+                        {/* View toggle */}
+                        <div className="flex items-center bg-stone-100 dark:bg-white/10 rounded-full p-0.5">
+                            <button
+                                onClick={() => setView('list')}
+                                className={`p-1.5 rounded-full transition-colors ${view === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}
+                                title="List view"
+                            >
+                                <List className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                                onClick={() => setView('map')}
+                                className={`p-1.5 rounded-full transition-colors ${view === 'map' ? 'bg-white dark:bg-slate-700 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}
+                                title="Map view"
+                            >
+                                <MapIcon className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Filter pills */}
@@ -80,45 +98,48 @@ export function ActivityFeed({ items, onSelectItem, loading }: ActivityFeedProps
                     ))}
                 </div>
 
-                {/* Sort dropdown - explicit label */}
-                <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">Sort:</span>
-                    <div className="relative">
-                        <select
-                            value={sort}
-                            onChange={(e) => setSort(e.target.value as FeedSort)}
-                            className="text-sm font-medium bg-transparent text-slate-700 dark:text-slate-300 border-none focus:outline-none cursor-pointer appearance-none pr-5"
-                        >
-                            {SORT_OPTIONS.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
-                        <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                {view === 'list' && (
+                    <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">Sort:</span>
+                        <div className="relative">
+                            <select
+                                value={sort}
+                                onChange={(e) => setSort(e.target.value as FeedSort)}
+                                className="text-sm font-medium bg-transparent text-slate-700 dark:text-slate-300 border-none focus:outline-none cursor-pointer appearance-none pr-5"
+                            >
+                                {SORT_OPTIONS.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            {/* Feed Items */}
-            <div className="space-y-3 flex-1">
-                {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                        <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
-                    </div>
-                ) : sortedItems.length === 0 ? (
-                    <div className="text-center py-12 space-y-1">
-                        <p className="text-sm font-medium text-stone-500">Coming soon</p>
-                        <p className="text-xs text-stone-400">
-                            {category === 'all' ? 'No activity data yet' : `No ${category.replace('_', ' ')} data yet`}
-                        </p>
-                    </div>
-                ) : (
-                    sortedItems.map((item) => (
-                        <FeedItemCard key={item.id} item={item} onSelect={onSelectItem} />
-                    ))
                 )}
             </div>
+
+            {/* Content */}
+            {loading ? (
+                <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                </div>
+            ) : view === 'map' ? (
+                <ActivityFeedMap items={sortedItems} onSelectItem={onSelectItem} />
+            ) : sortedItems.length === 0 ? (
+                <div className="text-center py-12 space-y-1">
+                    <p className="text-sm font-medium text-stone-500">No activity data</p>
+                    <p className="text-xs text-stone-400">
+                        {category === 'all' ? 'No activity data yet' : `No ${category.replace('_', ' ')} data yet`}
+                    </p>
+                </div>
+            ) : (
+                <div className="space-y-3 flex-1">
+                    {sortedItems.map((item) => (
+                        <FeedItemCard key={item.id} item={item} onSelect={onSelectItem} />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

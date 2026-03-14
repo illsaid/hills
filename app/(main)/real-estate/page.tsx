@@ -5,11 +5,12 @@ import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { AddressProvider, useAddressContext } from '@/hooks/useAddressContext';
 import { MarketIntelligence } from '@/components/MarketIntelligence';
-import { AddressSelector, RadiusWindowControls, IntelCards, ModuleTile, ModuleDrawer } from '@/components/real-estate';
+import { AddressSelector, RadiusWindowControls, IntelCards, ModuleTile, ModuleDrawer, ParcelProfile } from '@/components/real-estate';
 
 const MODULES = [
     { id: 'permits', title: 'Building Permits', icon: 'file-text', requiresVerification: true },
     { id: 'distress', title: 'Distress Signals', icon: 'alert-triangle', requiresVerification: false },
+    { id: 'buildwatch', title: 'BuildWatch', icon: 'hard-hat', requiresVerification: false },
     { id: 'firescore', title: 'FireScore', icon: 'shield', requiresVerification: false },
 ];
 
@@ -38,14 +39,15 @@ function RealEstateContent() {
                     window_days: window_days.toString(),
                 });
 
-                const [permitsRes, firescoreRes] = await Promise.allSettled([
+                const [permitsRes, firescoreRes, distressRes, buildwatchRes] = await Promise.allSettled([
                     fetch(`/api/real-estate/permits?${params}`),
                     fetch(`/api/real-estate/firescore?${params}`),
+                    fetch(`/api/real-estate/distress?${params}`),
+                    fetch(`/api/real-estate/buildwatch?${params}`),
                 ]);
 
                 const newSummaries: Record<string, { newCount: number; headlineMetric: string; topTag?: string }> = {
-                    distress: { newCount: 0, headlineMetric: 'Coming soon' },
-                    firescore: { newCount: 0, headlineMetric: 'Coming soon' },
+                    firescore: { newCount: 0, headlineMetric: 'No address selected' },
                 };
 
                 if (permitsRes.status === 'fulfilled' && permitsRes.value.ok) {
@@ -58,6 +60,20 @@ function RealEstateContent() {
                 if (firescoreRes.status === 'fulfilled' && firescoreRes.value.ok) {
                     const data = await firescoreRes.value.json();
                     newSummaries.firescore = data.summary;
+                }
+
+                if (distressRes.status === 'fulfilled' && distressRes.value.ok) {
+                    const data = await distressRes.value.json();
+                    newSummaries.distress = data.summary;
+                } else {
+                    newSummaries.distress = { newCount: 0, headlineMetric: 'No signals nearby' };
+                }
+
+                if (buildwatchRes.status === 'fulfilled' && buildwatchRes.value.ok) {
+                    const data = await buildwatchRes.value.json();
+                    newSummaries.buildwatch = data.summary;
+                } else {
+                    newSummaries.buildwatch = { newCount: 0, headlineMetric: 'No inspections found' };
                 }
 
                 setSummaries(newSummaries);
@@ -73,7 +89,6 @@ function RealEstateContent() {
 
     const handleTileClick = (module: typeof MODULES[number]) => {
         if (!address) return;
-        if (summaries[module.id]?.headlineMetric === 'Coming soon') return;
         setActiveModule(module);
         setDrawerOpen(true);
     };
@@ -114,6 +129,8 @@ function RealEstateContent() {
                     </div>
                 </div>
             )}
+
+            {address && <ParcelProfile />}
 
             {address && <IntelCards />}
 

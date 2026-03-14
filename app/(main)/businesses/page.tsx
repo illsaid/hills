@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { Search, Map as MapIcon, List, ChartBar as BarChart3, X, Building2 } from 'lucide-react';
+import { Search, Map as MapIcon, List, X, Building2, FileArchive, Calendar, RefreshCw } from 'lucide-react';
+import { WatchmarkButton } from '@/components/WatchmarkButton';
 
 interface Business {
   location_account: string;
@@ -19,6 +20,20 @@ interface Business {
     latitude: string;
     longitude: string;
   } | null;
+}
+
+interface FBN {
+  id: string;
+  business_name: string;
+  owner_name: string;
+  street_address: string;
+  city: string;
+  zip_code: string;
+  filing_date: string;
+  expiration_date: string;
+  category: string;
+  is_renewal: boolean;
+  filing_number: string;
 }
 
 const ZIP_CODES = ['90046', '90068', '90069'];
@@ -49,8 +64,11 @@ export default function BusinessesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedZip, setSelectedZip] = useState('All');
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
-  const [activeTab, setActiveTab] = useState<'map' | 'list'>('map');
+  const [activeTab, setActiveTab] = useState<'map' | 'list' | 'filings'>('map');
   const [showStats, setShowStats] = useState(false);
+  const [fbns, setFbns] = useState<FBN[]>([]);
+  const [fbnsLoading, setFbnsLoading] = useState(false);
+  const [fbnSearch, setFbnSearch] = useState('');
 
   useEffect(() => {
     setLoading(true);
@@ -60,6 +78,32 @@ export default function BusinessesPage() {
       .catch(err => { setLoadError('Failed to load business data. Please try refreshing.'); })
       .finally(() => { setLoading(false); });
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'filings' || fbns.length > 0) return;
+    setFbnsLoading(true);
+    fetch('/api/businesses?limit=500')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          setFbns(data.items.map((item: any) => ({
+            id: item.id,
+            business_name: item.title,
+            owner_name: item.owner_name || '',
+            street_address: item.street_address || '',
+            city: item.city || '',
+            zip_code: item.zip_code || '',
+            filing_date: item.filing_date || '',
+            expiration_date: item.expiration_date || '',
+            category: item.category || '',
+            is_renewal: item.is_renewal || false,
+            filing_number: item.filing_number || '',
+          })));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setFbnsLoading(false));
+  }, [activeTab, fbns.length]);
 
   const filtered = useMemo(() => {
     return businesses.filter(biz => {
@@ -205,17 +249,27 @@ export default function BusinessesPage() {
               <List className="w-4 h-4" />
               List
             </button>
+            <button
+              onClick={() => setActiveTab('filings')}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-premium flex items-center gap-1.5 ${activeTab === 'filings' ? 'bg-white shadow-sm text-stone-900' : 'text-stone-500'
+                }`}
+            >
+              <FileArchive className="w-4 h-4" />
+              Filings
+            </button>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative overflow-hidden">
           {activeTab === 'map' ? (
             <BusinessMap
               businesses={filtered}
               selectedBusiness={selectedBusiness}
               onSelectBusiness={setSelectedBusiness}
             />
+          ) : activeTab === 'filings' ? (
+            <FBNList fbns={fbns} loading={fbnsLoading} search={fbnSearch} onSearchChange={setFbnSearch} />
           ) : (
             <BusinessList
               businesses={filtered}
@@ -253,7 +307,98 @@ export default function BusinessesPage() {
   );
 }
 
-// Map Component
+// FBN List Component
+function FBNList({ fbns, loading, search, onSearchChange }: {
+  fbns: FBN[];
+  loading: boolean;
+  search: string;
+  onSearchChange: (s: string) => void;
+}) {
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    if (!q) return fbns;
+    return fbns.filter(f =>
+      f.business_name?.toLowerCase().includes(q) ||
+      f.owner_name?.toLowerCase().includes(q) ||
+      f.street_address?.toLowerCase().includes(q) ||
+      f.category?.toLowerCase().includes(q)
+    );
+  }, [fbns, search]);
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b border-stone-200/50 bg-white/50">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <input
+            type="text"
+            placeholder="Search business name, owner, address..."
+            value={search}
+            onChange={e => onSearchChange(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 bg-white border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10"
+          />
+        </div>
+        <p className="text-xs text-stone-400 mt-2">
+          {loading ? 'Loading filings...' : `${filtered.length} of ${fbns.length} LA County FBN filings`}
+        </p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto scrollbar-hide p-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-6 h-6 border-2 border-stone-200 border-t-stone-900 rounded-full animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-12">
+            <FileArchive className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+            <p className="text-stone-500 text-sm">No filings found</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map(fbn => (
+              <div key={fbn.id} className="glass rounded-xl p-4 shadow-premium hover:shadow-hover transition-premium">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h3 className="font-semibold text-stone-900 truncate">{fbn.business_name}</h3>
+                      {fbn.is_renewal && (
+                        <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full flex-shrink-0">Renewal</span>
+                      )}
+                    </div>
+                    {fbn.owner_name && (
+                      <p className="text-xs text-stone-500 mb-1">Owner: {fbn.owner_name}</p>
+                    )}
+                    {fbn.street_address && (
+                      <p className="text-sm text-stone-600 truncate">{fbn.street_address}{fbn.city ? `, ${fbn.city}` : ''}</p>
+                    )}
+                    <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-stone-400">
+                      {fbn.category && (
+                        <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded-full">{fbn.category}</span>
+                      )}
+                      {fbn.filing_date && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          Filed {new Date(fbn.filing_date).toLocaleDateString()}
+                        </span>
+                      )}
+                      {fbn.expiration_date && (
+                        <span>Expires {new Date(fbn.expiration_date).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                  </div>
+                  {fbn.filing_number && (
+                    <span className="text-xs text-stone-400 flex-shrink-0 font-mono">{fbn.filing_number}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Map Component
 function BusinessMap({
   businesses,
@@ -417,7 +562,14 @@ function BusinessList({
                 <p className="text-xs text-stone-400">{biz.zip_code}</p>
                 <p className="text-xs text-stone-500 mt-1">{biz.primary_naics_description || 'General Business'}</p>
               </div>
-              <Building2 className="w-5 h-5 text-stone-300" />
+              <div className="flex flex-col items-end gap-1">
+                <WatchmarkButton
+                  term={biz.business_name}
+                  type="business"
+                  label={biz.business_name}
+                />
+                <Building2 className="w-5 h-5 text-stone-300" />
+              </div>
             </div>
           </div>
         ))}

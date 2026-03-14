@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Landmark, Loader2, AlertCircle, ExternalLink, Truck, Building } from 'lucide-react';
+import { Landmark, Loader as Loader2, CircleAlert as AlertCircle, Truck, Building, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { LegislativeDetailDrawer } from './LegislativeDetailDrawer';
 
 interface LegislativeUpdate {
     id: string;
@@ -14,6 +14,14 @@ interface LegislativeUpdate {
     impact_label: 'Logistics Update' | 'Property Intelligence' | null;
     source_url: string;
     source_name: string;
+}
+
+interface NewsItem {
+    id: string;
+    title: string;
+    date: string;
+    href?: string;
+    category?: string;
 }
 
 interface LegislativeResponse {
@@ -27,6 +35,9 @@ export function LegislativeSentinelDashboard() {
     const [updates, setUpdates] = useState<LegislativeUpdate[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedUpdate, setSelectedUpdate] = useState<LegislativeUpdate | null>(null);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [relatedNews, setRelatedNews] = useState<NewsItem[]>([]);
 
     useEffect(() => {
         async function fetchUpdates() {
@@ -48,6 +59,36 @@ export function LegislativeSentinelDashboard() {
 
         fetchUpdates();
     }, []);
+
+    const handleOpenDetail = async (update: LegislativeUpdate) => {
+        setSelectedUpdate(update);
+        setDrawerOpen(true);
+
+        try {
+            const res = await fetch('/api/news-feed');
+            const data = await res.json();
+            const allNews: any[] = data.items || [];
+
+            const keywords = update.title.toLowerCase().split(' ').filter(w => w.length > 4);
+            const related = allNews
+                .filter(n => {
+                    const text = `${n.headline || n.title || ''} ${n.description || ''}`.toLowerCase();
+                    return keywords.some(kw => text.includes(kw));
+                })
+                .slice(0, 4)
+                .map(n => ({
+                    id: n.id || String(Math.random()),
+                    title: n.headline || n.title || '',
+                    date: n.published || n.published_at || '',
+                    href: n.url || n.link || '',
+                    category: n.category || n.source || '',
+                }));
+
+            setRelatedNews(related);
+        } catch {
+            setRelatedNews([]);
+        }
+    };
 
     if (loading) {
         return (
@@ -97,66 +138,57 @@ export function LegislativeSentinelDashboard() {
     };
 
     return (
-        <div className="space-y-3">
-            {updates.map((update) => (
-                <div
-                    key={update.id}
-                    className="group p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 transition-all"
-                >
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                            {/* Title and impact badge */}
-                            <div className="flex items-start gap-2 mb-2 flex-wrap">
-                                <h3 className="font-medium text-slate-900 dark:text-titanium-100 text-sm leading-tight flex-1">
-                                    {update.title}
-                                </h3>
+        <>
+            <div className="space-y-3">
+                {updates.map((update) => (
+                    <button
+                        key={update.id}
+                        onClick={() => handleOpenDetail(update)}
+                        className="w-full group p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 transition-all text-left"
+                    >
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-start gap-2 mb-2 flex-wrap">
+                                    <h3 className="font-medium text-slate-900 dark:text-titanium-100 text-sm leading-tight flex-1">
+                                        {update.title}
+                                    </h3>
+                                </div>
+
+                                <p className="text-sm text-slate-500 dark:text-titanium-400 line-clamp-2">
+                                    {update.summary}
+                                </p>
+
+                                <div className="flex flex-wrap items-center gap-2 mt-3 text-xs">
+                                    <Badge variant="outline" className="bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-titanium-300">
+                                        {update.category}
+                                    </Badge>
+                                    <span className="text-slate-400 dark:text-titanium-500">•</span>
+                                    <span className="text-slate-400 dark:text-titanium-500">{update.date}</span>
+                                    {update.impact_label && (
+                                        <>
+                                            <span className="text-slate-400 dark:text-titanium-500">•</span>
+                                            {getImpactBadge(update.impact_label)}
+                                        </>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Summary */}
-                            <p className="text-sm text-slate-500 dark:text-titanium-400 line-clamp-2">
-                                {update.summary}
-                            </p>
-
-                            {/* Meta row */}
-                            <div className="flex flex-wrap items-center gap-2 mt-3 text-xs">
-                                <Badge variant="outline" className="bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-titanium-300">
-                                    {update.category}
-                                </Badge>
-                                <span className="text-slate-400 dark:text-titanium-500">•</span>
-                                <span className="text-slate-400 dark:text-titanium-500">{update.date}</span>
-                                {update.impact_label && (
-                                    <>
-                                        <span className="text-slate-400 dark:text-titanium-500">•</span>
-                                        {getImpactBadge(update.impact_label)}
-                                    </>
-                                )}
-                            </div>
+                            <ChevronRight className="w-5 h-5 text-slate-300 dark:text-titanium-600 flex-shrink-0 mt-0.5 group-hover:text-slate-500 dark:group-hover:text-titanium-400 transition-colors" />
                         </div>
+                    </button>
+                ))}
 
-                        {/* Read More button */}
-                        <a
-                            href={update.source_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-shrink-0"
-                        >
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-1.5 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300 dark:hover:border-indigo-500/30 text-slate-700 dark:text-titanium-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
-                            >
-                                <span>Read More</span>
-                                <ExternalLink className="w-3.5 h-3.5" />
-                            </Button>
-                        </a>
-                    </div>
-                </div>
-            ))}
+                <p className="text-center text-[10px] text-slate-400 dark:text-titanium-600 pt-2">
+                    Source: cd4.lacity.gov • Councilmember Nithya Raman, District 4
+                </p>
+            </div>
 
-            {/* Source attribution */}
-            <p className="text-center text-[10px] text-slate-400 dark:text-titanium-600 pt-2">
-                Source: cd4.lacity.gov • Councilmember Nithya Raman, District 4
-            </p>
-        </div>
+            <LegislativeDetailDrawer
+                update={selectedUpdate}
+                relatedNews={relatedNews}
+                isOpen={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+            />
+        </>
     );
 }
