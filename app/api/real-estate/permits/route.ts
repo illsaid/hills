@@ -10,6 +10,8 @@ import { permitsAdapter } from '@/lib/real-estate/permitsAdapter';
 import { isInHillsBoundary } from '@/lib/geo/hillsBoundary';
 import type { AddressParams } from '@/lib/real-estate/types';
 
+export const dynamic = 'force-dynamic';
+
 // Simple in-memory cache (60 seconds)
 const cache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL_MS = 60 * 1000;

@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { firescoreAdapter } from '@/lib/real-estate/firescoreAdapter';
 import type { AddressParams } from '@/lib/real-estate/types';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);

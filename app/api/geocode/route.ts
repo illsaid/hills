@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 
 export async function GET(request: NextRequest) {

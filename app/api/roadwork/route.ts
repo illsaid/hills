@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
+export const dynamic = 'force-dynamic';
+
 // StreetsLA Pavement Preservation Program 2025-2026 (live feed)
 const STREETLA_2526_URL = 'https://services5.arcgis.com/7nsPwEMP38bSkCjy/arcgis/rest/services/StreetsLA_PPP_2025_to_2026_SUBJECT_TO_CHANGE/FeatureServer/0/query';
 

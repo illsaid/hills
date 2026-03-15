@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 // Configuration
 const TARGET_ZIPS = [
     { zip: '90068', lat: 34.1164, lng: -118.3205 }, // Hollywood Hills

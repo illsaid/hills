@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { supabaseServer as supabase } from '@/lib/supabase/server';
 import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const { data, error } = await supabase

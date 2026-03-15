@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildwatchAdapter } from '@/lib/real-estate/buildwatchAdapter';
 import type { AddressParams } from '@/lib/real-estate/types';
 
+export const dynamic = 'force-dynamic';
+
 // Simple in-memory cache (60 seconds)
 const cache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL_MS = 60 * 1000;

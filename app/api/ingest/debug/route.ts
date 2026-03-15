@@ -3,6 +3,8 @@ import { supabaseServer } from '@/lib/supabase/server';
 import { providers } from '@/lib/ingest';
 import { HOLLYWOOD_HILLS_KEYWORDS } from '@/lib/ingest/utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/server';
 import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
+export const dynamic = 'force-dynamic';
+
 export interface SafetyIncident {
     id: string;
     source_name: string;

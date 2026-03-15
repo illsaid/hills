@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { distressAdapter } from '@/lib/real-estate/distressAdapter';
 import type { AddressParams } from '@/lib/real-estate/types';
 
+export const dynamic = 'force-dynamic';
+
 const cache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL_MS = 60 * 1000;
 

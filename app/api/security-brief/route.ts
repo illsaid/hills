@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { supabaseServer as supabase } from '@/lib/supabase/server';
 import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
+export const dynamic = 'force-dynamic';
+
 const SECURITY_SOURCE_NAMES = ['LAPD NIBRS', 'Security Brief', 'LAPD Activity', 'LAPD Calls for Service'];
 
 export async function GET() {

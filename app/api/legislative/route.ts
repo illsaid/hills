@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/server';
 import { DATA_CUTOFFS, cutoffDate } from '@/lib/dateCutoffs';
 
+export const dynamic = 'force-dynamic';
+
 // CD4 Press Release and Tourism URLs
 const CD4_SOURCES = {
     pressReleases: 'https://cd4.lacity.gov/press-releases',

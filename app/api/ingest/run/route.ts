@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runProvider } from '@/lib/ingest';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const ingestKey = request.headers.get('x-ingest-key');
