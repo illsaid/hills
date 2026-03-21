@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-03-21T08:25:49.189397",
+  "updated_at": "2026-03-21T09:26:31.016003",
   "items": [
     {
       "headline": "Mysterious sign draws attention along 101 Freeway in Hollywood Hills - CBS News",
@@ -114,14 +114,6 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "77 Sunset Strip (1958) - IMDb",
-      "source": "IMDb",
-      "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxPRjdZMzFKb1FBQzVRZ1lEdm96LUl5bkR3VU1RVG94ZnRqRjVyNEdiZTBKQkdleXphM01LajFzSW0wcjFPUFZhdVRvYi1QUGhmc1lfaXB3b3BTUjRVdFpqMnM3SXdSNUp2VDdzdmQxb3lkWTJmZHNWczZwRXFlY21JWjRra3g?oc=5",
-      "published": "2026-03-17T22:00:16",
-      "summary": "77 Sunset Strip (1958)&nbsp;&nbsp;IMDb",
-      "keyword_match": "Query Match"
-    },
-    {
       "headline": "Mulholland Drive (2001) - IMDb",
       "source": "IMDb",
       "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9QaU9tYU93V1Exa0hMQk96U2dkUnFnTTlseVFXYTJXTG40YmhFZmUxcnQzSzcxR3l6aGRud0ZWOUU3SC1MVXVIeG9oQjluZXpqb2RjUDdOQjQyOUlkOGF1VWZTeDVNb3FuU2V4enJKUQ?oc=5",
@@ -146,19 +138,27 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "Hollywood Hills Girls Flag Football Schedule - MaxPreps.com",
-      "source": "MaxPreps.com",
-      "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxNRWRvdVc0ZGNrN1l5emY4WVNlWkF4bGluVUxUQWx3S1NkN0F4cmY2ekVQbmRlQU1HdS1FalpTY0FybzdHODhUakNEOEZXMGJEX3JBOE1Wd2Zna3FLcFIzMi1ubVBNb3RfbmwwT2JmRFd6WXBWei14NXJuX0RUeFJ5YTZQWmpOTG9YX1JISF9qZkpSQmtYVjNj?oc=5",
-      "published": "2026-03-11T12:32:15",
-      "summary": "Hollywood Hills Girls Flag Football Schedule&nbsp;&nbsp;MaxPreps.com",
-      "keyword_match": "Query Match"
-    },
-    {
       "headline": "David Lynch\u2019s Hollywood Hills Home, Partly Designed by Frank Lloyd Wright\u2019s Family, Sells for $13 Million - Galerie Magazine",
       "source": "Galerie Magazine",
       "url": "https://news.google.com/rss/articles/CBMivgFBVV95cUxQUUVaSzJ0alhGUjVtMWhlV1Jta3NWUEs5ODIwQlB3ZlpHNUdXcTZMSVlXdlJ0UDhyeVFzTkl2dTQxZEtRX09QRzVlTUJMay1HeU9kdC1CcGlnQW9PcU9XY3NBX0dKYVVscUdOQ0VSUi1MVDMzUWw3VDIwMnRjMTUzdmFaVzN2dW8tS3Y3QnBmeGdSVXVPaFA4c21leVBaRnVLUFpQNTl3Uko1RzVBQTlJRWlfYmM4SVlDZUJSeGl3?oc=5",
       "published": "2026-03-11T07:00:00",
       "summary": "David Lynch\u2019s Hollywood Hills Home, Partly Designed by Frank Lloyd Wright\u2019s Family, Sells for $13 Million&nbsp;&nbsp;Galerie Magazine",
+      "keyword_match": "Query Match"
+    },
+    {
+      "headline": "100+ Firefighters Tackle Second Massive Hollywood Hills House Fire Days Apart - Los Angeles Fire Department",
+      "source": "Los Angeles Fire Department",
+      "url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxPOUVwRXlWeHhXVXdiUnRmb2JzQkN1T19BYjZRaXYwdmpaLW5DMVFNUUF2cEQyaDMzT0JjckxRY2FLdVVPZGJsdDFYMFBXTDZvWW5vVkg3bndfWUtPUEk5YlRjSTJvX042OU5PeHJmY3NjZ3k5VmoxRG9Tc1VVeXBWOUpNQWtDRS1feFhmRHdfeTl6RTRTUmhVcm5rMkZPOGs?oc=5",
+      "published": "2026-03-10T07:00:00",
+      "summary": "100+ Firefighters Tackle Second Massive Hollywood Hills House Fire Days Apart&nbsp;&nbsp;Los Angeles Fire Department",
+      "keyword_match": "Query Match"
+    },
+    {
+      "headline": "Firefighter hurt battling house fire in Hollywood Hills - NBC Los Angeles",
+      "source": "NBC Los Angeles",
+      "url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxONDNnVzlTSHpYc2xYYUJPRDI2NkZVQk9QOXdWR2gwRTY4YWw5SmU3ZXBEU0MxR3M0d0N6WlBzQ3AtRWdLYlVYZ0xDYUswUXZadExFd2hpRFdzZVBZWnYwOE0tMVVYZTNHd3M2R2Z1bkg4Q2xhYnJsWkZMbW82V05yZDVZb3JvMEhYb3RhdGZQSDdUNmdsSUxvVEZaR0RyZWZVbTJEbXNR0gGuAUFVX3lxTE1RTTVyMDhPWmZjR1A3a3ZRN2FSQllZNFRXSDJUY0lWbU9sRUhQVXBndlQ2MzVyTEJjYzdqX25CbHA3ZnZnVVRmZG5SUk5sUGxvb2hsMnp1cV9LUkxyM3c1NGZkRWtYX2Z0Y1IyVEVGWkRqSUExZDdBaXlxcjJ5ZWtrWnZpME1BRVYtbjZIMWV2NVRRMWhvTC1mQVlUWkZPUEhqVTBsd2FNR3dHUF8tZw?oc=5",
+      "published": "2026-03-09T07:00:00",
+      "summary": "Firefighter hurt battling house fire in Hollywood Hills&nbsp;&nbsp;NBC Los Angeles",
       "keyword_match": "Query Match"
     }
   ]
