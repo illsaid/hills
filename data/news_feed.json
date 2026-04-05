@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-04-05T07:52:28.042273",
+  "updated_at": "2026-04-05T08:37:00.659443",
   "items": [
     {
       "headline": "Hollywood Buzz Is Back: This Sunset Strip Hotel Reopening Is Turning Heads - Travel And Tour World",
@@ -34,6 +34,14 @@
       "keyword_match": "Query Match"
     },
     {
+      "headline": "Hollywood Hills @ Cooper City - FloWrestling",
+      "source": "FloWrestling",
+      "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE0zUnFValdIQjZ5Skt6RmV5RDhpUG5aWFluOENRV3FNNkZtNU96bC1iVWMtakN4eDN6ZmxvbXRCeWpQUThPWXYtalRWRjNYOVpyV3hZanpVZml1WUl2cEJLQmp4LTlBSnRV?oc=5",
+      "published": "2026-04-03T15:39:29",
+      "summary": "Hollywood Hills @ Cooper City&nbsp;&nbsp;FloWrestling",
+      "keyword_match": "Query Match"
+    },
+    {
       "headline": "A Sunset Strip Icon Reemerges as The Valorian Los Angeles, Curio Collection by Hilton - WebWire",
       "source": "WebWire",
       "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTFBRWHpUWlJkMkpjNEtXT1lobkZpemE1TXZlUHFjLVh4b3NUM0pDN2ZsMl9rVkJWZE5PY3VsU0J1bGV3OW1HY1F5Nl9SM1pka21ZZElwdWZLcldlY01GeU9zUQ?oc=5",
@@ -50,14 +58,6 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "The story of Pamela Des Barres' Laurel Canyon Ballet Company - Far Out Magazine",
-      "source": "Far Out Magazine",
-      "url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxQTHIyYjktMFhCMGd5VVY4M1J6WExzQzZrd2t1bDJlbU8wZVVMdVdTTU40djdycnp5QnpkcFk4MlEyZ2d1czJMam5Bb3RQRmRTMy1fZm85SUhIa0d1Q2tFU0RYSkhCSzJ0R3ZSNkRZQ0FFcERxYjFqaWJVRHdoYlZkZXlocjI0VmkyRy1OdXVIQjJwU1NkLVlFcjBQTUJvZS1QTWNtc1RJcUM?oc=5",
-      "published": "2026-04-01T00:00:00",
-      "summary": "The story of Pamela Des Barres' Laurel Canyon Ballet Company&nbsp;&nbsp;Far Out Magazine",
-      "keyword_match": "Query Match"
-    },
-    {
       "headline": "OPP Investigate Reported Break And Enter At Sunset Strip Business - Bayshore Broadcasting News Centre",
       "source": "Bayshore Broadcasting News Centre",
       "url": "https://news.google.com/rss/articles/CBMiswFBVV95cUxPd0dGWVJ0QmViWlBQd0F1bVBIZ0NuY1BJcG11em5XdExHWXA4X0prU042eThYRUQtYmlTaDBDOTNGSlFJdWRTOFMwTGRack4zRXo1eGs2T19kc0kyeUUxT29iMU9HZzdLcTlKMnU1LXdlT1JSakhuOUZCdUh1YkZCOHpBOUlTUklmbjlRQ0RqZVBWbkNTcFZWLUUxOGdiNXN1a0hYeWFtQU5KdVNza0hwRWNJVQ?oc=5",
@@ -66,11 +66,11 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "Homeboy Industries breaks ground on treatment campus in Hollywood Hills - nbclosangeles.com",
-      "source": "nbclosangeles.com",
+      "headline": "Homeboy Industries breaks ground on treatment campus in Hollywood Hills - NBC Los Angeles",
+      "source": "NBC Los Angeles",
       "url": "https://news.google.com/rss/articles/CBMivgFBVV95cUxNSHA4UGk0TVNISVU1LUZtSlBkNGpKWnJCVmhOVTlxcHI3VWpYUy1iTmJhVkJHMlQtbTNTZV9RRFZud1NPZnp5ek54MXBrRDFISWRDZXZ2QVNrNjRMQnh0NUpSQnNsTDJlOWhGT2EtZTF4S1RRMjMwS3VBbWlubk1MaGZkeVZubXVsVzRrNFY0WG52eEJrUEFkdVVzbXRuRUhralU4RVU5SGsxMWI4SG4za0E0V2dtZkxsVXlVZ2x30gHGAUFVX3lxTE9wNThRWm42Nk8zRG1jMVR1U0RaajB4MzhEWXR4dkRfN2Q0aVFkSEpTQXNFTk41T0xYM3FLYkFwVDh2dkhkUjRWWEJpZUR5RHo2N1VVT3ZoOFoyazFyMG00QUIzZWV3d0QzMTd2cDBoeUZIb0FlVFpLQVVIWUVUaFZGRFNCZm51dTdWSWR1TmFDemxZT08teWRWNk5tUG9iWW9yYWN0VDQ0Nk4tbUVET1NPT25OZ2dUZUFUajFnSlRoMFExeUNYZw?oc=5",
       "published": "2026-03-31T02:27:10",
-      "summary": "Homeboy Industries breaks ground on treatment campus in Hollywood Hills&nbsp;&nbsp;nbclosangeles.com",
+      "summary": "Homeboy Industries breaks ground on treatment campus in Hollywood Hills&nbsp;&nbsp;NBC Los Angeles",
       "keyword_match": "Query Match"
     },
     {
@@ -122,43 +122,43 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "David Lynch\u2019s Hollywood Hills Home, Partly Designed by Frank Lloyd Wright\u2019s Family, Sells for $13 Million - galeriemagazine.com",
-      "source": "galeriemagazine.com",
+      "headline": "David Lynch\u2019s Hollywood Hills Home, Partly Designed by Frank Lloyd Wright\u2019s Family, Sells for $13 Million - Galerie Magazine",
+      "source": "Galerie Magazine",
       "url": "https://news.google.com/rss/articles/CBMivgFBVV95cUxQUUVaSzJ0alhGUjVtMWhlV1Jta3NWUEs5ODIwQlB3ZlpHNUdXcTZMSVlXdlJ0UDhyeVFzTkl2dTQxZEtRX09QRzVlTUJMay1HeU9kdC1CcGlnQW9PcU9XY3NBX0dKYVVscUdOQ0VSUi1MVDMzUWw3VDIwMnRjMTUzdmFaVzN2dW8tS3Y3QnBmeGdSVXVPaFA4c21leVBaRnVLUFpQNTl3Uko1RzVBQTlJRWlfYmM4SVlDZUJSeGl3?oc=5",
       "published": "2026-03-11T07:00:00",
-      "summary": "David Lynch\u2019s Hollywood Hills Home, Partly Designed by Frank Lloyd Wright\u2019s Family, Sells for $13 Million&nbsp;&nbsp;galeriemagazine.com",
+      "summary": "David Lynch\u2019s Hollywood Hills Home, Partly Designed by Frank Lloyd Wright\u2019s Family, Sells for $13 Million&nbsp;&nbsp;Galerie Magazine",
       "keyword_match": "Query Match"
     },
     {
-      "headline": "100+ Firefighters Tackle Second Massive Hollywood Hills House Fire Days Apart - lafd.org",
-      "source": "lafd.org",
+      "headline": "100+ Firefighters Tackle Second Massive Hollywood Hills House Fire Days Apart - Los Angeles Fire Department",
+      "source": "Los Angeles Fire Department",
       "url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxPOUVwRXlWeHhXVXdiUnRmb2JzQkN1T19BYjZRaXYwdmpaLW5DMVFNUUF2cEQyaDMzT0JjckxRY2FLdVVPZGJsdDFYMFBXTDZvWW5vVkg3bndfWUtPUEk5YlRjSTJvX042OU5PeHJmY3NjZ3k5VmoxRG9Tc1VVeXBWOUpNQWtDRS1feFhmRHdfeTl6RTRTUmhVcm5rMkZPOGs?oc=5",
       "published": "2026-03-10T07:00:00",
-      "summary": "100+ Firefighters Tackle Second Massive Hollywood Hills House Fire Days Apart&nbsp;&nbsp;lafd.org",
+      "summary": "100+ Firefighters Tackle Second Massive Hollywood Hills House Fire Days Apart&nbsp;&nbsp;Los Angeles Fire Department",
       "keyword_match": "Query Match"
     },
     {
-      "headline": "Who Are the \u2018Big 4\u2032 of Sunset Strip Bands? - Ultimate Classic Rock",
-      "source": "Ultimate Classic Rock",
-      "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE5veFl2RUhET0VCZFVlSkhKX3FVOEtBUm5vU1I0Z2VYV3NhMXU0aWYzYU5pZnduN3pNRllQeU5SMVBKc01JWGdvSF96N2FUTjNTSHZSZ0VjczByQmJOLUNTdWQtZlFYQVJH?oc=5",
-      "published": "2026-03-09T07:00:00",
-      "summary": "Who Are the \u2018Big 4\u2032 of Sunset Strip Bands?&nbsp;&nbsp;Ultimate Classic Rock",
-      "keyword_match": "Query Match"
-    },
-    {
-      "headline": "Firefighter hurt battling house fire in Hollywood Hills - nbclosangeles.com",
-      "source": "nbclosangeles.com",
+      "headline": "Firefighter hurt battling house fire in Hollywood Hills - NBC Los Angeles",
+      "source": "NBC Los Angeles",
       "url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxONDNnVzlTSHpYc2xYYUJPRDI2NkZVQk9QOXdWR2gwRTY4YWw5SmU3ZXBEU0MxR3M0d0N6WlBzQ3AtRWdLYlVYZ0xDYUswUXZadExFd2hpRFdzZVBZWnYwOE0tMVVYZTNHd3M2R2Z1bkg4Q2xhYnJsWkZMbW82V05yZDVZb3JvMEhYb3RhdGZQSDdUNmdsSUxvVEZaR0RyZWZVbTJEbXNR0gGuAUFVX3lxTE1RTTVyMDhPWmZjR1A3a3ZRN2FSQllZNFRXSDJUY0lWbU9sRUhQVXBndlQ2MzVyTEJjYzdqX25CbHA3ZnZnVVRmZG5SUk5sUGxvb2hsMnp1cV9LUkxyM3c1NGZkRWtYX2Z0Y1IyVEVGWkRqSUExZDdBaXlxcjJ5ZWtrWnZpME1BRVYtbjZIMWV2NVRRMWhvTC1mQVlUWkZPUEhqVTBsd2FNR3dHUF8tZw?oc=5",
       "published": "2026-03-09T07:00:00",
-      "summary": "Firefighter hurt battling house fire in Hollywood Hills&nbsp;&nbsp;nbclosangeles.com",
+      "summary": "Firefighter hurt battling house fire in Hollywood Hills&nbsp;&nbsp;NBC Los Angeles",
       "keyword_match": "Query Match"
     },
     {
-      "headline": "Los Angeles firefighters extinguish large fire at Hollywood Hills home - CBS News",
-      "source": "CBS News",
-      "url": "https://news.google.com/rss/articles/CBMisAFBVV95cUxPVXRiS1dRNWtjaHc0ZkczRzg4SElmUXZLRW9JeWJyQmdsZHF2VGI5ZDJPNFJ6bzd5RndIR1RFblRJVWxjdlhHTXBjbFZfVGdMdGdZb2RDcks4QjRaSWdaSlcwMUtEdmNBOUZxSjNUYWU4TG9kYTlrRXBnRXVTX2tJMnNyNC1QLUtCQUlxMXFpLWxQMjZpRl9rMjZnV21aZDVPUFZjeWlRQ3YyNC1velZVYg?oc=5",
+      "headline": "Fire destroys roof of Hollywood Hills mansion - ktla.com",
+      "source": "ktla.com",
+      "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxNUUpVV0wwUGtmSWRlNEN2VVlpNkVvX3dyNVBPdFNiYlB1Zi0wVklzTnQtSUhMNjdfamFNcVFFVUFadkl3aTU5MWFseTZtTVFPdWkzX3lmZWtVeHI3clJaN2NEYzV2dmJlc2ItV3gyZm0tNGw0dVFEWXN4blRXcVVjMVpMVVg?oc=5",
       "published": "2026-03-09T07:00:00",
-      "summary": "Los Angeles firefighters extinguish large fire at Hollywood Hills home&nbsp;&nbsp;CBS News",
+      "summary": "Fire destroys roof of Hollywood Hills mansion&nbsp;&nbsp;ktla.com",
+      "keyword_match": "Query Match"
+    },
+    {
+      "headline": "Crews extinguish raging fire in 4-story Hollywood Hills home - ktla.com",
+      "source": "ktla.com",
+      "url": "https://news.google.com/rss/articles/CBMijAFBVV95cUxOLThyaG5wQmZrd3FUaTNhVkd5SlRXWDI4clU4VS14RHRDRU5uRDBybnpMeG9zckxoSDByRkhGY3hZWnMyb2hNemdJT21GTDB4WFlGX1g3YU1KVGdrUWJMV3B6Q2RxOHd4cG1LWm5vdkNCYmM4N2lraEFjenFlQkU2UmNDVVdjejB5YjEwWdIBkgFBVV95cUxPeDJBVDFBM1RtLW0zTEhmenFzYWRnOUhyN205T0dMTVB2YmxlSS1hTVZ6cXRRdk9IV0E1U1JWcmJfc0hTX01wZTRlakljLXZBU0I4M0h1V195eTRMendGMGdwcC0zM0MwM2dyT2RDMjRtQUZqMGJHaU1KbjRPS2Y3RXNfb2tXVzdSc1pDSHJMa1RpUQ?oc=5",
+      "published": "2026-03-09T07:00:00",
+      "summary": "Crews extinguish raging fire in 4-story Hollywood Hills home&nbsp;&nbsp;ktla.com",
       "keyword_match": "Query Match"
     }
   ]
