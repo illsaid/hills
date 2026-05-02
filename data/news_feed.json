@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-05-02T07:24:13.771236",
+  "updated_at": "2026-05-02T08:59:56.880614",
   "items": [
     {
       "headline": "LAPD descends on Hollywood Hills street after reports of break-in at multimillion-dollar home - ABC7 Los Angeles",
@@ -90,6 +90,14 @@
       "keyword_match": "Query Match"
     },
     {
+      "headline": "Shakedown on the Sunset Strip (1988) - IMDb",
+      "source": "IMDb",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE85cDBHNzZ5SGRIZjZnSUp6X3FSZkpSWk1YRGpVak5Ob2Y0bmZ2NW9IRXl2akJEeEw5MjQ2dG16Y0Ixdk9HUWpIMDFVRzNIRGpSWmNDQTFUT2dVa3l5RTJaLUxtejFkMjN0YnF5X3dldw?oc=5",
+      "published": "2026-04-30T13:42:39",
+      "summary": "Shakedown on the Sunset Strip (1988)&nbsp;&nbsp;IMDb",
+      "keyword_match": "Query Match"
+    },
+    {
       "headline": "Mulholland Falls (1996) - IMDb",
       "source": "IMDb",
       "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTFAxLVNLU3pJQjExV0xSZnk2YU1tS1psTXBCQ2VoUDJRSVFXTld6SFRiNzhVREtwbFp6bU1waGt4T0ItM29EMGUtdlBJOXFPeDRRNThlRmVMemtwUndlbFpSOG5yaW1zYjlzazZBeHRR?oc=5",
@@ -122,14 +130,6 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "Chris Brown\u2019s graffiti-covered Hollywood Hills home listed at US$2.9m - Elite Agent",
-      "source": "Elite Agent",
-      "url": "https://news.google.com/rss/articles/CBMilgFBVV95cUxQVTF3dlp5a3hyZnR6N21QY0k4aFA5OVI0dTFabUZHbGU1TExKa0FnWkRkLVBmV1p0YTI4cVFqdDE4VVpIRzJCUDkyUm01dDZpVlFvc2I3S2NrLVlnSnF1c2lUSlk3Xy1ReEhsWTY1dDIxSjJvS2JKdmEzWGl3Nlc3d0RjZ3R2dVhuUnktdlBtR3dfeU1ia3c?oc=5",
-      "published": "2026-04-27T01:28:17",
-      "summary": "Chris Brown\u2019s graffiti-covered Hollywood Hills home listed at US$2.9m&nbsp;&nbsp;Elite Agent",
-      "keyword_match": "Query Match"
-    },
-    {
       "headline": "Masked thugs choke elderly woman in Hollywood Hills home invasion amid crime surge - AOL.com",
       "source": "AOL.com",
       "url": "https://news.google.com/rss/articles/CBMifEFVX3lxTE9oZzJrVGVPYUlTLVc2a2ZSSVpPbWVaWjdkR0N4azVlOVdFaVYwbFpGSmpIdVBUU2JhUXdrUWdTRmFwYlV5SEJINVRTVHU2ay1LR3RQQVJ3aHRudXJoa09oVU94ZnZ1X0hoRm1hNU5oRWVGNVZPdjZ1SXZTZDQ?oc=5",
@@ -146,19 +146,19 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "Home invasion robbery in Hollywood Hills under investigation - FOX 11 Los Angeles",
-      "source": "FOX 11 Los Angeles",
-      "url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE45UzV2RU9PVFZ5Z20tR2Q3NjZpc1J5b2pfM3FlWGR0cHlWRjkwSDlpZFlramJNYmpfRHc0Tmc1MVI1VGtTRmMzZWxRd0VwdFM5ZGVrS05OWFotNlNm0gFiQVVfeXFMTzhNWGllVFc5YVphSWY0WV9nQWM0TWs2Mmh5ejZPaGRkUndXRjhJNUpzcDFTNlZkWGVEd2lnbGFmckVIeU5DVWUwZjVEUldIbl8yamQwZXRHcDhmRDR6LVFRdEE?oc=5",
-      "published": "2026-04-25T15:12:25",
-      "summary": "Home invasion robbery in Hollywood Hills under investigation&nbsp;&nbsp;FOX 11 Los Angeles",
-      "keyword_match": "Query Match"
-    },
-    {
       "headline": "Elderly woman strangled inside Hollywood Hills home ID\u2019d as Budget Rent a Car heiress - KTLA",
       "source": "KTLA",
       "url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxNS19INklSYjVQampJNTVTWTRUSHd5cEppbkRTM3V3TTZCNEtzVzZuQlVsRXVoNUZPNDYzREQ3QXJRNFE4S2syYzZial9DT016TXQ3TDkyT01aWXNGSFctVkdhMmJTVm1jbml3OExMRFp2OFlnM01pTjZ4dVdYV1RFYlVKTG55ZUxoeVdsUXFBdWwxYk9RRms0azZjeWhhNW9JSVhjd2JIQXlGdTBqRGUxU0VNZjY0N2EtNkHSAb8BQVVfeXFMUExJTlB4MGdmcXBPVDJ4NTd1bE9STGRXLUVhSExvVmhKSmVMcUIyX1oycWhIMHloSlcxMWljeDM5LXNoU0laaG9jcjZiYTlvRWw5Y1hobDl3NnJHMHYwV0x1UzhZWEtlNEFEbFJfR1dtZEdBSE5ISTNBV1k3dEFTUTZFMUFFS3UtM25jWlRDSENFb19FeGlhbER6OW8zVVcwN3k1SDF5Qkl2bGVFT19objcwUE1scVJfZmE2dHpfOTQ?oc=5",
       "published": "2026-04-25T05:45:46",
       "summary": "Elderly woman strangled inside Hollywood Hills home ID\u2019d as Budget Rent a Car heiress&nbsp;&nbsp;KTLA",
+      "keyword_match": "Query Match"
+    },
+    {
+      "headline": "70-year-old woman strangled in horrifying Hollywood Hills home invasion - New York Post",
+      "source": "New York Post",
+      "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxQTmVpNHZGSTY3SzFaRmZ1RGFta3psMzNOaElkbnJ0WE5KMTNpdmJacjl1MjJiQ0ZfTFl6SnZRS1JpOHlDRzFDcXlEZUExQ25HT2ttLVFlbW5ZVDZJMUstQ3VsODVaWmxXUkNvaGtVWndVcnpSaDJnOGhzdzd4S1NuazZuVHRsRVBOcDV1Yld1bWNvczRJa0tLVEkwWU45TjhB?oc=5",
+      "published": "2026-04-24T15:12:00",
+      "summary": "70-year-old woman strangled in horrifying Hollywood Hills home invasion&nbsp;&nbsp;New York Post",
       "keyword_match": "Query Match"
     }
   ]
