@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-05-14T06:18:59.318098",
+  "updated_at": "2026-05-14T09:29:07.437893",
   "items": [
     {
       "headline": "Top LA Realtor Jimmy Heckenberg of Rodeo Realty Lists Mulholland - The National Law Review",
@@ -15,6 +15,14 @@
       "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxOUVVVbm1VRDIxRkw5WGh5dWI3eDl2TGxHVThvOU9kdXBWb3lvQm5VLVpYcDUxdWNPQk1SN2NYZWNwMzhwSjRsWFJfSVNyaG93OHBwdXFGa1JqOEJla09JYjFUb0w1eGhiWFJOSHhndnNtNHNieENKc0tSaGkwanF6bVNfRGw?oc=5",
       "published": "2026-05-13T09:00:00",
       "summary": "Jack Mulholland joins board of CRY Ireland&nbsp;&nbsp;Irish Legal News",
+      "keyword_match": "Query Match"
+    },
+    {
+      "headline": "\u201cAmerican Beauty,\u201d \u201cTrue Blood\u201d screenwriter seeks $21M for Hollywood Hills compound - The Real Deal",
+      "source": "The Real Deal",
+      "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxNdkhfcUtIVW94SU9tWWc1UGZ3aExJb2J4V090Mk55WE5scE83LVcyZEpkZ1ZRVlpqTkFyd3RucFdlQUlkR2R6QkRXTXlDY1hKV3o0ckt1X0QxMHNmRmpJQ0xOZDUtRm41bkJ1em9YNFVadk1qTU5qWDNrWFljUWlHSFFXaVF5T29Wc1NWUERkNFlVOUhNRmxsLVpDTQ?oc=5",
+      "published": "2026-05-12T17:14:00",
+      "summary": "\u201cAmerican Beauty,\u201d \u201cTrue Blood\u201d screenwriter seeks $21M for Hollywood Hills compound&nbsp;&nbsp;The Real Deal",
       "keyword_match": "Query Match"
     },
     {
@@ -90,14 +98,6 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "How a Complicated Hollywood Hills Renovation Taught One Couple the Art of Compromise - House Beautiful",
-      "source": "House Beautiful",
-      "url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxPSjhEVDJJUUkwVk9nNWxGUTVqWUUxMzR2NFhzS3pmNThJTXVHWDFjTXYxd2RGZC1ndHl4dnBxcEtGVUlOWVN2dE01YUpEUDdyZWtQZXRmRkJHZjRZT0dYRWt4Q2o4T3UzcUZEM256emZhc0FXTUFtbXBqa3A1NVltNEZzdURwbmVpc0VlVGxkdW1ERFR6S3lGMl9qdzhnUWJDSDFORVJzOGVTU0c4T0hjX0kxcEVlMjZ2THlScy1pSUpqakNo?oc=5",
-      "published": "2026-05-08T07:00:00",
-      "summary": "How a Complicated Hollywood Hills Renovation Taught One Couple the Art of Compromise&nbsp;&nbsp;House Beautiful",
-      "keyword_match": "Query Match"
-    },
-    {
       "headline": "9016 Thrasher Avenue: A Contemporary Masterpiece in the Bird Streets - Los Angeles Times",
       "source": "Los Angeles Times",
       "url": "https://news.google.com/rss/articles/CBMickFVX3lxTFBTdU8zSGtka1hXdjJiNU9UbE9uMXNKejdlUi0tb05WTVNEV3NSQml2U25XWEthUmJtcUJKalZ6Q2xqRENzMm9RZ3ZackE4U2ozWTB4NVM5WFVwVlRYaE9uWlFPbUJ1ZjZDUm5Lbk5RZGtZQQ?oc=5",
@@ -146,19 +146,19 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "Los Angeles police detain crowd near Hollywood Hills homes - CBS News",
-      "source": "CBS News",
-      "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOeGkyU3pKM1h2M3RleG9hZUgzQ0FOS2pCY2hQa2lhSk1kd3A1eWpLSUdQazFyazJmT1ZQQkJtYXlKUnhyUzkwUHRGVHpiNUZ6RHl3RGVCQjBDM3lmNlc3TktjT2lXdjZ2bkp2Z09qckZNejhxVlkzdVdWenBhemQwWl9JTTR4UExUVXQ4blJxbHpLNGxoNXhVUERpNW9Hak5YSWc?oc=5",
-      "published": "2026-05-01T07:00:00",
-      "summary": "Los Angeles police detain crowd near Hollywood Hills homes&nbsp;&nbsp;CBS News",
-      "keyword_match": "Query Match"
-    },
-    {
       "headline": "House of the Week: The Hollywood Hills Home of an Award-Winning Artist - WSJ",
       "source": "WSJ",
       "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxQNHFrc3dza3ZiRm1YazktYWpydjBhVnUzYkp3MnBNeVhaa00yTUJZV0I1anMyeGhtNTFFazlBb1BVdkRSeXAzQUlob3AxUm5jTG9WNFZSa1huSlVnNndQZ0FIemJmX3ZhTXFHZzVORGtwanpJSkd1NDljYi1kZ29ueERjdUZYcFBiOU96OGVlN3JDb0k?oc=5",
       "published": "2026-05-01T07:00:00",
       "summary": "House of the Week: The Hollywood Hills Home of an Award-Winning Artist&nbsp;&nbsp;WSJ",
+      "keyword_match": "Query Match"
+    },
+    {
+      "headline": "Woman in her 70s survives strangling, robbery in Hollywood Hills home invasion - Los Angeles Times",
+      "source": "Los Angeles Times",
+      "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxQam9MMEUtOG9xZ190eGw2N0R5VjNneTgtdXpPZ0VsamxmUjhmdXBwaDNtRDNpeVhwdndkSzBqTDV3a09rQV9ZcHhnQWlNMjQ0SnRJRm50NnZBelFUWUpUVWNTbjJZUTVpcy1EbGptTUFucVBzZUlwaFFaVnpDTklwT3ZSVTZJbzEwdVpxS19JTXhUNXNsV091MXp0M1N5WVBiVHc?oc=5",
+      "published": "2026-04-24T07:00:00",
+      "summary": "Woman in her 70s survives strangling, robbery in Hollywood Hills home invasion&nbsp;&nbsp;Los Angeles Times",
       "keyword_match": "Query Match"
     }
   ]
