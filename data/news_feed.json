@@ -1,14 +1,6 @@
 {
-  "updated_at": "2026-06-28T02:52:34.904100",
+  "updated_at": "2026-06-28T06:58:31.471250",
   "items": [
-    {
-      "headline": "Lewes Music: Carole King's Tapestry: An Evening in Laurel Canyon - Clydebank Post",
-      "source": "Clydebank Post",
-      "url": "https://news.google.com/rss/articles/CBMi3gFBVV95cUxQUXVoSTljd1VFaXJ2RDVpbThkdlZlZnNqdkNvZWp1YU9rQVd0VWt0WTR2MnZ1eTE0RnBJRU1OamNOWUpwd3BKQ0dTU0hUZC1NNE9mRVpqMV9UWjk4bkdkLVNYUklGZXB0VmxWVlJfR2hJZjhZWkoyY05paGxNeGNCTjNVYUdjLVI0akZHUWpSc2FPZkx0ZTU4TlMzbk9vNDZVWnF1bF9YTXVuQk84WlZoNzVlWXNoQTJ0aXY4X0dtSTBxLWh2blZnb0dPeWhsT0Y0aHpoZ3AyejVFUERqWUE?oc=5",
-      "published": "2026-06-27T22:45:37",
-      "summary": "Lewes Music: Carole King's Tapestry: An Evening in Laurel Canyon&nbsp;&nbsp;Clydebank Post",
-      "keyword_match": "Query Match"
-    },
     {
       "headline": "Hotel review: California luxe on the Sunset Strip at The Sun Rose West Hollywood, USA - Karryon",
       "source": "Karryon",
@@ -58,11 +50,19 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "2 killed in high-speed crash on Mulholland Highway - ktla.com",
-      "source": "ktla.com",
+      "headline": "2 killed in high-speed crash on Mulholland Highway - KTLA",
+      "source": "KTLA",
       "url": "https://news.google.com/rss/articles/CBMijAFBVV95cUxQcmFiRFA0RmlHODdINEpuQ3NROEtWRmpFM1lpZjJNRTNBQ0gwVVZfc3prazVKSlRuRXlSSHpGckt4ZWlhQ21Ma3pPeDVHRFBIbklOQmdVS2dYUjVubFM0S19zRW9sdHdEa2FmbFNyTUF1ZFZoNzlhVHJJUlkyVkVLZGRJaS1ORml5M1gtedIBkgFBVV95cUxOT0FMS1RpUGF0RjlZVkMyOERkYlFnemlZZ3ZHa1hRODR2VVRSYkZsTk5vZDZ4QmVHTjBUb2Y1TjZBZ3lWaHVPSEFqemxaMnplcENoNFhhZ241cDU3MU55aUg2SkwtNmRwMlpoVVdaaEZuY004dDZnSmhUZXU0bTVDRmJSR2xqazI1S29MMHkzOV95Zw?oc=5",
       "published": "2026-06-23T00:09:37",
-      "summary": "2 killed in high-speed crash on Mulholland Highway&nbsp;&nbsp;ktla.com",
+      "summary": "2 killed in high-speed crash on Mulholland Highway&nbsp;&nbsp;KTLA",
+      "keyword_match": "Query Match"
+    },
+    {
+      "headline": "Haylie Davis is Keeping Laurel Canyon Sounds Alive and Well \u2013 BGS - The Bluegrass Situation",
+      "source": "The Bluegrass Situation",
+      "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxNcWY4S09SbEI3YmRjd0xzOGhoU0ZHRERuLUliYW9IcG9aek4zZ3N1TW5XYUxLWXN3YVFuX3k5ZkNFNFhnd190ZzVUTmhFam1YOHZhaFZDU19wd3prcXVkSkxDREUybHJPUFl5MS1YTktRdXo4YmYwb1FydlRhc3BVQ2pIY3pYQ21HQ2V0Q0tmNnpRX3hUaDVJYnpZenFqSmZC?oc=5",
+      "published": "2026-06-22T13:51:37",
+      "summary": "Haylie Davis is Keeping Laurel Canyon Sounds Alive and Well \u2013 BGS&nbsp;&nbsp;The Bluegrass Situation",
       "keyword_match": "Query Match"
     },
     {
@@ -138,6 +138,14 @@
       "keyword_match": "Query Match"
     },
     {
+      "headline": "South Broward vs Hollywood Hills | Football | 10/22 - MaxPreps",
+      "source": "MaxPreps",
+      "url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxNVzhZb3BqOEE2ZzFXTjJ4eGl5RzRZVkpqRm5ielpmbFF6ZzY1UWUzdlBfM2pTTlVOcGFtcTk4T1V6S1VsOXMzMWI2RG14Z0p4VVRFZFRISWI2bVBXWE5JR005MXdvSVJaQ01lUjhVaFZjOTZzNnFQYklKTHVhRGllZG9iUU43c3ZTWWVtOGY5ejI2R2QzZGdhNzc5dzFMN3lqNU5HOC1manVqRXdQNWt0b1ZObnR0UQ?oc=5",
+      "published": "2026-06-08T13:55:57",
+      "summary": "South Broward vs Hollywood Hills | Football | 10/22&nbsp;&nbsp;MaxPreps",
+      "keyword_match": "Query Match"
+    },
+    {
       "headline": "Dozens join in air rescue attempt in Hollywood Hills, but hiker dies - Los Angeles Times",
       "source": "Los Angeles Times",
       "url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxPbzVNMzU1ZXNPSGRxaWlBMzMwY1NVYXNuQlI0U0xwb0V0bzZ3Nk5mSktjM1dxS2Z2ejRXOHREY016ZUE3b1YtNEp3QnB6bWFBeUdBaHVLWWNXSERUMU1QTUU1Z1R1dE1sNFFPYmJ1VHFWbS0wVlF6R0tOTHZrUHB6UDF4RVBvYmVWeFREbVZFckU5N09pdWwzQTNOTDFXSmktX2EtOENB?oc=5",
@@ -146,19 +154,11 @@
       "keyword_match": "Query Match"
     },
     {
-      "headline": "Hiker found in \u2018grave\u2019 condition dies in Hollywood Hills - ktla.com",
-      "source": "ktla.com",
-      "url": "https://news.google.com/rss/articles/CBMijgFBVV95cUxOYnZRY3ZjM2RMYlFrcmFHSENpbmc5ajZYNi1PVEplZ3ZIY1RRSEtFX1R6VDRnZHZ1UFdyVERFalU3VF9OVDlfdHByb2RlV3FvczVPSXl0dVR1Wk5NLXVwTmJHaTN6SWZPUnFBUWJFbl9hbi1odHVkLURmZEVvR1dsMzl4T3M3bnBFNnRTbWVR0gGTAUFVX3lxTFBJUy0yOUVuZEN0V3RJUGw1dWc3Z0FZa3NQWHRBU295UVZ5Z3BPSnZ1eS1wTVRQSUhrLWJSNjlsSlBVbTBDMElFMnZ3aFQ1Y21BeTF5SFhGSlkyM1E3TzBaN0NTd3RWM1BkbE83c3B0d3dnRUNEUXR1RmVyaFBGbEZuVjA4Q1Y2ZENQeUotVWhxSWJtaw?oc=5",
-      "published": "2026-06-06T07:00:00",
-      "summary": "Hiker found in \u2018grave\u2019 condition dies in Hollywood Hills&nbsp;&nbsp;ktla.com",
-      "keyword_match": "Query Match"
-    },
-    {
-      "headline": "Hiker Dies in Hollywood Hills West Despite Efforts to Save Him - MyNewsLA.com",
-      "source": "MyNewsLA.com",
-      "url": "https://news.google.com/rss/articles/CBMiowFBVV95cUxPM3JpZFBRdEZRYXZKSXVlZHROWWw5Qm5ydFJ1RTFLRU0xQUdhT2hwWXVRRjBJTGZ4N1dWVldab0Y0UXhMZ29SNlNvaTNVX0JIZzl3dG5hdHFwLXJqNEtFTk5mV1dvajF0cWNBYWlfcVJhTzhRNXlPdnZIMk9FOWVpRGJFS0h1R05ubXZMTFJRYmJQMUhPMVIzdHJtd2dXUHBBcEw0?oc=5",
-      "published": "2026-06-06T07:00:00",
-      "summary": "Hiker Dies in Hollywood Hills West Despite Efforts to Save Him&nbsp;&nbsp;MyNewsLA.com",
+      "headline": "Hiker Dies In Hollywood Hills West Despite Efforts To Save Him - Patch",
+      "source": "Patch",
+      "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxPQmhLMk9ibEpzZVp4OFQ3cDRKR3RMaW55UUdBa0Nfd1ZjckR3c2hsV1BFTEU5TUdoRFUxcFh5bko5UHdkVUFWVllLaDRZeGR5UWhDY0pjY2l6bVZOTW1HVXp6SEducVVzUDQxbC1DeUN2b0ZzbV83Y20xV0lQZG5rN1BEMi13eGxCY3V5bnNaeE9MS3d5b1pfVWdzbw?oc=5",
+      "published": "2026-06-07T07:00:00",
+      "summary": "Hiker Dies In Hollywood Hills West Despite Efforts To Save Him&nbsp;&nbsp;Patch",
       "keyword_match": "Query Match"
     }
   ]
