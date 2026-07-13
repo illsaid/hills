@@ -330,7 +330,44 @@ async function fetchDashboardData() {
       };
     });
 
-  const totalAlertCount = criticalAlerts.length;
+  let totalAlertCount = criticalAlerts.length;
+
+  // Live NWS alerts (heat warnings, red flag, high wind...) queried by point —
+  // no ingestion pipeline needed, and a hardcoded-zone bug previously meant
+  // these never appeared at all.
+  try {
+    const nwsAlertsRes = await fetch('https://api.weather.gov/alerts/active?point=34.12,-118.345', {
+      headers: { 'User-Agent': '(hills-ledger-app, 9000.eom@gmail.com)' },
+      next: { revalidate: 300 },
+    });
+    if (nwsAlertsRes.ok) {
+      const nwsAlerts = await nwsAlertsRes.json();
+      const features = (nwsAlerts.features || []).slice(0, 3);
+      const nwsChips = features.map((f: any) => {
+        const props = f.properties || {};
+        const sev = String(props.severity || '').toLowerCase();
+        const isCritical = sev === 'extreme' || sev === 'severe' ||
+          /warning/i.test(props.event || '');
+        const sent = new Date(props.sent || props.effective || Date.now());
+        const mins = Math.floor((Date.now() - sent.getTime()) / 60000);
+        const age = mins < 60 ? `${mins}m` : mins < 1440 ? `${Math.floor(mins / 60)}h` : `${Math.floor(mins / 1440)}d`;
+        return {
+          id: props.id || f.id,
+          icon: /fire|red flag/i.test(props.event || '') ? 'flame' : 'alert',
+          title: props.event || 'Weather Alert',
+          age,
+          severity: (isCritical ? 'critical' : 'warning') as 'critical' | 'warning' | 'info',
+          href: 'https://forecast.weather.gov/MapClick.php?lat=34.12&lon=-118.345',
+        };
+      });
+      // NWS alerts lead the strip; dedupe by title against DB alerts
+      const seenTitles = new Set(nwsChips.map((c: any) => c.title));
+      const merged = [...nwsChips, ...alertChips.filter((c: any) => !seenTitles.has(c.title))];
+      alertChips.length = 0;
+      alertChips.push(...merged);
+      totalAlertCount += nwsChips.length;
+    }
+  } catch { /* strip falls back to DB alerts only */ }
 
   // Build news headlines
   const newsHeadlines = (newsData.items || []).slice(0, 5).map((n: any, i: number) => ({

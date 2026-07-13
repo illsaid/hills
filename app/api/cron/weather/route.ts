@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 const GRID_POINT_URL = 'https://api.weather.gov/gridpoints/LOX/152,48/forecast/hourly';
-const ALERTS_URL = 'https://api.weather.gov/alerts/active?zone=CAZ368';
+const ALERTS_URL = 'https://api.weather.gov/alerts/active?point=34.12,-118.345';
 const USER_AGENT = '(hills-ledger-app, contact@example.com)';
 
 export async function GET(request: Request) {
