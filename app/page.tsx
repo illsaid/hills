@@ -155,8 +155,8 @@ async function fetchDashboardData() {
 
   // Geocode addresses for permits and code enforcement (cached 24h by Next.js fetch)
   const addressesToGeocode = [
-    ...codeEnforcement.filter((i: any) => i.address && !i.latitude).map((i: any) => i.address as string),
-    ...permits.filter((p: any) => p.address).map((p: any) => p.address as string),
+    ...codeEnforcement.filter((i: any) => i.address && i.lat == null).map((i: any) => i.address as string),
+    ...permits.filter((p: any) => p.address && p.lat == null).map((p: any) => p.address as string),
   ];
   const geoCache = addressesToGeocode.length > 0
     ? await batchGeocode(addressesToGeocode.slice(0, 20))
@@ -241,7 +241,9 @@ async function fetchDashboardData() {
     seenKeys.add(key);
 
     const valStr = item.valuation ? ` • $${Number(item.valuation).toLocaleString()}` : '';
-    const permitGeo = item.address ? (geoCache.get(item.address) ?? null) : null;
+    const permitGeo = (item.lat != null && item.lon != null)
+      ? { lat: Number(item.lat), lng: Number(item.lon) }
+      : (item.address ? (geoCache.get(item.address) ?? null) : null);
     feedItems.push({
       id: `permit-${item.permit_number}`,
       type: 'permit',

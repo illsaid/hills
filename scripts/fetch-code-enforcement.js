@@ -53,6 +53,32 @@ async function run() {
         const cases = await fetchCodeCases();
         console.log(`Fetched ${cases.length} OPEN cases.`);
 
+        // Ingest-time geocoding (polite: 1.1s delay, capped per run).
+        // Nominatim blocks parallel/datacenter render-time requests, so we
+        // geocode once here and store coords for the dashboard map.
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+        async function geocode(address) {
+            try {
+                const q = encodeURIComponent(`${address}, Los Angeles, CA`);
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=jsonv2&limit=1&countrycodes=us`, {
+                    headers: { 'User-Agent': 'HillsLedger/1.0 (ingest; contact: 9000.eom@gmail.com)' }
+                });
+                if (!res.ok) return null;
+                const results = await res.json();
+                if (!results.length) return null;
+                return { lat: parseFloat(results[0].lat), lon: parseFloat(results[0].lon) };
+            } catch { return null; }
+        }
+
+        // Skip geocoding for cases that already have coords in the DB
+        const { data: existing } = await supabase
+            .from('code_enforcement')
+            .select('case_number, lat')
+            .in('case_number', cases.map(c => c.apno));
+        const hasCoords = new Set((existing || []).filter(e => e.lat != null).map(e => e.case_number));
+
+        let geocodeBudget = 20; // max lookups per run; catches up across daily runs
+
         for (const c of cases) {
             // Field Mapping from Schema Probe
             // apno: "119009" (Case Num)
@@ -75,10 +101,21 @@ async function run() {
                 date_opened: c.adddttm,
                 status: c.stat, // 'O'
                 council_district: null, // Probe didn't show district column, might be strictly zip based here. 
-                // lat: c.location_1?.latitude, // If not present, null
-                // lon: c.location_1?.longitude,
                 updated_at: new Date()
             };
+
+            // Prefer coords from the source record if present; else geocode
+            const srcLat = c.location_1?.latitude ?? c.lat;
+            const srcLon = c.location_1?.longitude ?? c.lon;
+            if (srcLat != null && srcLon != null) {
+                payload.lat = parseFloat(srcLat);
+                payload.lon = parseFloat(srcLon);
+            } else if (fullAddress && !hasCoords.has(c.apno) && geocodeBudget > 0) {
+                geocodeBudget--;
+                const geo = await geocode(fullAddress);
+                await sleep(1100);
+                if (geo) { payload.lat = geo.lat; payload.lon = geo.lon; }
+            }
 
             const { error } = await supabase
                 .from('code_enforcement')
