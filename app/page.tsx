@@ -352,8 +352,22 @@ async function fetchDashboardData() {
   // Weather from NWS
   let weather: { temp: number; condition: string; high: number; low: number; wind?: string } | undefined;
   try {
-    const nwsRes = await fetch('https://api.weather.gov/gridpoints/LOX/152,48/forecast/hourly', {
-      headers: { 'User-Agent': '(hills-ledger-app, contact@example.com)' },
+    // Resolve the gridpoint for the Hills center from NWS /points (cached 24h)
+    // instead of trusting a hardcoded grid square; fall back to the old one.
+    let hourlyUrl = 'https://api.weather.gov/gridpoints/LOX/152,48/forecast/hourly';
+    try {
+      const ptRes = await fetch('https://api.weather.gov/points/34.12,-118.345', {
+        headers: { 'User-Agent': '(hills-ledger-app, 9000.eom@gmail.com)' },
+        next: { revalidate: 86400 },
+      });
+      if (ptRes.ok) {
+        const pt = await ptRes.json();
+        if (pt.properties?.forecastHourly) hourlyUrl = pt.properties.forecastHourly;
+      }
+    } catch { /* keep fallback URL */ }
+
+    const nwsRes = await fetch(hourlyUrl, {
+      headers: { 'User-Agent': '(hills-ledger-app, 9000.eom@gmail.com)' },
       next: { revalidate: 1800 },
     });
     if (nwsRes.ok) {
@@ -366,7 +380,12 @@ async function fetchDashboardData() {
         return now >= start && now < end;
       }) || periods[0];
       if (current) {
-        const dayPeriods = periods.slice(0, 12);
+        // High/low over TODAY's LA-timezone periods — not "next 12 forecast
+        // hours", which showed overnight temps as the daily high in the evening
+        const laDay = (d: Date) => d.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' });
+        const today = laDay(now);
+        const todayPeriods = periods.filter((p: any) => laDay(new Date(p.startTime)) === today);
+        const dayPeriods = todayPeriods.length ? todayPeriods : periods.slice(0, 12);
         const temps = dayPeriods.map((p: any) => p.temperature as number);
         weather = {
           temp: current.temperature,

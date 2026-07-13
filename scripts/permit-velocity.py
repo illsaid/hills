@@ -140,7 +140,11 @@ def save_recents_to_db(permits):
             "lat": float(lat) if lat else None,
             "lon": float(lon) if lon else None,
             "coords_missing": not has_coords,
-            "zimas_url": f"https://zimas.lacity.org/map.aspx?apn={p.get('apn','')}"
+            # ZIMAS deep links use ?pin= (spaces become +); map.aspx?apn= is dead
+            "zimas_url": (
+                f"https://zimas.lacity.org/?pin={p['pin_nbr'].replace(' ', '+')}"
+                if p.get("pin_nbr") else ""
+            )
         })
     
     if not rows:
