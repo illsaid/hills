@@ -41,3 +41,7 @@ jobs:
         env:
           NEWSDATA_API_KEY: ${{ secrets.NEWSDATA_API_KEY }}
         run: node scripts/news-sentinel.js
+
+      - name: Google News RSS (keyless)
+        if: ${{ !cancelled() }}
+        run: node scripts/google-news-feed.js

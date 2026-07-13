@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 """
 Security Awareness Brief - Weekly Crime Analysis for Hollywood Hills
-Uses LAPD NIBRS Offenses Dataset (y8y3-fqfu) - March 2024 to present
+Uses LAPD NIBRS Offenses Dataset 2026-to-Present (k7nn-b2ep)
 
 NIBRS (National Incident-Based Reporting System) provides more granular
 crime data than the legacy UCR system. This script analyzes property crimes
 in the Hollywood LAPD division area.
 
 NOTE: NIBRS dataset does not include lat/lon coordinates, so we filter by
-area_name = 'Hollywood' rather than geographic bounding box.
+area_name like 'Hollywood%' rather than geographic bounding box.
 """
 
 import requests
@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 
 # LAPD NIBRS API Endpoint (current data: March 2024 to present)
-API_ENDPOINT = "https://data.lacity.org/resource/y8y3-fqfu.json"
+API_ENDPOINT = "https://data.lacity.org/resource/k7nn-b2ep.json"
 
 # NIBRS started March 7, 2024 - no data before this
 NIBRS_START_DATE = datetime(2024, 3, 7)
@@ -72,7 +72,7 @@ def fetch_crime_data(start_date, end_date):
     """Fetch crime data from LAPD NIBRS API for a given date range.
     
     Filters by:
-    - area_name = 'Hollywood' (LAPD Hollywood Division)
+    - area_name like 'Hollywood%' (LAPD Hollywood Division)
     - crime_against = 'Property' (property crimes only)
     - Date range
     """
@@ -84,7 +84,7 @@ def fetch_crime_data(start_date, end_date):
     # NIBRS query: Hollywood division, property crimes
     where_clause = (
         f"date_occ >= '{start_str}' AND date_occ <= '{end_str}' AND "
-        "area_name = 'Hollywood' AND crime_against = 'Property'"
+        "area_name like 'Hollywood%' AND crime_against = 'Property'"
     )
 
     params = {
@@ -105,9 +105,9 @@ def fetch_crime_data(start_date, end_date):
         hills_rds = load_hills_rds()
         if hills_rds:
              # NIBRS uses 3-digit RDs (e.g., '632') while our config has '0632'
-             nibrs_rds = [rd.lstrip('0') for rd in hills_rds]
+             nibrs_rds = {rd.lstrip('0') for rd in hills_rds}
              
-             filtered = [d for d in data if d.get("rpt_dist_no") in nibrs_rds]
+             filtered = [d for d in data if (d.get("rpt_dist_no") or "").lstrip("0") in nibrs_rds]
              print(f"   Filtered to {len(filtered)} incidents in Hills RDs")
              return filtered
              
@@ -287,7 +287,7 @@ def generate_brief(current_analysis, prev_analysis, year_ago_analysis, clusters,
         "color": status_color,
         "analysis_week": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
         "data_as_of": run_date.strftime("%Y-%m-%d"),
-        "data_source": "LAPD NIBRS (y8y3-fqfu)",
+        "data_source": "LAPD NIBRS (k7nn-b2ep)",
         "brief_text": "\n".join(lines),
         "updated_at": datetime.now().isoformat(),
         "stats": {
