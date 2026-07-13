@@ -15,6 +15,15 @@ jobs:
         with:
           node-version: '22'
 
+      # Prints a short SHA of the DB URL so we can verify which Supabase
+      # project the GitHub secrets point at (the value itself is masked by
+      # GitHub). Expected for the project referenced in this repo's
+      # migrations: 9f672bc47ac9 (no trailing slash) / b3522cee7d99 (with).
+      - name: DB fingerprint
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: printf '%s' "$NEXT_PUBLIC_SUPABASE_URL" | sha256sum | cut -c1-12
+
       - name: Check feed freshness
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
