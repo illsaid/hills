@@ -1,21 +1,21 @@
 {
-  "status": "ELEVATED",
-  "status_detail": "Activity 33% above average",
-  "color": "amber",
-  "analysis_week": "2026-06-28 to 2026-07-04",
-  "data_as_of": "2026-07-27",
+  "status": "NORMAL",
+  "status_detail": "Activity 50% below average",
+  "color": "green",
+  "analysis_week": "2026-07-05 to 2026-07-11",
+  "data_as_of": "2026-08-03",
   "data_source": "LAPD NIBRS (k7nn-b2ep)",
-  "brief_text": "**SECURITY BRIEF \u2014 Week of Jun 28\u2013Jul 04**\n*(Data updated Jul 27 \u2014 typical 21-day reporting delay)*\n\n**Status:** ELEVATED \u2014 Activity 33% above average\n12 property incidents in Hollywood Division this week.\n\n**Incident Breakdown:**\n\u2022 Vehicle Security: 4 incidents (33%)\n\u2022 Residential Security: 2 incidents (16%)\n\u2022 Other Property: 6 incidents (50%)\n\n*Year-over-year comparison not available (NIBRS data starts March 2024)*\nPatterns detected: Vehicle Security (3 in 72h); Other Property (6 in 72h).",
-  "updated_at": "2026-07-27T10:44:29.890882",
+  "brief_text": "**SECURITY BRIEF \u2014 Week of Jul 05\u2013Jul 11**\n*(Data updated Aug 03 \u2014 typical 21-day reporting delay)*\n\n**Status:** NORMAL \u2014 Activity 50% below average\n6 property incidents in Hollywood Division this week.\n\n**Incident Breakdown:**\n\u2022 Vehicle Security: 3 incidents (50%)\n\u2022 Residential Security: 1 incidents (16%)\n\u2022 Other Property: 2 incidents (33%)\n\n*Year-over-year comparison not available (NIBRS data starts March 2024)*\nPatterns detected: Vehicle Security (3 in 72h).",
+  "updated_at": "2026-08-03T10:44:44.729160",
   "stats": {
-    "total": 12,
-    "wow_change": 33.3,
+    "total": 6,
+    "wow_change": -50.0,
     "yoy_change": null,
     "yoy_available": false,
     "type_breakdown": {
-      "Vehicle Security": 4,
-      "Other Property": 6,
-      "Residential Security": 2
+      "Residential Security": 1,
+      "Vehicle Security": 3,
+      "Other Property": 2
     }
   }
 }
