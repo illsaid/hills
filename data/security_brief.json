@@ -1,19 +1,19 @@
 {
   "status": "NORMAL",
-  "status_detail": "Activity 70% below average",
+  "status_detail": "Activity 33% below average",
   "color": "green",
-  "analysis_week": "2026-07-12 to 2026-07-18",
-  "data_as_of": "2026-08-10",
+  "analysis_week": "2026-07-19 to 2026-07-25",
+  "data_as_of": "2026-08-17",
   "data_source": "LAPD NIBRS (k7nn-b2ep)",
-  "brief_text": "**SECURITY BRIEF \u2014 Week of Jul 12\u2013Jul 18**\n*(Data updated Aug 10 \u2014 typical 21-day reporting delay)*\n\n**Status:** NORMAL \u2014 Activity 70% below average\n3 property incidents in Hollywood Division this week.\n\n**Incident Breakdown:**\n\u2022 Vehicle Security: 1 incidents (33%)\n\u2022 Other Property: 2 incidents (66%)\n\n*Year-over-year comparison not available (NIBRS data starts March 2024)*",
-  "updated_at": "2026-08-10T08:40:21.875223",
+  "brief_text": "**SECURITY BRIEF \u2014 Week of Jul 19\u2013Jul 25**\n*(Data updated Aug 17 \u2014 typical 21-day reporting delay)*\n\n**Status:** NORMAL \u2014 Activity 33% below average\n2 property incidents in Hollywood Division this week.\n\n**Incident Breakdown:**\n\u2022 Vehicle Security: 1 incidents (50%)\n\u2022 Other Property: 1 incidents (50%)\n\n*Year-over-year comparison not available (NIBRS data starts March 2024)*",
+  "updated_at": "2026-08-17T07:53:50.511025",
   "stats": {
-    "total": 3,
-    "wow_change": -70.0,
+    "total": 2,
+    "wow_change": -33.3,
     "yoy_change": null,
     "yoy_available": false,
     "type_breakdown": {
-      "Other Property": 2,
+      "Other Property": 1,
       "Vehicle Security": 1
     }
   }
